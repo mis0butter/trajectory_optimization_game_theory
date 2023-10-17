@@ -9,13 +9,12 @@ Oct 23:
 - simulator in Julia with propagator 
 - 2-body (J2 and J3) 
 - model chaser + evader 
-- experiment with plotting tools 
-
-Oct 30: 
 - add fuel/maneuver limits 
 - min distance between satellites 
 
 ... 
+- experiment with plotting tools at some point 
+
 
 Nov 27 
 - code done 
@@ -27,6 +26,19 @@ Nov 29
 - present 
 
 ## Oct 17, 2023 
+
+### Actions 
+
+Sofia: 
+- simulator in Julia with propagator 
+- 2-body (J2 and J3) 
+- model chaser + evader 
+
+Junette: 
+- add fuel/maneuver limits 
+- min distance between satellites 
+
+### Notes 
 
 The point of the class is: 
 - non-cooperative game theory 
