@@ -27,6 +27,14 @@ Nov 29
 
 ## Oct 24, 2023 
 
+### Actions 
+
+**Junette**
+- Put Sofia's code into Julia package template 
+
+
+### Notes 
+
 Static vs. dynamic game ? 
 - Static game uses a-e-i and some q-Q-something thing to compute reachability sets for evader / pursuer 
   - Reachability sets help determine if evasion or capture *can* be guaranteed (but still up to user to compute optimal control sequence) 
