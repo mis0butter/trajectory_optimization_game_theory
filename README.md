@@ -3,7 +3,7 @@ For game theory class
 
 ### Schedule 
 
-Bullet points are goals to complete by the date 
+Bullet points are goals to complete by the date listed 
 
 Oct 24: 
 - [x] simulator in Julia with propagator 
@@ -104,6 +104,11 @@ Nice to have:
 - atmosphere (cannonball) 
 
 
+## git stuff 
+
+trajectory_optimization_game_theory
+
+[![Build Status](https://github.com/mis0butter/trajectory_optimization_game_theory.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mis0butter/trajectory_optimization_game_theory.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 
 

@@ -1,0 +1,13 @@
+name = "trajectory_optimization_game_theory"
+uuid = "b8c46019-cd84-4ede-9ede-3355b0ab908e"
+authors = ["Junette Hsin <junetter@gmail.com> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
