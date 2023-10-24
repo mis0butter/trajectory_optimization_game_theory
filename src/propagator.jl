@@ -1,6 +1,5 @@
 using Revise
 using DifferentialEquations
-using Plots
 
 # propagate orbit based on given initial conditions, time, and gravitational parameter
 export propagate_2Body
@@ -9,6 +8,7 @@ function propagate_2Body(x0, t, mu)
     return solve(prob)
 end
 
+export eom_2Body! 
 function eom_2Body!(dx, x, mu, t)
     x1 = x[1]
     x2 = x[2]
@@ -24,6 +24,7 @@ function eom_2Body!(dx, x, mu, t)
     dx[6] = mu_div_r3 * x3
 end
 
+export kep2cart 
 function kep2cart(kep, mu)
 
     sma = kep[1]
@@ -71,20 +72,20 @@ end
 # end
 
 
-mu = 398600.4415
-r = 6378.0
-x0 = kep2cart([r+400.0, 0.0, 51.6*pi/180, 0.0, 0.0, 0.0], mu)
-println(x0)
-t = (0.0, 90*60.0)
-prob = propagate_2Body(x0, t, mu)
+# mu = 398600.4415
+# r = 6378.0
+# x0 = kep2cart([r+400.0, 0.0, 51.6*pi/180, 0.0, 0.0, 0.0], mu)
+# println(x0)
+# t = (0.0, 90*60.0)
+# prob = propagate_2Body(x0, t, mu)
 
-xVals = []
-yVals = []
-zVals = []
-for i in 1:length(prob.u)
-    push!(xVals, prob.u[i][1])
-    push!(yVals, prob.u[i][2])
-    push!(zVals, prob.u[i][3])
-end
+# xVals = []
+# yVals = []
+# zVals = []
+# for i in 1:length(prob.u)
+#     push!(xVals, prob.u[i][1])
+#     push!(yVals, prob.u[i][2])
+#     push!(zVals, prob.u[i][3])
+# end
 
-scatter(xVals, yVals, zVals)
+# scatter(xVals, yVals, zVals)
