@@ -5,12 +5,18 @@ For game theory class
 
 Bullet points are goals to complete by the date 
 
-Oct 23: 
-- simulator in Julia with propagator 
-- 2-body (J2 and J3) 
-- model chaser + evader 
+Oct 24: 
+- [x] simulator in Julia with propagator 
+- [x] 2-body (J2 and J3) 
+- [x] model chaser + evader 
 - add fuel/maneuver limits 
 - min distance between satellites 
+
+Oct 31: 
+- Define optimization problem 
+- Figure out how to set up optimization problem using JuMP or Optim or something 
+- realistic IC for satellites 
+- realistic starting fuel mass 
 
 ... 
 - experiment with plotting tools at some point 
