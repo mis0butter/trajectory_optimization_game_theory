@@ -89,10 +89,12 @@ zVals_p1 = []
 xVals_p2 = []
 yVals_p2 = []
 zVals_p2 = []
-for i in 1:length(prob.u)
+for i in 1:length(prop1.u)
     push!(xVals_p1, prop1.u[i][1])
     push!(yVals_p1, prop1.u[i][2])
     push!(zVals_p1, prop1.u[i][3])
+end
+for i in 1:length(prop2.u)
     push!(xVals_p2, prop2.u[i][1])
     push!(yVals_p2, prop2.u[i][2])
     push!(zVals_p2, prop2.u[i][3])
