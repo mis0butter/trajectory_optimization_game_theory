@@ -3,14 +3,20 @@ For game theory class
 
 ### Schedule 
 
-Bullet points are goals to complete by the date 
+Bullet points are goals to complete by the date listed 
 
-Oct 23: 
-- simulator in Julia with propagator 
-- 2-body (J2 and J3) 
-- model chaser + evader 
+Oct 24: 
+- [x] simulator in Julia with propagator 
+- [x] 2-body (J2 and J3) 
+- [x] model chaser + evader 
 - add fuel/maneuver limits 
 - min distance between satellites 
+
+Oct 31: 
+- Define optimization problem 
+- Figure out how to set up optimization problem using JuMP or Optim or something 
+- realistic IC for satellites 
+- realistic starting fuel mass 
 
 ... 
 - experiment with plotting tools at some point 
@@ -24,6 +30,45 @@ Nov 28
 
 Nov 29
 - present 
+
+## Oct 24, 2023 
+
+### Actions 
+
+**Junette**
+- Put Sofia's code into Julia package template 
+
+
+### Notes 
+
+Static vs. dynamic game ? 
+- Static game uses a-e-i and some q-Q-something thing to compute reachability sets for evader / pursuer 
+  - Reachability sets help determine if evasion or capture *can* be guaranteed (but still up to user to compute optimal control sequence) 
+- Dynamic game 
+  - We just propagate dynamics 
+  - Still need to formulate cost function: mass-optimal? time-optimal? 
+
+Bryn technical advice: 
+- This is how you formulate cost function for single player optimal control:   
+$$ J = \sum_{i=1}^{N} \Delta v_i^2 - K_{terminal} $$ 
+- Constraints will be dynamics  
+
+Path forward: 
+- Static game where we solve above cost function for delta v at each segment  
+- $K_{terminal}$ is basically $K_{distance}$ 
+- Evader (P1) wants to minimize $J$ --> $ \Delta v $ and maximize $ K_{distance} $, thus minus sign 
+- Pursuer (P2) wants to maximize $J$ 
+- terminal constraint: 
+$$ \Delta \bar{r} = \bar{0} = \bar{r}_E - \bar{r}_P $$ 
+
+Questions: 
+- Constraint dynamics will have to be integrated for each time segment and then $\Delta v$ applied between each segment 
+$$ c_1 = \int_{t_0}^{t_1} f( \Delta v_1 )dt + ... + \int_{t_f-1}^{t_f} f( \Delta v_f ) dt $$ 
+  - How to implement this kind of constraint? 
+- Open loop? Feedback? 
+- Perfect information at each state? 
+
+
 
 ## Oct 17, 2023 
 
@@ -59,6 +104,11 @@ Nice to have:
 - atmosphere (cannonball) 
 
 
+## git stuff 
+
+trajectory_optimization_game_theory
+
+[![Build Status](https://github.com/mis0butter/trajectory_optimization_game_theory.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mis0butter/trajectory_optimization_game_theory.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 
 
