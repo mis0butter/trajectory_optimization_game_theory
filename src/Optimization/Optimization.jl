@@ -32,4 +32,4 @@ include("state_update.jl")
 include("solve_transfer.jl")
 
 # Exports
-export SimsFlanaganTrajectory, solve_transfer
+export SimsFlanaganTrajectory, solve_transfer, sims_flanagan_transfer 
