@@ -6,11 +6,10 @@ Description: Solves the low-thrust transfer between an initial orbit state and a
 
 
 Inputs:
-    1. xₒ - Initial state vector constructed as [r;v]
-    2. N - Number of segments the trajectory is split up into
-    3. M - Planetary Constants Model (i.e. Europa, Ganymede, etc.)
-        • From import_constants()
-    4. tₒ - Time period
+    1. xₒ_P - Initial state vector of pursuer constructed as [r;v]
+    2. xₒ_E - Initial state vector of evader constructed as [r;v]
+    3. N - Number of segments the trajectory is split up into
+    4. t - Time period
     5. μ - Gravitational Parameter
     6. revs - Number of revolutions between legs, initialized to 0
 
@@ -21,15 +20,10 @@ Output:
 ============================================================#
 
 function sims_flanagan_transfer(
-    x₀_E::AbstractVector{T}, 
-    N::Int, 
-    xₒ_P::AbstractVector{T}, 
-    t₀::T, 
-    μ::T;
-    revs = 0) where T<:AbstractFloat
+    xₒ_P, x₀_E, N, t, μ; revs = 0) 
 
     # Nondimensionalizing Inputs
-    #   x̄₀ - Non-dimensionalized state vector
+    #   x̄₀_E - Non-dimensionalized state vector
     #   DU - Relative distance
     #   TU - Relative time 
     x̄₀_E, DU, TU = nondimensionalize_x(x₀_E, μ)
@@ -39,16 +33,20 @@ function sims_flanagan_transfer(
     #   x̄f₀ - non-dimensionalized final state
     # xₒ_P  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
     # xₒ_P  = convert(Vector, xₒ_P) # QUICK FIX
-    x̄₀_P = copy(xₒ_P)
-    x̄₀_P[1:3] /= DU      
-    x̄₀_P[4:6] /= DU/TU
+
+    prop = propagate_2Body( x₀_E, t, μ) 
+    xf_P  = prop.u[end] 
+
+    x̄f_P = copy(xf_P)
+    x̄f_P[1:3] /= DU      
+    x̄f_P[4:6] /= DU/TU
    
     # Number of Constraints
     mC = 3     # Terminal Constraints
     mI = N+1   # Number of Inequality Constraints
 
     # Initializing Performance Index
-    ϕ = (x, λ, p) -> performance_index(x, λ, p, N, x̄₀_E, x̄₀_P, mC)
+    ϕ = (x, λ, p) -> performance_index(x, λ, p, N, x̄₀_E, x̄f_P, mC)
     
     # Initializing Decision Variables
     #   ā - non-dimensionalized semi-major axis
@@ -87,8 +85,8 @@ function sims_flanagan_transfer(
 
         # Evaluting Constraints
         Δτ, Δv_vec = unwrap(x_vec, N)
-        h = equality_constraints(Δτ, Δv_vec, x̄₀_E, x̄₀_P, N)
-        ψ = inequality_constraints(Δτ, Δv_vec, x̄₀_E, x̄₀_P, N)
+        h = equality_constraints(Δτ, Δv_vec, x̄₀_E, x̄f_P, N)
+        ψ = inequality_constraints(Δτ, Δv_vec, x̄₀_E, x̄f_P, N)
 
         # Branching
         for i in eachindex(p_vec)
@@ -114,12 +112,12 @@ function sims_flanagan_transfer(
             break
         end
 
-        Δτ, Δv_vec = unwrap(x_vec, N)
+        Δτ, Δv_vec = unwrap(x_vec, N) 
 
     end
     Δv = [norm(Δv_vec[i, :]) for i in 1:N]
     x̄f, Δt̄ = state_update(x̄₀_E, Δv_vec, Δτ, N)
-    miss = equality_constraints(Δτ, Δv_vec, x̄₀_E, x̄₀_P, N)
+    miss = equality_constraints(Δτ, Δv_vec, x̄₀_E, x̄f_P, N)
     
     xf = vcat(x̄f[1:3]*DU, x̄f[4:6]*DU/TU)
     Δt = Δt̄*TU
@@ -153,7 +151,7 @@ Output:
 function solve_transfer(
     x₀::AbstractVector{T}, 
     N::Int, 
-    M::PlanetaryConstantsModel, 
+    xfₒ, 
     t₀::T, 
     μ::T;
     revs = 0) where T<:AbstractFloat
@@ -167,7 +165,7 @@ function solve_transfer(
     # Other Initial Pieces
     #   xfₒ - final state at end of time period
     #   x̄f₀ - non-dimensionalized final state
-    xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
+    # xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
     xfₒ  = convert(Vector, xfₒ) # QUICK FIX
     x̄f₀ = copy(xfₒ)
     x̄f₀[1:3] /= DU      
@@ -180,7 +178,7 @@ function solve_transfer(
     # Initializing Performance Index
     ϕ = (x, λ, p) -> performance_index(x, λ, p, N, x̄₀, x̄f₀, mC)
     
-    # Initializing Decision Variables
+    # Initializing Decision Variables 
     #   ā - non-dimensionalized semi-major axis
     #   x_vec - vector of size 3N+1 containing Δτ and N velocity vectors for each segment of trajectory
     #   Δτ - Kepler's Universal Variable

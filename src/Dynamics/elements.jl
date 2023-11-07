@@ -90,10 +90,10 @@ function rv2oe(r_vec::AbstractVector{T}, v_vec::AbstractVector{T}, μ::T = 1.0) 
     ν = atan((ê×r_vec/r)'*ĥ, (ê⋅r_vec/r))
 
     # Converting to Requested Anomaly
-    α = ν2M(ν, e; units = π/180)
+    # α = ν2M(ν, e; units = π/180)
 
-    oe = [a, e, i, ω, Ω, α]
-
+    # oe = [a, e, i, ω, Ω, α]
+    oe = [a, e, i, ω, Ω, ν]
 
     return oe
 end 

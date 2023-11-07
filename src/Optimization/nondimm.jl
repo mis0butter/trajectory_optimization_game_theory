@@ -14,6 +14,7 @@ Outputs:
 ============================================================#
 
 function nondimensionalize_x(x_vec::AbstractVector{<:Real}, μ::Real)
+    
     # Separating State Vectors
     r_vec = x_vec[1:3]
     v_vec = x_vec[4:6]

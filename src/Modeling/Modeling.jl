@@ -49,7 +49,7 @@ export PlanetaryConstantsModel, ProblemConstants, import_constants
 include("plotting.jl")
 
 # Exports
-export plot_solution!, plot_moon!, plottraj
+export plot_solution!, plot_sims_flanagan!, plot_moon!, plottraj
 
 # =====================================================================
 # === Parsing Data
