@@ -52,6 +52,87 @@ function kep2cart(kep, mu)
     return cart
 end
 
+export cart2kep
+function cart2kep(cart, mu, tol=1e-10)
+
+    x    = cart[1]
+    y    = cart[2]
+    z    = cart[3]
+    xDot = cart[4]
+    yDot = cart[5]
+    zDot = cart[6]
+
+    r = [x y z]
+    v = [xDot yDot zDot]
+
+    # orbit energy calc
+    h = cross(r, v)
+    magR = norm(r)
+    magV = norm(v)
+    energy = (1.0 / 2.0) * (magV ^ 2) - mu / magR
+
+    ecc = (cross(v, h) - mu * (r / magR)) / mu
+    magEcc = norm(ecc)
+
+    if (magEcc <= 1.0)
+        sma = -mu / (2.0 * energy)
+    else
+        sma = mu / (2.0 * energy)
+    end
+
+    theta = acos(dot(r, ecc) / (magR * magEcc))
+    if (dot(r, v) < 0.0)
+        theta = 2.0 * np.pi - theta
+    end
+    inc = acos(h[2] / norm(h))
+
+    K = [0 0 1]
+    n = cross(K, h)
+
+    raan = acos(n[0] / norm(n))
+    if n[2] < 0
+        raan = 2.0 * np.pi - raan
+    end
+    omega = acos(dot(n, ecc) / (norm(n) * magEcc))
+    if ecc[3] < 0
+        omega = 2.0 * np.pi - omega
+    end
+
+    # singularity checks
+    I = [1 0 0]
+
+    if magEcc < tol && inc < tol
+        raan = 0.0
+        omega = 0.0
+
+        # set true longitude of periapsis as theta
+        theta = acos(dot(r, I) / magR)
+        if r[2] < 0
+            theta = 2.0 * pi - theta
+        end
+    elseif magEcc < tol
+        omega = 0.0
+
+        # set argument of latitude as theta
+        theta = acos(dot(n, r) / magR)
+        if r[3] < 0
+            theta = 2.0 * pi - theta
+        end
+    elseif inc < tol
+        raan = 0.0
+
+        # set longitude of periapsis as omega
+        omega = acos(dot(ecc, I) / magEcc)
+        if ecc[2] < 0
+            omega = 2.0 * pi - omega
+        end
+    end
+
+    kepState = [sma magEcc inc raan omega theta]
+
+    return kepState
+end
+
 function R3(angle)
     R = [cos(angle) sin(angle) 0.0;
          -sin(angle) cos(angle) 0.0;

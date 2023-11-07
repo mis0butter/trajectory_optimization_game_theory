@@ -12,6 +12,9 @@ t = (0.0, orbitPeriod(kep0_p2, mu))
 prop1 = propagate_2Body(kep2cart(kep0_p1, mu), t, mu)
 prop2 = propagate_2Body(kep2cart(kep0_p2, mu), t, mu)
 
+cart0_p1 = cart2kep(kep0_p1, mu)
+println(cart0_p1)
+
 xVals_p1 = []
 yVals_p1 = []
 zVals_p1 = []
