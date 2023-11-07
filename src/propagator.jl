@@ -1,4 +1,3 @@
-using Revise
 using DifferentialEquations
 
 # propagate orbit based on given initial conditions, time, and gravitational parameter
@@ -66,14 +65,92 @@ function R1(angle)
     return R
 end
 
-# function cart2kep(cart, mu)
+export cart2kep
+function cart2kep(cart, mu, tol=1e-20)
+    # get position and velocity components
+    r = cart[1:3]
+    v = cart[4:6]
 
-#     return kep
-# end
+    # orbit energy calc
+    h = cross(r, v) # specific angular momentum
+    magR = norm(r)
+    magV = norm(v)
+    energy = 0.5 * (magV ^ 2) - (mu / magR) # vis viva equation
+
+    # eccentricity vector
+    ecc = (cross(v, h) - mu * (r / magR)) / mu
+    magEcc = norm(ecc)
+
+    # determine orbit type based on eccentricity magnitude
+    if (magEcc <= 1.0)
+        # ellipse
+        sma = -mu / (2.0 * energy)
+    else
+        # hyperbola
+        sma = mu / (2.0 * energy)
+    end
+
+    # get mean anomaly
+    theta = acos(dot(r, ecc) / (magR * magEcc))
+    if (dot(r, v) < 0.0)
+        theta = 2.0 * np.pi - theta
+    end
+    inc = acos(h[3] / norm(h))
+
+    K = [0.0; 0.0; 1.0]
+    n = cross(K, h)
+    normN = norm(n)
+
+    # get right ascension
+    raan = acos(n[1] / normN)
+    if n[2] < 0.0
+        raan = 2.0 * pi - raan
+    end
+
+    # get argument of periapsis
+    omega = acos(dot(n, ecc) / (normN * magEcc))
+    if ecc[3] < 0.0
+        omega = 2.0 * pi - omega
+    end
+
+    # singularity checks
+    I = [1.0; 0.0; 0.0]
+
+    if magEcc < tol && inc < tol
+        raan = 0.0
+        omega = 0.0
+
+        # set true longitude of periapsis as theta
+        theta = acos(dot(r, I) / magR)
+        if r[2] < 0.0
+            theta = 2.0 * pi - theta
+        end
+    elseif magEcc < tol
+        omega = 0.0
+
+        # set argument of latitude as theta
+        theta = acos(dot(n, r) / (normN * magR))
+        if r[3] < 0.0
+            theta = 2.0 * pi - theta
+        end
+    elseif inc < tol
+        raan = 0.0
+
+        # set longitude of periapsis as omega
+        omega = acos(dot(ecc, I) / magEcc)
+        if ecc[2] < 0.0
+            omega = 2.0 * pi - omega
+        end
+    end
+
+    # output theta here refers to true anomaly!
+    kepState = [sma; magEcc; inc; raan; omega; theta]
+
+    return kepState
+end
 
 export orbitPeriod 
 function orbitPeriod(kep, mu)
     T = 2.0 * pi * sqrt(kep[1]^3 / mu)
     return T
 end
-

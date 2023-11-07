@@ -166,8 +166,6 @@ function solve_transfer(
     # Other Initial Pieces
     #   xfₒ - final state at end of time period
     #   x̄f₀ - non-dimensionalized final state
-    # xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
-    # xfₒ  = convert(Vector, xfₒ) # QUICK FIX
     x̄f₀ = copy(xfₒ)
     x̄f₀[1:3] /= DU      
     x̄f₀[4:6] /= DU/TU
