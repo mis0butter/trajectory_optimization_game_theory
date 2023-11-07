@@ -250,13 +250,15 @@ function plot_solution!(
          Δv_vec[:, 1], 
          Δv_vec[:, 2], 
          Δv_vec[:, 3];
-         lengthscale = 1e6/Δvmax, 
-        #  linewidth = 30000, 
-        #  arrowsize = 100000
+         lengthscale = 1e4/Δvmax, 
+         linewidth = 300, 
+         arrowsize = 200  
          )
 
     scatter!(0,0,0;marker = :circle, markersize = 15, color = :black)
     text!(0,0,0; text = "Earth?", color = :gray, offset = (-25,-25), align = (:center, :bottom))
+
+    Auto() 
 
     # Reshowing Figure
     return fig
