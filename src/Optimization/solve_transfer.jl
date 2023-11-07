@@ -151,7 +151,8 @@ Output:
 function solve_transfer(
     x₀::AbstractVector{T}, 
     N::Int, 
-    M::PlanetaryConstantsModel, 
+    # M::PlanetaryConstantsModel, 
+    xfₒ, 
     t₀::T, 
     μ::T;
     revs = 0) where T<:AbstractFloat 
@@ -165,8 +166,8 @@ function solve_transfer(
     # Other Initial Pieces
     #   xfₒ - final state at end of time period
     #   x̄f₀ - non-dimensionalized final state
-    xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
-    xfₒ  = convert(Vector, xfₒ) # QUICK FIX
+    # xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
+    # xfₒ  = convert(Vector, xfₒ) # QUICK FIX
     x̄f₀ = copy(xfₒ)
     x̄f₀[1:3] /= DU      
     x̄f₀[4:6] /= DU/TU

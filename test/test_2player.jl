@@ -23,9 +23,15 @@ v̂p = xp[4:6] / norm(xp[4:6])
 x0 = xp + vcat(zeros(3), v̂p*v∞) 
 
 # Solving Transfer to Europa
-x0 = convert(Vector, x0)
+x0 = convert(Vector, x0) 
 
-sf  = solve_transfer(x0, 100, C.Europa, t0, μ)
+#   xfₒ - final state at end of time period
+#   x̄f₀ - non-dimensionalized final state
+xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(C.Europa, t0, μ), μ) |> collect
+xfₒ  = convert(Vector, xfₒ) # QUICK FIX
+
+# sf  = solve_transfer(x0, 100, C.Europa, t0, μ)
+sf  = solve_transfer(x0, 100, xfₒ, t0, μ)
 fig = plot_solution!(x0, sf.xf, sf.Δτ, sf.Δv⃗, μ) 
 
 ## ============================================ ## 
@@ -42,7 +48,8 @@ x0 = xp + vcat(zeros(3), v̂p*v∞)
 # Solving Transfer to Europa
 x0 = convert(Vector, x0)
 
-sf  = solve_transfer(x0, 100, C.Europa, t0, μ) 
+# sf  = solve_transfer(x0, 100, C.Europa, t0, μ)
+sf  = solve_transfer(x0, 100, xfₒ, t0, μ)
 fig = plot_solution!(x0, sf.xf, sf.Δτ, sf.Δv⃗ , μ, nothing, nothing, fig)
 
 
