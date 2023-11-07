@@ -117,10 +117,10 @@ function plot_sims_flanagan!(
         marker = :rect, markersize = 10, color = :black)
 
     # Plotting DVs
-    Δvmax = maximum([norm(Δv_vec[i, :]) for i in 1:N])
-     arrows!(Xtraj[1:end-1, 1], Xtraj[1:end-1, 2], Xtraj[1:end-1, 3], 
-         Δv_vec[:, 1], Δv_vec[:, 2], Δv_vec[:, 3];
-         lengthscale = 1e6/Δvmax, linewidth = 30000, arrowsize = 100000)
+    # Δvmax = maximum([norm(Δv_vec[i, :]) for i in 1:N])
+    #  arrows!(Xtraj[1:end-1, 1], Xtraj[1:end-1, 2], Xtraj[1:end-1, 3], 
+    #      Δv_vec[:, 1], Δv_vec[:, 2], Δv_vec[:, 3];
+    #      lengthscale = 1e6/Δvmax, linewidth = 30000, arrowsize = 100000)
 
     scatter!(0,0,0;marker = :circle, markersize = 15, color = :black)
     text!(0,0,0; text = "Earth?", color = :gray, offset = (-25,-25), align = (:center, :bottom))
@@ -247,8 +247,13 @@ function plot_solution!(
     # Plotting DVs
     Δvmax = maximum([norm(Δv_vec[i, :]) for i in 1:N])
      arrows!(Xtraj[1:end-1, 1], Xtraj[1:end-1, 2], Xtraj[1:end-1, 3], 
-         Δv_vec[:, 1], Δv_vec[:, 2], Δv_vec[:, 3];
-         lengthscale = 1e6/Δvmax, linewidth = 30000, arrowsize = 100000)
+         Δv_vec[:, 1], 
+         Δv_vec[:, 2], 
+         Δv_vec[:, 3];
+         lengthscale = 1e6/Δvmax, 
+        #  linewidth = 30000, 
+        #  arrowsize = 100000
+         )
 
     scatter!(0,0,0;marker = :circle, markersize = 15, color = :black)
     text!(0,0,0; text = "Earth?", color = :gray, offset = (-25,-25), align = (:center, :bottom))
