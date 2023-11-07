@@ -78,13 +78,15 @@ function plot_sims_flanagan!(
     Δv_vec         *= DU/TU
 
     # Initializing Figure
-    fig = Figure()
-    Δv = sum([norm(Δv_vec[i, :]) for i in 1:N])
-    error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
-    vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
-     Axis3(fig[1, 1], 
-         xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
-         title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(error; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")
+    if isnothing(fig)  
+        fig = Figure()
+        Δv = sum([norm(Δv_vec[i, :]) for i in 1:N])
+        error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
+        vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
+         Axis3(fig[1, 1], 
+             xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
+             title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(error; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")
+    end 
 
     # Plotting Initial Condition
     # Plots line between the initial state and the propagated initial state
@@ -150,9 +152,10 @@ function plot_solution!(
     xf₀::AbstractVector{T},
     Δτ::T,
     Δv_vec::AbstractMatrix{T},
-    μ::T = 1.0,
-    label = nothing;
-    color = nothing) where T<:AbstractFloat
+    μ::T  = 1.0,
+    label = nothing, 
+    color = nothing, 
+    fig   = nothing) where T<:AbstractFloat
 
     # Non-DimensionalizingS
     x₀, DU, TU = nondimensionalize_x(x₀, μ)
@@ -203,13 +206,15 @@ function plot_solution!(
     Δv_vec         *= DU/TU
 
     # Initializing Figure
-    fig = Figure()
-    Δv = sum([norm(Δv_vec[i, :]) for i in 1:N])
-    error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
-    vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
-     Axis3(fig[1, 1], 
-         xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
-         title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(error; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")
+    if isnothing(fig)  
+        fig = Figure()
+        Δv = sum([norm(Δv_vec[i, :]) for i in 1:N])
+        error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
+        vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
+         Axis3(fig[1, 1], 
+             xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
+             title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(error; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")
+    end 
 
     # Plotting Initial Condition
     # Plots line between the initial state and the propagated initial state

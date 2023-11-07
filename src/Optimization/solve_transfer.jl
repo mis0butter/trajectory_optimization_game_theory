@@ -151,10 +151,10 @@ Output:
 function solve_transfer(
     x₀::AbstractVector{T}, 
     N::Int, 
-    xfₒ, 
+    M::PlanetaryConstantsModel, 
     t₀::T, 
     μ::T;
-    revs = 0) where T<:AbstractFloat
+    revs = 0) where T<:AbstractFloat 
 
     # Nondimensionalizing Inputs
     #   x̄₀ - Non-dimensionalized state vector
@@ -165,7 +165,7 @@ function solve_transfer(
     # Other Initial Pieces
     #   xfₒ - final state at end of time period
     #   x̄f₀ - non-dimensionalized final state
-    # xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
+    xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(M, t₀, μ), μ) |> collect
     xfₒ  = convert(Vector, xfₒ) # QUICK FIX
     x̄f₀ = copy(xfₒ)
     x̄f₀[1:3] /= DU      
@@ -178,7 +178,7 @@ function solve_transfer(
     # Initializing Performance Index
     ϕ = (x, λ, p) -> performance_index(x, λ, p, N, x̄₀, x̄f₀, mC)
     
-    # Initializing Decision Variables 
+    # Initializing Decision Variables
     #   ā - non-dimensionalized semi-major axis
     #   x_vec - vector of size 3N+1 containing Δτ and N velocity vectors for each segment of trajectory
     #   Δτ - Kepler's Universal Variable
