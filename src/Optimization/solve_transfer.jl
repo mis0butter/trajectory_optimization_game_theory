@@ -116,7 +116,7 @@ function sims_flanagan_transfer(
 
     end
     Δv = [norm(Δv_vec[i, :]) for i in 1:N]
-    x̄f, Δt̄ = state_update(x̄₀_E, Δv_vec, Δτ, N)
+    x̄f, Δt̄ = prop_stateUV_Nseg(x̄₀_E, Δv_vec, Δτ, N)
     miss = equality_constraints(Δτ, Δv_vec, x̄₀_E, x̄f_P, N)
     
     xf = vcat(x̄f[1:3]*DU, x̄f[4:6]*DU/TU)
@@ -144,9 +144,9 @@ Inputs:
 
 
 Output:
-    1. Final Sims-Flanagan Trajectory object
+    1. Final Sims-Flanagan Trajectory object 
         • Look at Optimization.jl for the declaration of this struct
-============================================================#
+============================================================# 
 
 function solve_transfer(
     x₀::AbstractVector{T}, 
@@ -155,13 +155,14 @@ function solve_transfer(
     xfₒ, 
     t₀::T, 
     μ::T;
-    revs = 0) where T<:AbstractFloat 
+    revs = 0
+) where T<:AbstractFloat 
 
     # Nondimensionalizing Inputs
     #   x̄₀ - Non-dimensionalized state vector
     #   DU - Relative distance
     #   TU - Relative time 
-    x̄₀, DU, TU = nondimensionalize_x(x₀, μ)
+    x̄₀, DU, TU = nondimensionalize_x(x₀, μ) 
 
     # Other Initial Pieces
     #   xfₒ - final state at end of time period
@@ -181,7 +182,7 @@ function solve_transfer(
     #   ā - non-dimensionalized semi-major axis
     #   x_vec - vector of size 3N+1 containing Δτ and N velocity vectors for each segment of trajectory
     #   Δτ - Kepler's Universal Variable
-    #   Δv_vec - N velocity vectors for each segment of trajectory
+    #   Δv_vec - N velocity vectors for each segment of trajectory 
     ā = x2oe(x̄₀)[1]
     x_vec = [sqrt(ā)*((revs + 1)*2π - π/8)/N, 1e-10*ones(3*N)...]
     Δτ, Δv_vec = unwrap(x_vec, N)
@@ -201,6 +202,8 @@ function solve_transfer(
         # Creating Function
         ϕ′  = x -> ϕ(x, λ_vec, p_vec)
         ∇ϕ′ = x -> ForwardDiff.gradient(ϕ′, x)
+
+        Main.@infiltrate 
 
         # Finding New Minimum
         x_new_vec = bfgs(x_vec, ϕ′, ∇ϕ′; tol = 1e-10, itermax=50)
@@ -245,7 +248,7 @@ function solve_transfer(
 
     end
     Δv = [norm(Δv_vec[i, :]) for i in 1:N]
-    x̄f, Δt̄ = state_update(x̄₀, Δv_vec, Δτ, N)
+    x̄f, Δt̄ = prop_stateUV_Nseg(x̄₀, Δv_vec, Δτ, N)
     miss = equality_constraints(Δτ, Δv_vec, x̄₀, x̄f₀, N)
     
     xf = vcat(x̄f[1:3]*DU, x̄f[4:6]*DU/TU)
@@ -272,8 +275,12 @@ Outputs:
 
 ============================================================#
 
-function unwrap(x_vec::AbstractVector, N::Int)
+function unwrap(
+    x_vec::AbstractVector, 
+    N::Int)
+
     Δτ = x_vec[1]
     Δv_vec = reshape(x_vec[2:end], N, 3)
+
     return Δτ, Δv_vec
 end

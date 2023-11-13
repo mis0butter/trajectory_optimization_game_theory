@@ -55,24 +55,28 @@ Inputs:
     3. μ - Gravitational parameter
 
 Outputs:
-    1. Y - Final state vector
+    1. xf_vec - Final state vector
 ============================================================#
 
-function propagate_x(x₀_vec::AbstractVector{T2}, Δt::T1, μ::T2) where {T1<:Real, T2<:Real}
+function propagate_x(
+    x₀_vec::AbstractVector{T2}, 
+    Δt::T1, 
+    μ::T2
+) where {T1<:Real, T2<:Real}
 
     # len = length(Δt)
-    Y = zeros(T1, 6)
+    xf_vec = zeros(T1, 6)
     # t = zeros(T1)
 
     a = -0.5*μ/(0.5*norm(x₀_vec[4:6])^2 - μ/norm(x₀_vec[1:3]))
     # println(a)
     if a > 0
-        Y = propKepTE(x₀_vec, Δt, μ)
+        xf_vec = propKepTE(x₀_vec, Δt, μ)
     else
-        Y = propKepTH(x₀_vec, Δt, μ)
+        xf_vec = propKepTH(x₀_vec, Δt, μ)
     end
 
-    return Y
+    return xf_vec
 end
 
 #============================================================

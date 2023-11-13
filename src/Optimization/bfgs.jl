@@ -22,11 +22,12 @@ function bfgs(
     g::Function; 
     tol = 1e-8, 
     itermax = 100,
-    params::Union{NamedTuple, Tuple, AbstractArray} = (;))
+    params::Union{NamedTuple, Tuple, AbstractArray} = (;)
+)
 
     # Initializing
     δx = Inf
-    n = length(x₀)
+    n  = length(x₀)
     gk = zeros(n)
     Qk = zeros(n, n)
     xk = zeros(n)
@@ -38,10 +39,10 @@ function bfgs(
     end
 
     # Iterating
-    x = copy(x₀)
-    iter = 0
-    miter = 0
-    exit = 0
+    x     = copy(x₀)
+    iter  = 0
+    miter = 0 
+    exit  = 0
     while abs(δx) > tol
         iter += 1
 
@@ -101,7 +102,8 @@ function goldenRatioMin(
     x::AbstractVector, 
     f::Function; 
     tol::Float64 = 1e-8, 
-    itermax::Int = 50)
+    itermax::Int = 50
+)
 
     # Initializing
     ϕ  = (3 - √5)/2
@@ -177,7 +179,8 @@ function linesearch(
     initial_step::T = 0.00001, 
     updatestep::Int = 4, 
     itermax::Int = 50,
-    stepmod::T = 2.0) where T<:AbstractFloat
+    stepmod::T = 2.0
+) where T<:AbstractFloat
 
     # Initializing
     z = [f(x₀)]
@@ -233,7 +236,8 @@ function update_gradients!(
     g::Function, 
     glast::AbstractVector{T},
     Qlast::AbstractMatrix{T},
-    xlast::AbstractVector{T}) where T<:AbstractFloat
+    xlast::AbstractVector{T}
+) where T<:AbstractFloat
 
 
     n = length(x)

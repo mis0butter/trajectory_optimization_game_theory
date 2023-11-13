@@ -38,7 +38,7 @@ function plot_sims_flanagan!(
 
     # Getting Required Trajectory States
     N = size(Δv_vec, 1)
-    Xtraj, Δt = state_update_range(x₀, Δv_vec, Δτ, 1:N)
+    Xtraj, Δt = prop_stateUV_Nseg_range(x₀, Δv_vec, Δτ, 1:N)
 
     # Integrating between segments
     m = 20
@@ -145,7 +145,9 @@ Inputs:
 
 Outputs:
     1. fig - Figure object, displays graph
-============================================================#
+============================================================# 
+
+using Infiltrator 
 
 function plot_solution!(
     x₀ ::AbstractVector{T},
@@ -155,7 +157,7 @@ function plot_solution!(
     μ::T  = 1.0,
     label = nothing, 
     color = nothing, 
-    fig   = nothing) where T<:AbstractFloat
+    fig   = nothing) where T<:AbstractFloat 
 
     # Non-DimensionalizingS
     x₀, DU, TU = nondimensionalize_x(x₀, μ)
@@ -166,7 +168,10 @@ function plot_solution!(
 
     # Getting Required Trajectory States
     N = size(Δv_vec, 1)
-    Xtraj, Δt = state_update_range(x₀, Δv_vec, Δτ, 1:N)
+    Xtraj, Δt = prop_stateUV_Nseg_range(x₀, Δv_vec, Δτ, 1:N)
+
+    println( "integrated Xtraj" ) 
+    @infiltrate 
 
     # Integrating between segments
     m = 20
@@ -179,6 +184,9 @@ function plot_solution!(
         end
     end
     Xtraj2 = hcat(Xtraj2...)'
+
+    println( "integrated Xtraj2" ) 
+    @infiltrate 
 
     # Propagating Orbit of initial body
     tspan = LinRange(0, Δt, N)
@@ -205,6 +213,9 @@ function plot_solution!(
     Xf[:, 4:6] *= DU/TU
     Δv_vec         *= DU/TU
 
+    println( "Redimmensionalizing" ) 
+    @infiltrate 
+
     # Initializing Figure
     if isnothing(fig)  
         fig = Figure()
@@ -221,10 +232,16 @@ function plot_solution!(
      lines!(Xi[:, 1], Xi[:, 2], Xi[:, 3]; 
          linestyle =  :dash, color = :black)
 
+    println( "plotted IC" ) 
+    @infiltrate 
+     
     # Plotting Final Condition
     # Plots line between the final state and the propagated final state
      lines!(Xf[:, 1], Xf[:, 2], Xf[:, 3]; 
         linestyle =  :dot, color = :black)
+
+    println( "plotted final condition" ) 
+    @infiltrate     
 
     # Plotting Trajectory
     if isnothing(color)

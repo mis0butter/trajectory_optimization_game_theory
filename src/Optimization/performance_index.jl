@@ -16,7 +16,16 @@ Outputs:
     1. ϕ - Performance index
 ============================================================#
 
-function performance_index(x, λ, p, N, x̄₀, x̄f₀, mC)
+function performance_index(
+    x, 
+    λ, 
+    p, 
+    N, 
+    x̄₀, 
+    x̄f₀, 
+    mC
+)
+
     # Unwrapping State
     Δτ = x[1]
     Δv_vec = reshape(collect(x[2:end]), N, 3)

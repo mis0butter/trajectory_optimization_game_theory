@@ -1,13 +1,13 @@
 #============================================================
 
-STATE_UPDATE:
+prop_stateUV_Nseg:
 
 Description: Propagates an initial state to the Nth segment of the trajectory
 
 Inputs:
-    1. x̄ₒ - Non-dimensionalized initial state vector of form [r̄; v̄]
+    1. x̄0 - Non-dimensionalized initial state vector of form [r̄; v̄]
     2. Δv̄ - Matrix of size (N, 3) where each row is the non-dimensionalized velocity vector at a segment of the trajectory
-    3. Δτ - Kepler's Universal Variable
+    3. UV - Kepler's Universal Variable
     4. N - Number of segments of the trajectory
 
 Outputs:
@@ -16,22 +16,29 @@ Outputs:
 
 ============================================================#
 
-function state_update(x̄₀::AbstractVector, Δv̄::AbstractMatrix{T}, Δτ::T, N::Int) where T<:Real# Iteration Variable
-    # Creating Iteration Variables
-    xk = copy(x̄₀)
+function prop_stateUV_Nseg(
+    x̄0::AbstractVector, 
+    Δv̄::AbstractMatrix{T}, 
+    UV::T, 
+    N::Int
+) where T<:Real # Iteration Variable
+
+    # Creating Iteration Variables 
+    xk = copy(x̄0)
     Δt = 0.0
 
-    # Propagating to N
-    for i = 1:N
+    # Propagating to N 
+    for i = 1:N 
+
         # Applying Δv
         xkdv = apply_dv(xk, Δv̄[i, :])
 
         # Propagating
-        xk1, δt = propKepUV(xkdv, Δτ)
+        xk, δt = propKepUV(xkdv, UV) 
 
         # Updating
-        xk = copy(xk1)
         Δt += δt
+
     end
 
     # Outputting
@@ -40,14 +47,14 @@ end
 
 #============================================================
 
-STATE_UPDATE_RANGE:
+prop_stateUV_Nseg_RANGE:
 
 Description: Propagates an initial state through a vector of N trajectory segments
 
-Inputs:
-    1. x̄ₒ - Non-dimensionalized initial state vector of form [r̄; v̄]
+Inputs: 
+    1. x̄0 - Non-dimensionalized initial state vector of form [r̄; v̄]
     2. Δv̄ - Matrix of size (N, 3) where each row is the non-dimensionalized velocity vector at a segment of the trajectory
-    3. Δτ - Kepler's Universal Variable
+    3. UV - Kepler's Universal Variable
     4. N - vector of segments of the trajectory
 
 Outputs:
@@ -56,9 +63,15 @@ Outputs:
 
 ============================================================#
 
-function state_update_range(x̄₀::AbstractVector, Δv̄::AbstractMatrix{T}, Δτ::T, N::UnitRange) where T<:Real# Iteration Variable
+function prop_stateUV_Nseg_range(
+    x̄0::AbstractVector, 
+    Δv̄::AbstractMatrix{T}, 
+    UV::T, 
+    N::UnitRange
+) where T<:Real# Iteration Variable
+
     # Creating Iteration Variables
-    xk = copy(x̄₀)
+    xk = copy(x̄0)
     Δt = 0.0
 
     # Output Variable
@@ -71,10 +84,9 @@ function state_update_range(x̄₀::AbstractVector, Δv̄::AbstractMatrix{T}, Δ
         xkdv = apply_dv(xk, Δv̄[i, :])
 
         # Propagating
-        xk1, δt = propKepUV(xkdv, Δτ)
+        xk, δt = propKepUV(xkdv, UV)
 
         # Updating
-        xk = copy(xk1)
         X[i+1, :] = xk
         Δt += δt
     end
@@ -87,7 +99,7 @@ end
 
 APPLY_DV:
 
-Description: Helper function for state_update() and state_update_range() that adds Δv to a state vector's velocity
+Description: Helper function for prop_stateUV_Nseg() and prop_stateUV_Nseg_range() that adds Δv to a state vector's velocity
 
 Inputs:
     1. x̄ - Non-Dimensionalized state vector
@@ -100,6 +112,7 @@ Outputs:
 
 
 function apply_dv(x̄, Δv̄)
+
     # Applying Δv
     r̄ = x̄[1:3]
     v̄ = x̄[4:6] + Δv̄

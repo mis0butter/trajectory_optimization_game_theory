@@ -13,8 +13,11 @@ Outputs:
     3. TU - Time unit
 ============================================================#
 
-function nondimensionalize_x(x_vec::AbstractVector{<:Real}, μ::Real)
-    
+function nondimensionalize_x(
+    x_vec, 
+    μ 
+)
+
     # Separating State Vectors
     r_vec = x_vec[1:3]
     v_vec = x_vec[4:6]
@@ -44,7 +47,12 @@ Outputs:
     4. TU - Time unit
 ============================================================#
 
-function nondimensionalize_rv(r_vec::V, v_vec::V, μ::Real) where V<:AbstractVector{<:Real}
+function nondimensionalize_rv(
+    r_vec, 
+    v_vec, 
+    μ
+) 
+
     # Distance unit
     DU = norm(r_vec)
 
