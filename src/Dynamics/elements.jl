@@ -57,7 +57,12 @@ Outputs:
 
 ============================================================#
 
-function rv2oe(r_vec::AbstractVector{T}, v_vec::AbstractVector{T}, μ::T = 1.0) where T<:Real
+function rv2oe( 
+    r_vec::AbstractVector{T}, 
+    v_vec::AbstractVector{T}, 
+    μ::T = 1.0
+) where T<:Real
+
     # Calculating Norms
     r = norm(r_vec)
     v = norm(v_vec)
@@ -69,9 +74,9 @@ function rv2oe(r_vec::AbstractVector{T}, v_vec::AbstractVector{T}, μ::T = 1.0) 
 
     # Calculating Integrals of Motion
     ẑ = [0., 0., 1.]
-    h_vec = r_vec×v_vec;           h = norm(h_vec); ĥ = h_vec/h
-    n_vec = ẑ×h_vec;           n = norm(n_vec); n̂ = n_vec/n
-    e_vec = (v_vec×h_vec)/μ - r_vec/r; e = norm(e_vec); ê = e_vec/e
+    h_vec = r_vec×v_vec;                h = norm(h_vec); ĥ = h_vec/h
+    n_vec = ẑ×h_vec;                    n = norm(n_vec); n̂ = n_vec/n
+    e_vec = (v_vec×h_vec)/μ - r_vec/r;  e = norm(e_vec); ê = e_vec/e
     ε = 0.5*v^2 - μ/r
 
     # Semi-Major Axis
@@ -173,10 +178,15 @@ Outputs:
 
 ============================================================#
 
-function x2oe(x::AbstractVector{T}, μ::T = 1.0) where {T<:Real}
+function x2oe(
+    x, 
+    μ = 1.0
+) 
+
     r_vec = x[1:3]
     v_vec = x[4:6]
     oe = rv2oe(r_vec, v_vec, μ)
+
     return oe
 end
 
@@ -201,17 +211,23 @@ Outputs:
 
 ==============================================================#
 
-function M2E(M, e; tol = 1e-6, units = π/180)
+function M2E(
+    M, 
+    e; 
+    tol = 1e-6, 
+    units = π/180
+)
+
     # Creating initial guess for E
     M *= units
     E = M < π ? M + e/2 : M - e/2
 
     # Iterating
-    ΔE = Inf
+    ΔE   = Inf
     iter = 0
     while abs(ΔE) > tol
         iter += 1
-        ΔE = (E - e*sin(E) - M)/(1 - e*cos(E))
+        ΔE = (E - e*sin(E) - M) / (1 - e*cos(E))
         E -= ΔE
     end
     
@@ -234,8 +250,13 @@ Outputs:
 
 ============================================================#
 
-function E2M(E, e; units = π/180)
-    M = (E*units - e*sin(E*units))/units
+function E2M(
+    E, 
+    e; 
+    units = π/180
+)
+
+    M = ( E*units - e*sin(E*units) ) / units
     return M
 end
 
@@ -255,8 +276,14 @@ Outputs:
 
 ============================================================#
 
-function E2ν(E, e; units = π/180)
-    ν = 2*atan(sqrt((1+e)/(1-e))*tan(E/2*units))/units
+function E2ν(
+    E, 
+    e; 
+    units = π/180
+)
+
+    ν = 2*atan( sqrt((1+e)/(1-e)) * tan(E/2*units) ) / units
+
     return ν
 end
 
@@ -276,8 +303,14 @@ Outputs:
 
 ============================================================#
 
-function ν2E(ν, e; units = π/180)
-    E = 2*atan(sqrt((1-e)/(1+e))*tan(ν/2*units))/units
+function ν2E(
+    ν, 
+    e; 
+    units = π/180
+)
+
+    E = 2*atan( sqrt((1-e)/(1+e)) * tan(ν/2*units) ) / units
+
     return E
 end
 
@@ -297,8 +330,14 @@ Outputs:
 
 ============================================================#
 
-function ν2M(ν, e; units = π/180)
-    M = E2M(ν2E(ν, e; units = units), e; units = units)
+function ν2M(
+    ν, 
+    e; 
+    units = π/180
+) 
+
+    M = E2M( ν2E(ν, e; units = units), e; units = units )
+
     return M
 end
 
@@ -318,7 +357,13 @@ Outputs:
 
 ============================================================#
 
-function M2ν(M, e; units = π/180)
-    ν = E2ν(M2E(M, e; units = units), e; units = units)
+function M2ν(
+    M, 
+    e; 
+    units = π/180
+)
+
+    ν = E2ν( M2E(M, e; units = units), e; units = units )
+
     return ν
 end
