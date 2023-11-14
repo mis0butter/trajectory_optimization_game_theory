@@ -31,7 +31,7 @@ xfₒ  = pcm2cart(propagate_PlanetaryConstantsModel(C.Europa, t0, μ), μ) |> co
 xfₒ  = convert(Vector, xfₒ) # QUICK FIX
 
 # sf  = solve_transfer(x0, 100, C.Europa, t0, μ)
-sf  = solve_transfer(x0, 100, xfₒ, t0, μ)
+sf  = solve_transfer(x0, 2, xfₒ, t0, μ)
 fig = plot_solution!(x0, sf.xf, sf.Δτ, sf.Δv⃗, μ) 
 
 ## ============================================ ## 
