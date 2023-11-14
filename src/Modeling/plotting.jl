@@ -164,7 +164,7 @@ function plot_solution!(
     xf₀ = copy(xf₀)
     xf₀[1:3]  /= DU
     xf₀[4:6]  /= DU/TU
-    Δv_vec        /= DU/TU
+    Δv_vec    /= DU/TU
 
     # Getting Required Trajectory States
     N = size(Δv_vec, 1)
@@ -279,82 +279,6 @@ function plot_solution!(
 
     # Reshowing Figure
     return fig
-end
-
-#============================================================
-PLOT_MOON!:
-
-Description: Plots a moon object on a 3D graph
-
-Inputs:
-    1. ax3 - Axis3 object from GLMakie
-    2. m - Moon object of interest
-
-Outputs:
-    1. N/A
-============================================================#
-
-function plot_moon!(ax3, m::Moon)
-
-    # Initializing
-    vertices = read_gtoc_data()
-    edges = Tuple{Int, Int}[]
-    ϕ = 0.5*(1 + √5)
-    scale = m.Radius/norm([3*ϕ, 1])
-
-    # Looping Through All 
-    for i = 1:length(vertices.x)
-        neighbors = closest(i, vertices)
-        for n in neighbors
-            pair = Tuple(vert for vert in sort([i, n]))
-            if pair ∉ edges
-                push!(edges, pair)
-            end
-        end
-    end
-    
-    # Plotting Edges
-    for vals in edges
-        x = vertices.x[[vals[1], vals[2]]] * scale
-        y = vertices.y[[vals[1], vals[2]]] * scale
-        z = vertices.z[[vals[1], vals[2]]] * scale
-        lines!(ax3, x, y, z; 
-            linewidth = 2, color = [1]
-        )
-        scatter!(ax3, x, y, z; color = [1]
-        )
-    end
-
-end
-
-#============================================================
-CLOSEST:
-
-Description: Helper function for plot_moon!() that calculates the closest vertex from another vertex
-
-Inputs: 
-    1. index - Index of the vertex of interest
-    2. vertices - array of vertices of the moon
-
-Outputs:
-    1. array of the 3 closest vertices to the vertex of interest
-============================================================#
-
-function closest(index, vertices)
-    # Setup
-    p_vec = [vertices.x[index], vertices.y[index], vertices.z[index]]
-    n = length(vertices.x)
-    dists = zeros(n)
-
-    # Finding Distances
-    for i = 1:n
-        p′_vec = [vertices.x[i], vertices.y[i], vertices.z[i]]
-        dists[i] = norm(p_vec - p′_vec)
-    end
-
-    # Grabbing Three Closest
-    # @info "Distances" dists
-    return partialsortperm(dists, 2:4)
 end
 
 #============================================================
