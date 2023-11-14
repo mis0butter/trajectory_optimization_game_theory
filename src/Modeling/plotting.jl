@@ -164,7 +164,7 @@ function plot_solution!(
     xf₀ = copy(xf₀)
     xf₀[1:3]  /= DU
     xf₀[4:6]  /= DU/TU
-    Δv_vec        /= DU/TU
+    Δv_vec    /= DU/TU
 
     # Getting Required Trajectory States
     N = size(Δv_vec, 1)
