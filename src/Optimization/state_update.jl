@@ -24,17 +24,17 @@ function prop_stateUV_Nseg(
 ) where T<:Real # Iteration Variable
 
     # Creating Iteration Variables 
-    xk = copy(x̄0)
+    x̄k = copy(x̄0)
     Δt = 0.0
 
     # Propagating to N 
     for i = 1:N 
 
         # Applying Δv
-        xkdv = apply_dv(xk, Δv̄[i, :])
+        x̄kdv = apply_dv(x̄k, Δv̄[i, :])
 
         # Propagating
-        xk, δt = propKepUV(xkdv, UV) 
+        x̄k, δt = propKepUV(x̄kdv, UV) 
 
         # Updating
         Δt += δt
@@ -42,7 +42,7 @@ function prop_stateUV_Nseg(
     end
 
     # Outputting
-    return xk, Δt
+    return x̄k, Δt
 end
 
 #============================================================
@@ -58,7 +58,7 @@ Inputs:
     4. N - vector of segments of the trajectory
 
 Outputs:
-    1. xk - Matrix of size (N, 6) where each row is the nondimensionalized state at each segment of the trajectory
+    1. X̄ - Matrix of size (N, 6) where each row is the nondimensionalized state at each segment of the trajectory
     2. Δt - Change in time between initial and final states
 
 ============================================================#
@@ -71,28 +71,28 @@ function prop_stateUV_Nseg_range(
 ) where T<:Real# Iteration Variable
 
     # Creating Iteration Variables
-    xk = copy(x̄0)
+    x̄k = copy(x̄0)
     Δt = 0.0
 
     # Output Variable
-    X = zeros(last(N)+1, 6)
-    X[1, :] = xk
+    X̄ = zeros(last(N)+1, 6)
+    X̄[1, :] = x̄k
 
     # Propagating to N
     for i in N
         # Applying Δv
-        xkdv = apply_dv(xk, Δv̄[i, :])
+        x̄kdv = apply_dv(x̄k, Δv̄[i, :])
 
         # Propagating
-        xk, δt = propKepUV(xkdv, UV)
+        x̄k, δt = propKepUV(x̄kdv, UV)
 
         # Updating
-        X[i+1, :] = xk
+        X̄[i+1, :] = x̄k 
         Δt += δt
     end
 
     # Outputting
-    return X, Δt
+    return X̄, Δt
 end
 
 #============================================================

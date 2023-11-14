@@ -25,7 +25,10 @@ sf  = solve_transfer(xₒ, 20, xfₒ, t0, mu)
 
 ## ============================================ ##
 
-# fig = plot_solution!(xₒ, sf.xf, sf.Δτ, sf.Δv⃗, mu) 
+fig = plot_solution!(xₒ, sf.xf, sf.Δτ, sf.Δv⃗, mu) 
+
+## ============================================ ##
+
 x₀      = xₒ 
 xf₀     = sf.xf 
 Δτ      = sf.Δτ 
@@ -57,6 +60,8 @@ Outputs:
     1. fig - Figure object, displays graph
 ============================================================# 
 
+using GLMakie 
+
 # using Infiltrator 
 
 # function plot_solution!(
@@ -70,18 +75,19 @@ Outputs:
 #     fig   = nothing) where T<:AbstractFloat 
 
     # Non-DimensionalizingS
-    x₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, μ)
-    xf₀ = copy(xf₀)
-    xf₀[1:3]  /= DU
-    xf₀[4:6]  /= DU/TU
-    Δv_vec    /= DU/TU
+    x̄₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, μ)
+    x̄f₀    = copy(xf₀)
+    Δv̄_vec = copy(Δv_vec)
+    x̄f₀[1:3] /= DU
+    x̄f₀[4:6] /= DU/TU 
+    Δv̄_vec   /= DU/TU 
 
     # Getting Required Trajectory States
-    N = size(Δv_vec, 1)
-    Xtraj, Δt = trajectory_optimization_game_theory.prop_stateUV_Nseg_range(x₀, Δv_vec, Δτ, 1:N)
+    N = size(Δv̄_vec, 1)
+    Xtraj, Δt = trajectory_optimization_game_theory.prop_stateUV_Nseg_range(x̄₀, Δv̄_vec, Δτ, 1:N)
 
     println( "integrated Xtraj" ) 
-    # @infiltrate 
+    @infiltrate 
 
     # Integrating between segments
     m = 20
@@ -102,14 +108,14 @@ Outputs:
     tspan = LinRange(0, Δt, N)
     Xi = zeros(N, 6)
     for i = 1:N
-        Xi[i, :] = propagate_x(x₀, tspan[i],μ)
+        Xi[i, :] = propagate_x(x̄₀, tspan[i],μ)
     end
 
     # Propagating Orbit of target body
     tspan = LinRange(0, Δt, N)
     Xf = zeros(N, 6)
     for i = 1:N
-        Xf[i, :] = propagate_x(xf₀, tspan[i],μ)
+        Xf[i, :] = propagate_x(x̄f₀, tspan[i],μ)
     end
 
     # Redimmensionalizing
@@ -121,7 +127,7 @@ Outputs:
     Xi[:, 4:6] *= DU/TU
     Xf[:, 1:3] *= DU
     Xf[:, 4:6] *= DU/TU
-    Δv_vec         *= DU/TU
+    Δv̄_vec         *= DU/TU
 
     println( "Redimmensionalizing" ) 
     @infiltrate 
@@ -129,7 +135,7 @@ Outputs:
     # Initializing Figure
     if isnothing(fig)  
         fig = Figure()
-        Δv = sum([norm(Δv_vec[i, :]) for i in 1:N])
+        Δv = sum([norm(Δv̄_vec[i, :]) for i in 1:N])
         error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
         vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
          Axis3(fig[1, 1], 
