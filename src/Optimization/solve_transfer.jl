@@ -20,13 +20,13 @@ Output:
 ============================================================#
 
 function sims_flanagan_transfer(
-    xₒ_P, x₀_E, N, t, μ; revs = 0) 
+    xₒ_P, x₀_E, N, t, μ, R; revs = 0) 
 
     # Nondimensionalizing Inputs
     #   x̄₀_E - Non-dimensionalized state vector
     #   DU - Relative distance
     #   TU - Relative time 
-    x̄₀_E, DU, TU = nondimensionalize_x(x₀_E, μ)
+    x̄₀_E, DU, TU = nondimensionalize_x(x₀_E, μ, R)
 
     # Other Initial Pieces
     #   xfₒ - final state at end of time period
@@ -154,7 +154,8 @@ function solve_transfer(
     # M::PlanetaryConstantsModel, 
     xfₒ, 
     t₀::T, 
-    μ::T;
+    μ::T,
+    R::T;
     revs = 0
 ) where T<:AbstractFloat 
 
@@ -162,7 +163,7 @@ function solve_transfer(
     #   x̄₀ - Non-dimensionalized state vector
     #   DU - Relative distance
     #   TU - Relative time 
-    x̄₀, DU, TU = nondimensionalize_x(x₀, μ) 
+    x̄₀, DU, TU = nondimensionalize_x(x₀, μ, R) 
 
     # Other Initial Pieces
     #   xfₒ - final state at end of time period
@@ -203,7 +204,7 @@ function solve_transfer(
         ϕ′  = x -> ϕ(x, λ_vec, p_vec)
         ∇ϕ′ = x -> ForwardDiff.gradient(ϕ′, x)
 
-        Main.@infiltrate 
+        # Main.@infiltrate 
 
         # Finding New Minimum
         x_new_vec = bfgs(x_vec, ϕ′, ∇ϕ′; tol = 1e-10, itermax=50)

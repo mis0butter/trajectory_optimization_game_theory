@@ -26,11 +26,12 @@ function plot_sims_flanagan!(
     Δτ,
     Δv_vec,
     μ = 1.0,
+    R = 1.0, # see note in plot_solution!
     label = nothing;
     color = nothing) 
 
     # Non-DimensionalizingS
-    x₀, DU, TU = nondimensionalize_x(x₀, μ)
+    x₀, DU, TU = nondimensionalize_x(x₀, μ, R)
     xf₀ = copy(xf₀)
     xf₀[1:3]  /= DU
     xf₀[4:6]  /= DU/TU
@@ -154,13 +155,14 @@ function plot_solution!(
     xf₀::AbstractVector{T},
     Δτ::T,
     Δv_vec::AbstractMatrix{T},
-    μ::T  = 1.0,
+    μ::T  = 1.0, # if this is 1, the R::T might not be 1? unless reall this should be real mu and R real earth radius, TODO: check this!
+    R::T  = 1.0, # not sure if this is right
     label = nothing, 
     color = nothing, 
     fig   = nothing) where T<:AbstractFloat 
 
     # Non-DimensionalizingS
-    x₀, DU, TU = nondimensionalize_x(x₀, μ)
+    x₀, DU, TU = nondimensionalize_x(x₀, μ, R)
     xf₀ = copy(xf₀)
     xf₀[1:3]  /= DU
     xf₀[4:6]  /= DU/TU
@@ -296,8 +298,8 @@ Inputs:
 Outputs:
     1. Plot of the trajectory
 ============================================================#
-function plottraj(Δv_vec, Δτ, x0, xf0, μ)
-    x̄0, DU, TU = UpdatedAdversarialTourDesign.nondimensionalize_x(x0, μ)
+function plottraj(Δv_vec, Δτ, x0, xf0, μ, R)
+    x̄0, DU, TU = UpdatedAdversarialTourDesign.nondimensionalize_x(x0, μ, R)
     # Getting Trajectory States
     X = getstates(Δv_vec, Δτ, x0, μ)
 
@@ -355,9 +357,9 @@ Inputs:
     4. μ - Gravitational parameter
 ============================================================#
 
-function getstates(Δv_vec, Δτ, x0, μ)
+function getstates(Δv_vec, Δτ, x0, μ, R)
     # Non-Dimensionalizing State
-    @show x0, DU, TU = nondimensionalize_x(x0, μ)
+    @show x0, DU, TU = nondimensionalize_x(x0, μ, R)
     # @show Δv⃗[1]
     Δv_vec /= (DU/TU)
     # @show Δv⃗[1]

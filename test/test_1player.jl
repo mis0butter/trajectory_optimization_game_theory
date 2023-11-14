@@ -1,5 +1,7 @@
 using trajectory_optimization_game_theory
 using LinearAlgebra, StaticArrays
+using GLMakie
+using Infiltrator
 
 # Infiltrator.clear_disabled!()
 # Infiltrator.toggle_async_check(false) 
@@ -21,7 +23,7 @@ xf_E = prop1.u[end]
 xₒ  = x₀_P 
 xfₒ = xf_E 
 
-sf  = solve_transfer(xₒ, 20, xfₒ, t0, mu)
+sf  = solve_transfer(xₒ, 2, xfₒ, 0.0, mu, r)
 
 ## ============================================ ##
 
@@ -70,7 +72,7 @@ Outputs:
 #     fig   = nothing) where T<:AbstractFloat 
 
     # Non-DimensionalizingS
-    x₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, μ)
+    x₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, μ, r)
     xf₀ = copy(xf₀)
     xf₀[1:3]  /= DU
     xf₀[4:6]  /= DU/TU
@@ -130,11 +132,11 @@ Outputs:
     if isnothing(fig)  
         fig = Figure()
         Δv = sum([norm(Δv_vec[i, :]) for i in 1:N])
-        error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
+        err = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
         vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
          Axis3(fig[1, 1], 
              xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
-             title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(error; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")
+             title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(err; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")
     end 
 
     # Plotting Initial Condition
@@ -143,7 +145,7 @@ Outputs:
          linestyle =  :dash, color = :black)
 
     println( "plotted IC" ) 
-    @infiltrate 
+    # @infiltrate 
      
     # Plotting Final Condition
     # Plots line between the final state and the propagated final state
@@ -171,15 +173,15 @@ Outputs:
     scatter!(Xtraj[end, 1], Xtraj[end, 2], Xtraj[end,3]; 
         marker = :rect, markersize = 10, color = :black)
 
-    # # Plotting DVs
+    # Plotting DVs
     # Δvmax = maximum([norm(Δv_vec[i, :]) for i in 1:N])
     #  arrows!(Xtraj[1:end-1, 1], Xtraj[1:end-1, 2], Xtraj[1:end-1, 3], 
     #      Δv_vec[:, 1], 
     #      Δv_vec[:, 2], 
     #      Δv_vec[:, 3];
-    #      lengthscale = 1e4/Δvmax, 
-    #      linewidth = 300, 
-    #      arrowsize = 200  
+    #      lengthscale = 1e3/Δvmax, 
+    #      linewidth = 10, 
+    #      arrowsize = 10  
     #      )
 
     scatter!(0,0,0;marker = :circle, markersize = 15, color = :black)
@@ -188,7 +190,7 @@ Outputs:
     Auto() 
 
     # Reshowing Figure
-#     return fig
+    return fig
 # end
 
 ## ============================================ ##
