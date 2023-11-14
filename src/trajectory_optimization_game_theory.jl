@@ -3,17 +3,6 @@ module trajectory_optimization_game_theory
 # # Write your package code here.
 include("propagator.jl") 
 
-# include("parametric_game.jl")
-# export ParametricGame, total_dim, solve
-
-# include("environment.jl")
-# export get_constraints, CubeEnvironment
-
-# end
-## ============================================ ##
-
-# module AdversarialSpacecraftTrajectories
-
 # Math
 using LinearAlgebra
 using StaticArrays
