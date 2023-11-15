@@ -24,14 +24,15 @@ function plot_solution!(
     x₀ ::AbstractVector{T},
     xf₀::AbstractVector{T},
     Δτ::T,
-    Δv_vec::AbstractMatrix{T},
+    Δv_vec::AbstractMatrix{T}, 
+    R, 
     μ::T  = 1.0,
     label = nothing, 
     color = nothing, 
     fig   = nothing) where T<:AbstractFloat 
 
     # Non-DimensionalizingS
-    x₀, DU, TU = nondimensionalize_x(x₀, μ)
+    x₀, DU, TU = nondimensionalize_x(x₀, μ, R)
     xf₀ = copy(xf₀)
     xf₀[1:3]  /= DU
     xf₀[4:6]  /= DU/TU

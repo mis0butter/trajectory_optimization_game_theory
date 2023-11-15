@@ -21,7 +21,7 @@ xf_E = prop2.u[end]
 xₒ  = x₀_P 
 xfₒ = xf_E 
 
-sf  = solve_transfer(xₒ, 20, xfₒ, mu)
+sf  = solve_transfer(xₒ, xfₒ, 20, r, mu)
 
 ## ============================================ ##
 
