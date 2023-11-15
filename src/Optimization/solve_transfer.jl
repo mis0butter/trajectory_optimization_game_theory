@@ -153,7 +153,7 @@ function solve_transfer(
     N::Int, 
     # M::PlanetaryConstantsModel, 
     xfₒ, 
-    t₀::T, 
+    t₀, 
     μ::T;
     revs = 0
 ) where T<:AbstractFloat 
@@ -203,7 +203,7 @@ function solve_transfer(
         ϕ′  = x -> ϕ(x, λ_vec, p_vec)
         ∇ϕ′ = x -> ForwardDiff.gradient(ϕ′, x)
 
-        Main.@infiltrate 
+        # Main.@infiltrate 
 
         # Finding New Minimum
         x_new_vec = bfgs(x_vec, ϕ′, ∇ϕ′; tol = 1e-10, itermax=50)
