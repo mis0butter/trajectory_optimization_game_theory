@@ -14,8 +14,7 @@ Outputs:
 
 function propKepUV(
     x̄0_vec, 
-    x_UV
-) 
+    x_UV ) 
 
     # ASSIGNING UNIVERSAL VARIABLE
     x_UV_sq = x_UV^2 
@@ -164,7 +163,7 @@ Inputs:
     1. x̄0 - Non-dimensionalized initial state vector of form [r̄; v̄]
     2. Δv̄ - Matrix of size (N, 3) where each row is the non-dimensionalized velocity vector at a segment of the trajectory
     3. UV - Kepler's Universal Variable
-    4. N - Number of segments of the trajectory
+    4. N  - Number of segments of the trajectory
 
 Outputs:
     1. xk - Non-dimensionalized final state vector
@@ -220,11 +219,10 @@ Outputs:
 ============================================================#
 
 function prop_stateUV_Nseg_range(
-    x̄0::AbstractVector, 
-    Δv̄::AbstractMatrix{T}, 
-    UV::T, 
-    N::UnitRange
-) where T<:Real# Iteration Variable
+    x̄0, 
+    Δv̄, 
+    Δτ,  
+    N ) 
 
     # Creating Iteration Variables
     x̄k = copy(x̄0)
@@ -240,7 +238,7 @@ function prop_stateUV_Nseg_range(
         x̄kdv = apply_dv(x̄k, Δv̄[i, :])
 
         # Propagating
-        x̄k, δt = propKepUV(x̄kdv, UV)
+        x̄k, δt = propKepUV(x̄kdv, Δτ)
 
         # Updating
         X̄[i+1, :] = x̄k 

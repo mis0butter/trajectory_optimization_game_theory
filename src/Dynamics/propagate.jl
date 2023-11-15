@@ -68,7 +68,10 @@ function propKepΔt(
     xf_vec = zeros(6)
     # t = zeros(T1)
 
-    a = -0.5*μ/(0.5*norm(x₀_vec[4:6])^2 - μ/norm(x₀_vec[1:3]))
+    v = norm(x₀_vec[4:6]) 
+    r = norm(x₀_vec[1:3]) 
+
+    a = -0.5*μ/( 0.5*v^2 - μ/r )
     # println(a)
     if a > 0
         xf_vec = propKepTE(x₀_vec, Δt, μ)
