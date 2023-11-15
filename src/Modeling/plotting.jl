@@ -11,27 +11,29 @@ Inputs:
     3. Δτ - Kepler's Universal Variable
     4. Δv_vec - Matrix of size (N,3) where each row is a velocity vector at a segment of the trajectory
     5. μ - Gravitational Parameter
-    6. label - Label of graph, initialized to nothing
-    7. color - Color of the line of the graph, initialized to nothing (results in blue line)
+    6. R - Radius of the planet  
+    7. label - Label of graph, initialized to nothing
+    8. color - Color of the line of the graph, initialized to nothing (results in blue line)
 
 Outputs:
     1. fig - Figure object, displays graph
 ============================================================# 
 
-using Infiltrator 
+# using Infiltrator 
 
 function plot_solution!(
-    x₀ ::AbstractVector{T},
-    xf₀::AbstractVector{T},
-    Δτ::T,
-    Δv_vec::AbstractMatrix{T},
-    μ::T  = 1.0,
+    x₀,
+    xf₀,
+    Δτ,
+    Δv_vec,
+    R, 
+    μ = 1.0,
     label = nothing, 
     color = nothing, 
-    fig   = nothing) where T<:AbstractFloat 
+    fig   = nothing ) 
 
     # Non-DimensionalizingS
-    x̄₀, DU, TU = nondimensionalize_x(x₀, μ)
+    x̄₀, DU, TU = nondimensionalize_x(x₀, μ, R)
     x̄f₀    = copy(xf₀)
     Δv̄_vec = copy(Δv_vec)
     x̄f₀[1:3] /= DU
@@ -40,17 +42,19 @@ function plot_solution!(
 
     # Getting Required Trajectory States
     N = size(Δv̄_vec, 1)
-    Xtraj, Δt = prop_stateUV_Nseg_range(x̄₀, Δv̄_vec, Δτ, 1:N)
+    X̄traj, Δt = prop_stateUV_Nseg_range(x̄₀, Δv̄_vec, Δτ, 1:N)
 
     println( "integrated Xtraj" ) 
-    @infiltrate 
+    # @infiltrate 
 
     # Integrating between segments
     m = 20
     Xtraj2 = Vector{Float64}[]
     for i = 1:N
-        X0 = Xtraj[i, :]
-        dτ = LinRange(0, Δτ, m)
+        X0 = X̄traj[i, :] 
+        X0[1:3] *= DU 
+        X0[4:6] *= DU/TU 
+        # dτ = LinRange(0, Δτ, m)
         for j = 1:m
             push!(Xtraj2, propKepUV(X0, dτ[j])[1])
         end
@@ -58,35 +62,35 @@ function plot_solution!(
     Xtraj2 = hcat(Xtraj2...)'
 
     println( "integrated Xtraj2" ) 
-    @infiltrate 
+    # @infiltrate 
 
     # Propagating Orbit of initial body
     tspan = LinRange(0, Δt, N)
     Xi = zeros(N, 6)
     for i = 1:N
-        Xi[i, :] = propagate_x(x̄₀, tspan[i],μ)
+        Xi[i, :] = propKepΔt(x̄₀, tspan[i],μ)
     end
 
     # Propagating Orbit of target body
     tspan = LinRange(0, Δt, N)
     Xf = zeros(N, 6)
     for i = 1:N
-        Xf[i, :] = propagate_x(x̄f₀, tspan[i],μ)
+        Xf[i, :] = propKepΔt(x̄f₀, tspan[i],μ)
     end
 
     # Redimmensionalizing
-    Xtraj[:, 1:3] *= DU
-    Xtraj[:, 4:6] *= DU/TU
+    Xtraj[:, 1:3]  *= DU
+    Xtraj[:, 4:6]  *= DU/TU
     Xtraj2[:, 1:3] *= DU
     Xtraj2[:, 4:6] *= DU/TU
     Xi[:, 1:3] *= DU
     Xi[:, 4:6] *= DU/TU
     Xf[:, 1:3] *= DU
     Xf[:, 4:6] *= DU/TU
-    Δv̄_vec         *= DU/TU
+    Δv̄_vec     *= DU/TU
 
     println( "Redimmensionalizing" ) 
-    @infiltrate 
+    # @infiltrate 
 
     # Initializing Figure
     if isnothing(fig)  
@@ -105,7 +109,7 @@ function plot_solution!(
          linestyle =  :dash, color = :black)
 
     println( "plotted IC" ) 
-    @infiltrate 
+    # @infiltrate 
      
     # Plotting Final Condition
     # Plots line between the final state and the propagated final state
@@ -113,7 +117,7 @@ function plot_solution!(
         linestyle =  :dot, color = :black)
 
     println( "plotted final condition" ) 
-    @infiltrate     
+    # @infiltrate     
 
     # Plotting Trajectory
     if isnothing(color)
@@ -260,19 +264,19 @@ function plottraj(Δv_vec, Δτ, x0, xf0, μ)
     X0 = zeros(6, N)
     δt = LinRange(0, T, N)
     for i = 1:N
-        X0[:, i] = propagate_x(xf0, δt[i], μ)
+        X0[:, i] = propKepΔt(xf0, δt[i], μ)
     end
     lines!(X0[1, :]/DU, X0[2, :]/DU, X0[3,:]/DU;
        linestyle = :dash)
 
     # Initial Guess Lambert
-    xf = propagate_x(xf0, T, μ)
+    xf = propKepΔt(xf0, T, μ)
     l = lambert(x0, xf, T, μ)
     @show l.Δvᵢ
     Xl = zeros(6, N)
     δt = LinRange(0, T, N)
     for i = 1:N
-        Xl[:, i] = propagate_x(l.xᵢ, δt[i], μ)
+        Xl[:, i] = propKepΔt(l.xᵢ, δt[i], μ)
     end
 
     # Plotting Guess

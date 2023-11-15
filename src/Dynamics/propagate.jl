@@ -45,7 +45,7 @@ function propagate_Keplerian(K::Keplerian{T}, Δt::Real, μ::T)::Keplerian{T} wh
 end
 
 #============================================================
-PROPAGATE_X:
+propKepΔt:
 
 Description: Solves for the final state vector at the end of a time period
 
@@ -58,14 +58,14 @@ Outputs:
     1. xf_vec - Final state vector
 ============================================================#
 
-function propagate_x(
-    x₀_vec::AbstractVector{T2}, 
-    Δt::T1, 
-    μ::T2
-) where {T1<:Real, T2<:Real}
+function propKepΔt(
+    x₀_vec, 
+    Δt, 
+    μ 
+) 
 
     # len = length(Δt)
-    xf_vec = zeros(T1, 6)
+    xf_vec = zeros(6)
     # t = zeros(T1)
 
     a = -0.5*μ/(0.5*norm(x₀_vec[4:6])^2 - μ/norm(x₀_vec[1:3]))
@@ -94,7 +94,7 @@ Outputs:
 ============================================================#
 
 function propKepTE(
-    x₀_vec::AbstractVector, 
+    x₀_vec, 
     Δt,
     μ
     )
@@ -144,7 +144,7 @@ Outputs:
 ============================================================#
 
 function propKepTH(
-    x₀_vec::AbstractVector, 
+    x₀_vec, 
     Δt,
     μ
     )

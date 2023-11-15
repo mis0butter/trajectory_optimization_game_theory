@@ -13,16 +13,16 @@ Outputs:
 ============================================================#
 
 function propKepUV(
-    x̄0_vec::AbstractVector{T}, 
-    x_UV::T
-) where T<:Real
+    x̄0_vec, 
+    x_UV
+) 
 
     # ASSIGNING UNIVERSAL VARIABLE
     x_UV_sq = x_UV^2 
     
     # PREALLOCATING
     x0 = x̄0_vec
-    p  = zeros(T, 7)
+    p  = zeros(7)
     
     # BREAKING UP VECTOR
     r̄_vec = x̄0_vec[1:3]

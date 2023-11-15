@@ -1,5 +1,5 @@
 using trajectory_optimization_game_theory
-using LinearAlgebra, StaticArrays
+using LinearAlgebra, StaticArrays 
 
 # Infiltrator.clear_disabled!()
 # Infiltrator.toggle_async_check(false) 
@@ -8,24 +8,33 @@ using LinearAlgebra, StaticArrays
 
 mu = 398600.4415
 r = 6378.0
-kep0_p1 = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
-kep0_p2 = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 0.0]
-t = (0.0, orbitPeriod(kep0_p2, mu))
-prop1 = propagate_2Body(kep2cart(kep0_p1, mu), t, mu)
-prop2 = propagate_2Body(kep2cart(kep0_p2, mu), t, mu)
+kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
+kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 0.0]
+t = (0.0, orbitPeriod(kep0_E, mu))
+t_P, x_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu)
+t_E, x_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu) 
 
-x₀_P = prop1.u[1] 
-x₀_E = prop2.u[1] 
-xf_E = prop1.u[end] 
+x_P_mat = mapreduce( permutedims, vcat, x_P ) 
+x_E_mat = mapreduce( permutedims, vcat, x_E ) 
 
-xₒ  = x₀_P 
-xfₒ = xf_E 
+x₀_P = x_P[1] 
+x₀_E = x_E[1] 
+xf_E = x_E[end] 
 
-sf  = solve_transfer(xₒ, 20, xfₒ, t0, mu)
+sf  = solve_transfer(x₀_P, 10, xf_E, t, mu, r)
 
 ## ============================================ ##
 
-fig = plot_solution!(xₒ, sf.xf, sf.Δτ, sf.Δv⃗, mu) 
+x₀  = x₀_P 
+N   = 10 
+xf₀ = xf_E 
+t₀  = t 
+mu  = μ
+R   = r 
+
+## ============================================ ##
+
+# fig = plot_solution!(xₒ, sf.xf, sf.Δτ, sf.Δv⃗, r, mu) 
 
 ## ============================================ ##
 
@@ -33,7 +42,8 @@ x₀      = xₒ
 xf₀     = sf.xf 
 Δτ      = sf.Δτ 
 Δv_vec  = sf.Δv⃗ 
-μ       = mu 
+Δt      = sf.Δt 
+R       = r 
 label   = nothing 
 color   = nothing 
 fig     = nothing 
@@ -75,7 +85,7 @@ using GLMakie
 #     fig   = nothing) where T<:AbstractFloat 
 
     # Non-DimensionalizingS
-    x̄₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, μ)
+    x̄₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, mu, R)
     x̄f₀    = copy(xf₀)
     Δv̄_vec = copy(Δv_vec)
     x̄f₀[1:3] /= DU
@@ -86,13 +96,13 @@ using GLMakie
     N = size(Δv̄_vec, 1)
     Xtraj, Δt = trajectory_optimization_game_theory.prop_stateUV_Nseg_range(x̄₀, Δv̄_vec, Δτ, 1:N)
 
-    println( "integrated Xtraj" ) 
-    @infiltrate 
+    # plot evader orbit 
+    t, x_E = propagate_2Body( x₀_E, Δt, mu )  
 
     # Integrating between segments
     m = 20
     Xtraj2 = Vector{Float64}[]
-    for i = 1:N
+    for i  = 1:N
         X0 = Xtraj[i, :]
         dτ = LinRange(0, Δτ, m)
         for j = 1:m
@@ -101,21 +111,18 @@ using GLMakie
     end
     Xtraj2 = hcat(Xtraj2...)'
 
-    println( "integrated Xtraj2" ) 
-    @infiltrate 
-
     # Propagating Orbit of initial body
     tspan = LinRange(0, Δt, N)
     Xi = zeros(N, 6)
     for i = 1:N
-        Xi[i, :] = propagate_x(x̄₀, tspan[i],μ)
+        Xi[i, :] = propKepΔt(x̄₀, tspan[i],mu)
     end
 
     # Propagating Orbit of target body
     tspan = LinRange(0, Δt, N)
     Xf = zeros(N, 6)
     for i = 1:N
-        Xf[i, :] = propagate_x(x̄f₀, tspan[i],μ)
+        Xf[i, :] = propKepΔt(x̄f₀, tspan[i],mu)
     end
 
     # Redimmensionalizing
@@ -128,9 +135,6 @@ using GLMakie
     Xf[:, 1:3] *= DU
     Xf[:, 4:6] *= DU/TU
     Δv̄_vec         *= DU/TU
-
-    println( "Redimmensionalizing" ) 
-    @infiltrate 
 
     # Initializing Figure
     if isnothing(fig)  
@@ -147,17 +151,11 @@ using GLMakie
     # Plots line between the initial state and the propagated initial state
      lines!(Xi[:, 1], Xi[:, 2], Xi[:, 3]; 
          linestyle =  :dash, color = :black)
-
-    println( "plotted IC" ) 
-    @infiltrate 
      
     # Plotting Final Condition
     # Plots line between the final state and the propagated final state
      lines!(Xf[:, 1], Xf[:, 2], Xf[:, 3]; 
         linestyle =  :dot, color = :black)
-
-    println( "plotted final condition" ) 
-    @infiltrate     
 
     # Plotting Trajectory
     if isnothing(color)
@@ -177,6 +175,10 @@ using GLMakie
     scatter!(Xtraj[end, 1], Xtraj[end, 2], Xtraj[end,3]; 
         marker = :rect, markersize = 10, color = :black)
 
+    # plot evader orbit 
+    x_E = mapreduce(permutedims, vcat, x_E)
+    lines!( x_E[:,1], x_E[:,2], x_E[:,3]; color = :cyan, linewidth = 2, linestyle = :dash)  
+
     # # Plotting DVs
     # Δvmax = maximum([norm(Δv_vec[i, :]) for i in 1:N])
     #  arrows!(Xtraj[1:end-1, 1], Xtraj[1:end-1, 2], Xtraj[1:end-1, 3], 
@@ -187,6 +189,13 @@ using GLMakie
     #      linewidth = 300, 
     #      arrowsize = 200  
     #      )
+
+    oe_E = [] 
+    for i = 1 : size(x_E, 1)
+        push!( oe_E, cart2kep( x_E[i, :], mu ) ) 
+    end 
+
+    oe_E = mapreduce(permutedims, vcat, oe_E) 
 
     scatter!(0,0,0;marker = :circle, markersize = 15, color = :black)
     text!(0,0,0; text = "Earth?", color = :gray, offset = (-25,-25), align = (:center, :bottom))

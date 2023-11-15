@@ -64,7 +64,7 @@ export rv2oe, oe2rv, pcm2cart, cart2kep, kep2cart
 # === Time Propagation
 include("propagate.jl")
 
-export propagate_PlanetaryConstantsModel, propagate_Keplerian, propagate_x
+export propagate_PlanetaryConstantsModel, propagate_Keplerian, propKepΔt
 
 # =====================================================================
 # === Universal Variable Propagation
