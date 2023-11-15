@@ -93,7 +93,7 @@ function cart2kep(cart, mu, tol=1e-20)
     # get mean anomaly
     theta = acos(dot(r, ecc) / (magR * magEcc))
     if (dot(r, v) < 0.0)
-        theta = 2.0 * np.pi - theta
+        theta = 2.0 * pi - theta
     end
     inc = acos(h[3] / norm(h))
 

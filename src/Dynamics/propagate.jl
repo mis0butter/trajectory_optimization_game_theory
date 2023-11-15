@@ -59,23 +59,24 @@ Outputs:
 ============================================================#
 
 function propagate_x(
-    x₀_vec::AbstractVector{T2}, 
-    Δt::T1, 
-    μ::T2
-) where {T1<:Real, T2<:Real}
+    x₀_vec, 
+    Δt, 
+    μ
+)
 
     # len = length(Δt)
-    xf_vec = zeros(T1, 6)
+    xf_vec = zeros(6)
     # t = zeros(T1)
 
     a = -0.5*μ/(0.5*norm(x₀_vec[4:6])^2 - μ/norm(x₀_vec[1:3]))
     # println(a)
     if a > 0
-        xf_vec = propKepTE(x₀_vec, Δt, μ)
+        # xf_vec = propKepTE(x₀_vec, Δt, μ)
+        xf_vec = propKep_Russell(x₀_vec, Δt, μ)
     else
         xf_vec = propKepTH(x₀_vec, Δt, μ)
     end
-
+    
     return xf_vec
 end
 
@@ -94,7 +95,7 @@ Outputs:
 ============================================================#
 
 function propKepTE(
-    x₀_vec::AbstractVector, 
+    x₀_vec, 
     Δt,
     μ
     )
@@ -144,7 +145,7 @@ Outputs:
 ============================================================#
 
 function propKepTH(
-    x₀_vec::AbstractVector, 
+    x₀_vec, 
     Δt,
     μ
     )
@@ -178,3 +179,58 @@ function propKepTH(
 
     return xf_vec
 end
+
+#============================================================
+propKep_Russell:
+
+Description: Elliptical propagation algorithm using Kepler's equations, following Russell notes + BMW
+
+Inputs:
+    1. x₀_vec - Initial state vector
+    2. Δt - Time period
+    3. μ - Gravitational parameter
+
+Outputs:
+    1. xf_vec - Final state vector
+============================================================#
+function propKep_Russell(x₀_vec, Δt, μ)
+
+    # get state components
+    r0_vec = x₀_vec[1:3]
+    v0_vec = x₀_vec[4:6]
+
+    r0 = norm(r0_vec) 
+    v0 = norm(v0_vec)
+
+    # compute alpha
+    α = (2 / norm(r0)) - dot(v0, v0) / μ
+
+    # root solve for x, universal parameter
+    S(x) = (sqrt(x^2*α) - sin(x^2*α))/sqrt((x^2*α)^3)
+    C(x) = (1 - cos(x^2*α))/(x^2*α)
+    func = x -> (S(x)/sqrt(μ) * x^3) + (C(x) * dot(r0_vec,v0_vec) * (x^2) / μ) + (r0 * (1 - (x^2 * α * S(x))) * x / μ)
+    x = find_zero(func, 1.0)
+
+    println(x)
+
+    f = 1 - x^2 * C(x) / r0
+    g = Δt - x^3 * S(x) / sqrt(μ)
+    r_vec = f * r0_vec + g * v0_vec
+
+    z = x^2 * α
+    ḟ = sqrt(μ) * x * (z * S(x) - 1) / (r0 * norm(r_vec))
+    ġ = 1 - x^2 * C(x) / norm(r_vec)
+    v_vec = ḟ * r0_vec + ġ * v0_vec
+
+    soln = vcat(r_vec, v_vec)
+    
+    println(Δt)
+    if isapprox(Δt, 0.0)
+        soln = x₀_vec
+        println("Δt is zero")
+        
+    end
+
+    return soln
+end
+    

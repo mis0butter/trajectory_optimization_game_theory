@@ -15,14 +15,14 @@ Outputs:
 ============================================================#
 
 function equality_constraints(
-    Δτ::T, 
-    Δv_vec::AbstractMatrix{T}, 
+    Δτ, 
+    Δv_vec, 
     x̄₀, 
     x̄f₀, 
     N
-) where T<:Real
+)
 
-    h_vec = zeros(T, 3)
+    h_vec = zeros(3)
     
     # Terminal Constraint
     Δr = calculate_miss(Δτ, Δv_vec, x̄₀, x̄f₀, N)
@@ -48,14 +48,14 @@ Outputs:
 ============================================================#
 
 function inequality_constraints(
-    Δτ::T, 
-    Δv_vec::AbstractMatrix{T}, 
+    Δτ, 
+    Δv_vec, 
     x̄₀, 
     x̄f₀, 
     N
-) where T<:Real
+)
 
-    ψ_vec = zeros(T, N+1)
+    ψ_vec = zeros(N+1)
 
     # Δτ > 0 Inequality
     ψ_vec[1] = -Δτ
