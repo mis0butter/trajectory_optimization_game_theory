@@ -17,11 +17,11 @@ Outputs:
 ============================================================#
 
 function prop_stateUV_Nseg(
-    x̄0::AbstractVector, 
-    Δv̄::AbstractMatrix{T}, 
-    UV::T, 
-    N::Int
-) where T<:Real # Iteration Variable
+    x̄0, 
+    Δv̄, 
+    UV, 
+    N
+) 
 
     # Creating Iteration Variables 
     xk = copy(x̄0)
@@ -64,12 +64,12 @@ Outputs:
 ============================================================#
 
 function prop_stateUV_Nseg_range(
-    x̄0::AbstractVector, 
-    Δv̄::AbstractMatrix{T}, 
-    UV::T, 
-    N::UnitRange
-) where T<:Real# Iteration Variable
-
+    x̄0, 
+    Δv̄, 
+    UV, 
+    N
+    ) 
+    
     # Creating Iteration Variables
     xk = copy(x̄0)
     Δt = 0.0
@@ -81,7 +81,7 @@ function prop_stateUV_Nseg_range(
     # Propagating to N
     for i in N
         # Applying Δv
-        xkdv = apply_dv(xk, Δv̄[i, :])
+        xkdv = apply_dv(xk, Δv̄[i, :]) 
 
         # Propagating
         xk, δt = propKepUV(xkdv, UV)

@@ -21,16 +21,17 @@ Outputs:
 # using Infiltrator 
 
 function plot_solution!(
-    x₀ ::AbstractVector{T},
-    xf₀::AbstractVector{T},
-    Δτ::T,
-    Δv_vec::AbstractMatrix{T}, 
+    x₀ ,
+    xf₀,
+    Δτ,
+    Δv_vec, 
     R, 
-    μ::T  = 1.0,
+    μ  = 1.0,
     label = nothing, 
     color = nothing, 
-    fig   = nothing) where T<:AbstractFloat 
-
+    fig   = nothing
+    ) 
+    
     # Non-DimensionalizingS
     x₀, DU, TU = nondimensionalize_x(x₀, μ, R)
     xf₀ = copy(xf₀)
