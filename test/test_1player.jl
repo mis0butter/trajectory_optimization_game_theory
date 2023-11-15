@@ -21,11 +21,14 @@ xf_E = prop2.u[end]
 xₒ  = x₀_P 
 xfₒ = xf_E 
 
-sf  = solve_transfer(xₒ, 20, xfₒ, t, mu)
+sf  = solve_transfer(xₒ, 20, xfₒ, mu)
 
 ## ============================================ ##
 
-# fig = plot_solution!(xₒ, sf.xf, sf.Δτ, sf.Δv⃗, mu) 
+fig = plot_solution!(xₒ, sf.xf, sf.Δτ, sf.Δv⃗, mu) 
+
+## ============================================ ##
+
 x₀      = xₒ 
 xf₀     = sf.xf 
 Δτ      = sf.Δτ 

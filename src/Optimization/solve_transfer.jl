@@ -134,29 +134,26 @@ Description: Solves the low-thrust transfer between an initial orbit state and a
 
 
 Inputs:
-    1. xₒ - Initial state vector constructed as [r;v]
-    2. N - Number of segments the trajectory is split up into
-    3. M - Planetary Constants Model (i.e. Europa, Ganymede, etc.)
-        • From import_constants()
-    4. tₒ - Time period
-    5. μ - Gravitational Parameter
-    6. revs - Number of revolutions between legs, initialized to 0
+    xₒ   - Initial state vector constructed as [r;v]
+    xfₒ  - Final state vector constructed as [r;v] 
+    N    - Number of segments the trajectory is split up into
+    μ    - Gravitational Parameter
+    revs - Number of revolutions between legs, initialized to 0
 
 
 Output:
-    1. Final Sims-Flanagan Trajectory object 
+    Final Sims-Flanagan Trajectory object 
         • Look at Optimization.jl for the declaration of this struct
 ============================================================# 
 
 function solve_transfer(
-    x₀::AbstractVector{T}, 
-    N::Int, 
-    # M::PlanetaryConstantsModel, 
+    x₀, 
     xfₒ, 
-    t₀, 
-    μ::T;
+    N, 
+    # M::PlanetaryConstantsModel, 
+    μ;
     revs = 0
-) where T<:AbstractFloat 
+) 
 
     # Nondimensionalizing Inputs
     #   x̄₀ - Non-dimensionalized state vector
