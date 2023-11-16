@@ -1,4 +1,4 @@
-using trajectory_optimization_game_theory
+using trajectory_optimization_game_theory 
 
 ## ============================================ ## 
 # define IC and target state 
@@ -8,8 +8,8 @@ r = 6378.0
 kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
 kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 20*pi/180]
 t = (0.0, 3/4*orbitPeriod(kep0_E, mu)) 
-prop_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu)
-prop_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu)
+prop_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
+prop_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
 
 x₀_P = prop_P.u[1] 
 x₀_E = prop_E.u[1] 
@@ -67,7 +67,7 @@ text!( x_E[1,1], x_E[1,2], x_E[1,3]; text = "E IC", color = :gray, offset = text
 scatter!( x_E[end,1], x_E[end,2], x_E[end,3]; marker = :circle, markersize = 10, color = :black ) 
 text!( x_E[end,1], x_E[end,2], x_E[end,3]; text = "E target", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
 
-
+# lambert transfer 
 lines!( x_P_lambert[:,1], x_P_lambert[:,2], x_P_lambert[:,3]; linewidth = 2, label = "Lambert" ) 
 
 display(fig) 

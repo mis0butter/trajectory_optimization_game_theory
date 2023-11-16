@@ -16,7 +16,7 @@ Dtsec   = tof
 v1, v2  = lambertbattin(r1, r2, mu, dm, tof) 
 
 x0 = [r1; v1] 
-prop_P_lambert = propagate_2Body( x0, tof, mu ) 
+prop_P_lambert = propagate_2Body( x0, tof*1.2, mu, dt = 1.0 ) 
 
 x_lambert = prop_P_lambert.u 
 x_lambert = mapreduce( permutedims, vcat, x_lambert ) 
