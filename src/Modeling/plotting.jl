@@ -6,16 +6,16 @@ PLOT_SOLUTION!:
 Description: Plots the trajectory between x₀ and xf₀
 
 Inputs:
-    1. x₀ - Initial state vector
-    2. xf₀ - Final state vector
-    3. Δτ - Kepler's Universal Variable
-    4. Δv_vec - Matrix of size (N,3) where each row is a velocity vector at a segment of the trajectory
-    5. μ - Gravitational Parameter
-    6. label - Label of graph, initialized to nothing
-    7. color - Color of the line of the graph, initialized to nothing (results in blue line)
+    x₀      - Initial state vector
+    xf₀     - Final state vector
+    Δτ      - Kepler's Universal Variable
+    Δv_vec  - Matrix of size (N,3) where each row is a velocity vector at a segment of the trajectory
+    μ       - Gravitational Parameter
+    label   - Label of graph, initialized to nothing
+    color   - Color of the line of the graph, initialized to nothing (results in blue line)
 
 Outputs:
-    1. fig - Figure object, displays graph
+    fig     - Figure object, displays graph
 ============================================================# 
 
 # using Infiltrator 
