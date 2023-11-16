@@ -17,12 +17,12 @@ prop2 = propagate_2Body(kep2cart(kep0_p2, mu), t, mu)
 
 x₀_P = prop1.u[1] 
 x₀_E = prop2.u[1] 
-xf_E = prop1.u[end] 
+xf_E = prop2.u[end] 
 
 xₒ  = x₀_P 
 xfₒ = xf_E 
 
-sf  = solve_transfer(xₒ, 20, xfₒ, 0.0, mu, r)
+sf  = solve_transfer(xₒ, xfₒ, 20, r, mu)
 
 ## ============================================ ##
 
@@ -34,6 +34,7 @@ x₀      = xₒ
 xf₀     = sf.xf 
 Δτ      = sf.Δτ 
 Δv_vec  = sf.Δv⃗ 
+R       = r 
 μ       = mu 
 label   = nothing 
 color   = nothing 
@@ -41,54 +42,70 @@ fig     = nothing
 
 ## ============================================ ##
 
+fig = nothing 
 
+# #============================================================
+# PLOT_SOLUTION!:
 
-#============================================================
-PLOT_SOLUTION!:
+# Description: Plots the trajectory between x₀ and xf₀
 
-Description: Plots the trajectory between x₀ and xf₀
+# Inputs:
+#     1. x₀ - Initial state vector
+#     2. xf₀ - Final state vector
+#     3. Δτ - Kepler's Universal Variable
+#     4. Δv_vec - Matrix of size (N,3) where each row is a velocity vector at a segment of the trajectory
+#     5. μ - Gravitational Parameter
+#     6. label - Label of graph, initialized to nothing
+#     7. color - Color of the line of the graph, initialized to nothing (results in blue line)
 
-Inputs:
-    1. x₀ - Initial state vector
-    2. xf₀ - Final state vector
-    3. Δτ - Kepler's Universal Variable
-    4. Δv_vec - Matrix of size (N,3) where each row is a velocity vector at a segment of the trajectory
-    5. μ - Gravitational Parameter
-    6. label - Label of graph, initialized to nothing
-    7. color - Color of the line of the graph, initialized to nothing (results in blue line)
-
-Outputs:
-    1. fig - Figure object, displays graph
-============================================================# 
-
-using GLMakie 
-
-# using Infiltrator 
-
-# function plot_solution!(
-#     x₀ ::AbstractVector{T},
-#     xf₀::AbstractVector{T},
-#     Δτ::T,
-#     Δv_vec::AbstractMatrix{T},
-#     μ::T  = 1.0,
-#     label = nothing, 
-#     color = nothing, 
-#     fig   = nothing) where T<:AbstractFloat 
+# Outputs:
+#     1. fig - Figure object, displays graph
+# ============================================================# 
 
     # Non-DimensionalizingS
-    x̄₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, μ, r)
-    x̄f₀    = copy(xf₀)
-    Δv̄_vec = copy(Δv_vec)
-    x̄f₀[1:3] /= DU
-    x̄f₀[4:6] /= DU/TU 
-    Δv̄_vec   /= DU/TU 
+    x₀, DU, TU = trajectory_optimization_game_theory.nondimensionalize_x(x₀, μ, R)
+    xf₀ = copy(xf₀)
+    xf₀[1:3]  /= DU
+    xf₀[4:6]  /= DU/TU
+    Δv_vec    /= DU/TU
 
     # Getting Required Trajectory States
     N = size(Δv̄_vec, 1)
     Xtraj, Δt = trajectory_optimization_game_theory.prop_stateUV_Nseg_range(x̄₀, Δv̄_vec, Δτ, 1:N)
 
-    println( "integrated Xtraj" ) 
-    @infiltrate 
+## ============================================ ##
+
+    x̄0 = x₀ 
+    Δv̄ = Δv_vec 
+    UV = Δτ 
+    N_vec = 1:N 
+    
+    # Creating Iteration Variables
+    xk = copy(x̄0)
+    Δt = 0.0
+
+    # Output Variable
+    X = zeros(last(N)+1, 6)
+    X[1, :] = xk
+
+    # Propagating to N
+    for i in N_vec
+        # Applying Δv
+        xkdv = trajectory_optimization_game_theory.apply_dv(xk, Δv̄[i, :]) 
+
+        # Propagating
+        xk, δt = trajectory_optimization_game_theory.propKepUV(xkdv, UV)
+
+        # Updating
+        X[i+1, :] = xk
+        Δt += δt
+    end
+
+## ============================================ ##
+    
+
+    # println( "integrated Xtraj" ) 
+    # @infiltrate 
 
     # Integrating between segments
     m = 20
@@ -102,8 +119,8 @@ using GLMakie
     end
     Xtraj2 = hcat(Xtraj2...)'
 
-    println( "integrated Xtraj2" ) 
-    @infiltrate 
+    # println( "integrated Xtraj2" ) 
+    # @infiltrate 
 
     # Propagating Orbit of initial body
     tspan = LinRange(0, Δt, N)
@@ -130,8 +147,8 @@ using GLMakie
     Xf[:, 4:6] *= DU/TU
     Δv̄_vec         *= DU/TU
 
-    println( "Redimmensionalizing" ) 
-    @infiltrate 
+    # println( "Redimmensionalizing" ) 
+    # @infiltrate 
 
     # Initializing Figure
     if isnothing(fig)  
@@ -149,16 +166,16 @@ using GLMakie
      lines!(Xi[:, 1], Xi[:, 2], Xi[:, 3]; 
          linestyle =  :dash, color = :black)
 
-    println( "plotted IC" ) 
-    @infiltrate 
+    # println( "plotted IC" ) 
+    # @infiltrate 
      
     # Plotting Final Condition
     # Plots line between the final state and the propagated final state
      lines!(Xf[:, 1], Xf[:, 2], Xf[:, 3]; 
         linestyle =  :dot, color = :black)
 
-    println( "plotted final condition" ) 
-    @infiltrate     
+    # println( "plotted final condition" ) 
+    # @infiltrate     
 
     # Plotting Trajectory
     if isnothing(color)
@@ -195,11 +212,11 @@ using GLMakie
     # Auto() 
     save("plot3d.png", fig)
 
-    # Reshowing Figure
-#     return fig
-# end
+#     # Reshowing Figure
+# #     return fig
+# # end
 
-## ============================================ ##
+# ## ============================================ ##
 
 
 

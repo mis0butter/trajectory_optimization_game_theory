@@ -28,6 +28,7 @@ end
 include("performance_index.jl")
 include("constraints.jl")
 include("nondimm.jl")
+include("state_update.jl")
 include("solve_transfer.jl")
 
 # Exports

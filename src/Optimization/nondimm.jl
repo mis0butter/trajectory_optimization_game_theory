@@ -4,13 +4,14 @@ NONDIMENSIONALIZE_X:
 Description: Create relative distance and time constants and non-dimensionalize a state vector.
 
 Inputs:
-    1. x_vec - state vector of the form [r;v]
-    2. m - Planetary Constants Model object 
+    x_vec - state vector of the form [r;v]
+    m - Planetary Constants Model object 
+    R - radius of planet 
 
 Outputs:
-    1. x̄_vec - Non-dimensionalized x_vec
-    2. DU - Distance unit
-    3. TU - Time unit
+    x̄_vec - Non-dimensionalized x_vec
+    DU - Distance unit
+    TU - Time unit
 ============================================================#
 
 function nondimensionalize_x(
@@ -37,15 +38,16 @@ NONDIMENSIONALIZE_RV:
 Description: Create distance and time units and non-dimensionalize the radius and velocity vectors
 
 Inputs:
-    1. r_vec - Radius vector
-    2. v_vec - Velocity vectors
-    3. μ - Gravitational parameter
+    r_vec - Radius vector
+    v_vec - Velocity vectors
+    μ - Gravitational parameter
+    R - radius of planet 
 
 Outputs:
-    1. r̄_vec - Non-dimensionalized radius vector
-    2. v̄_vec - Non-dimensionalized velocity vector
-    3. DU - Distance unit
-    4. TU - Time unit
+    r̄_vec - Non-dimensionalized radius vector
+    v̄_vec - Non-dimensionalized velocity vector
+    DU - Distance unit
+    TU - Time unit
 ============================================================#
 
 function nondimensionalize_rv(
@@ -68,4 +70,3 @@ function nondimensionalize_rv(
     # Outputting
     return r̄_vec, v̄_vec, DU, TU
 end
-

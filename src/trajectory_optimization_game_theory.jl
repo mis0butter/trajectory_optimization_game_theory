@@ -28,4 +28,8 @@ include("Modeling/Modeling.jl")
 
 include("Optimization/Optimization.jl")
 
+## ============================================ ##
+
+include("Lambert/Lambert.jl") 
+
 end # module UpdatedAdversarialTourDesign

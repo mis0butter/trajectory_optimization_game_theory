@@ -2,49 +2,49 @@ using GLMakie
 
 #============================================================
 PLOT_SOLUTION!:
-
+ 
 Description: Plots the trajectory between x₀ and xf₀
 
 Inputs:
-    1. x₀ - Initial state vector
-    2. xf₀ - Final state vector
-    3. Δτ - Kepler's Universal Variable
-    4. Δv_vec - Matrix of size (N,3) where each row is a velocity vector at a segment of the trajectory
-    5. μ - Gravitational Parameter
-    6. label - Label of graph, initialized to nothing
-    7. color - Color of the line of the graph, initialized to nothing (results in blue line)
+    x₀      - Initial state vector
+    xf₀     - Final state vector
+    Δτ      - Kepler's Universal Variable
+    Δv_vec  - Matrix of size (N,3) where each row is a velocity vector at a segment of the trajectory
+    μ       - Gravitational Parameter
+    label   - Label of graph, initialized to nothing
+    color   - Color of the line of the graph, initialized to nothing (results in blue line)
 
 Outputs:
-    1. fig - Figure object, displays graph
+    fig     - Figure object, displays graph
 ============================================================# 
 
-using Infiltrator 
+# using Infiltrator 
 
 function plot_solution!(
-    x₀ ::AbstractVector{T},
-    xf₀::AbstractVector{T},
-    Δτ::T,
-    Δv_vec::AbstractMatrix{T},
-    μ::T  = 1.0, # if this is 1, the R::T might not be 1? unless reall this should be real mu and R real earth radius, TODO: check this!
-    R::T  = 1.0, # not sure if this is right
+    x₀ ,
+    xf₀,
+    Δτ,
+    Δv_vec, 
+    R, 
+    μ  = 1.0,
     label = nothing, 
     color = nothing, 
-    fig   = nothing) where T<:AbstractFloat 
-
+    fig   = nothing
+    ) 
+    
     # Non-DimensionalizingS
-    x̄₀, DU, TU = nondimensionalize_x(x₀, μ, R)
-    x̄f₀    = copy(xf₀)
-    Δv̄_vec = copy(Δv_vec)
-    x̄f₀[1:3] /= DU
-    x̄f₀[4:6] /= DU/TU 
-    Δv̄_vec   /= DU/TU 
+    x₀, DU, TU = nondimensionalize_x(x₀, μ, R)
+    xf₀ = copy(xf₀)
+    xf₀[1:3]  /= DU
+    xf₀[4:6]  /= DU/TU
+    Δv_vec    /= DU/TU
 
     # Getting Required Trajectory States
     N = size(Δv̄_vec, 1)
     Xtraj, Δt = prop_stateUV_Nseg_range(x̄₀, Δv̄_vec, Δτ, 1:N)
 
-    println( "integrated Xtraj" ) 
-    @infiltrate 
+    # println( "integrated Xtraj" ) 
+    # @infiltrate 
 
     # Integrating between segments
     m = 20
@@ -58,8 +58,8 @@ function plot_solution!(
     end
     Xtraj2 = hcat(Xtraj2...)'
 
-    println( "integrated Xtraj2" ) 
-    @infiltrate 
+    # println( "integrated Xtraj2" ) 
+    # @infiltrate 
 
     # Propagating Orbit of initial body
     tspan = LinRange(0, Δt, N)
@@ -86,15 +86,15 @@ function plot_solution!(
     Xf[:, 4:6] *= DU/TU
     Δv̄_vec         *= DU/TU
 
-    println( "Redimmensionalizing" ) 
-    @infiltrate 
+    # println( "Redimmensionalizing" ) 
+    # @infiltrate 
 
     # Initializing Figure
     if isnothing(fig)  
         fig = Figure()
         Δv = sum([norm(Δv̄_vec[i, :]) for i in 1:N])
         error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
-        vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
+        vinf  = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
          Axis3(fig[1, 1], 
              xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
              title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(error; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")
@@ -105,16 +105,16 @@ function plot_solution!(
      lines!(Xi[:, 1], Xi[:, 2], Xi[:, 3]; 
          linestyle =  :dash, color = :black)
 
-    println( "plotted IC" ) 
-    @infiltrate 
+    # println( "plotted IC" ) 
+    # @infiltrate 
      
     # Plotting Final Condition
     # Plots line between the final state and the propagated final state
      lines!(Xf[:, 1], Xf[:, 2], Xf[:, 3]; 
         linestyle =  :dot, color = :black)
 
-    println( "plotted final condition" ) 
-    @infiltrate     
+    # println( "plotted final condition" ) 
+    # @infiltrate     
 
     # Plotting Trajectory
     if isnothing(color)
