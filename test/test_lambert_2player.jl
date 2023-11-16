@@ -43,6 +43,7 @@ x_P_lambert = prop_P_lambert.u
 x_P_lambert = mapreduce( permutedims, vcat, x_P_lambert ) 
 
 ## ============================================ ##
+# plot 
 
 using GLMakie 
 
