@@ -94,7 +94,7 @@ function plot_solution!(
         fig = Figure()
         Δv = sum([norm(Δv_vec[i, :]) for i in 1:N])
         error = norm(Xtraj[end, 1:3] - Xf[end, 1:3])
-        vinf = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
+        vinf  = norm(Xtraj[end, 4:6] - Xf[end, 4:6])
          Axis3(fig[1, 1], 
              xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
              title = "Total Δv of Transfer: $(round(Δv; sigdigits=6)*1000) m/s\nFinal Error: $(round(error; sigdigits=6)) km\nVinf: $(round(vinf; sigdigits=6)) km/s")

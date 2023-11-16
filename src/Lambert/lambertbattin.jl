@@ -9,13 +9,14 @@
 #
 # Inputs:         Description                    Range/Units
 #   r1          - IJK Position vector 1          m
-#   r2           - IJK Position vector 2          m
+#   r2          - IJK Position vector 2          m
+#   mu          - Gravitational parameter        m3/s2 
 #   dm          - direction of motion            'pro','retro'
 #   Dtsec       - Time between r1 and r2          s
 #
 # OutPuts:
 #   v1          - IJK Velocity vector            m/s
-#   v2           - IJK Velocity vector            m/s
+#   v2          - IJK Velocity vector            m/s
 #
 # Reference:
 # Vallado D. A; Fundamentals of Astrodynamics and Applications; McGraw-Hill
