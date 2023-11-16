@@ -8,29 +8,30 @@ r1      = [20.0e6, 20.0e6, 0]   # [m]
 r2      = [-20.0e6, 10.0e6, 0]  # [m] 
 tof     = 1.0 * 86400 
 mu      = 398600.4418e9         # [m^3/s^2] 
-dm      = "retro" 
+dm      = "pro" 
 Dtsec   = tof 
 
 ## ============================================ ##
 # solve and propagate lambert orbit 
 
-v1, v2  = lambertbattin(r1, r2, mu, dm, tof) 
+v1, v2  = lambertbattin( r1, r2, mu, dm, tof ) 
 
 x0 = [ r1; v1 ] 
-prop_P_lambert = propagate_2Body( x0, tof, mu, 1.0 ) 
-
-x_lambert = prop_P_lambert.u 
+t_lambert, x_lambert = propagate_2Body( x0, tof, mu, 1.0 ) 
 x_lambert = mapreduce( permutedims, vcat, x_lambert ) 
+
+## ============================================ ##
 
 # test negative propagation 
 # xf = x_lambert[end,:] 
 vf = v2 ; vf[end] = 100
 xf = [r2; vf]
-prop_P_lambert_reverse = propagate_2Body( xf, -tof, mu, 1.0 ) 
-x_lambert_reverse = prop_P_lambert_reverse.u 
+t_lambert_reverse, x_lambert_reverse = propagate_2Body( xf, -tof, mu, 1.0 ) 
 x_lambert_reverse = mapreduce( permutedims, vcat, x_lambert_reverse ) 
 
 x_E_0  = x_lambert_reverse[end,:] 
+
+
 oe_E_0 = cart2kep( x_E_0, mu ) 
 
 ## ============================================ ##
