@@ -6,7 +6,13 @@ using trajectory_optimization_game_theory
 mu = 398600.4415
 r = 6378.0
 kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
-kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 20*pi/180]
+# kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 20*pi/180]
+kep0_P = [  4.737857837443617e7
+            0.554991429016585
+            3.1220335744595755
+            2.6779450445889883
+            0.5712199203126181
+            2.0118886126871565 ]
 t = (0.0, 3/4*orbitPeriod(kep0_E, mu)) 
 prop_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
 prop_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
