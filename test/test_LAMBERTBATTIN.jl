@@ -14,25 +14,25 @@ Dtsec   = tof
 ## ============================================ ##
 # solve and propagate lambert orbit 
 
-v1, v2  = lambertbattin( r1, r2, mu, dm, tof ) 
+v1, v2 = lambertbattin( r1, r2, mu, dm, tof ) 
 
 x0 = [ r1; v1 ] 
 t_lambert, x_lambert = propagate_2Body( x0, tof, mu, 1.0 ) 
 x_lambert = mapreduce( permutedims, vcat, x_lambert ) 
 
 ## ============================================ ##
-
 # test negative propagation 
+
 # xf = x_lambert[end,:] 
 vf = v2 ; vf[end] = 100
-xf = [r2; vf]
-t_lambert_reverse, x_lambert_reverse = propagate_2Body( xf, -tof, mu, 1.0 ) 
-x_lambert_reverse = mapreduce( permutedims, vcat, x_lambert_reverse ) 
+# xf = [r2; v2]
+xf = [r2; vf] 
+t_reverse, x_reverse = propagate_2Body( xf, -tof, mu, 1.0 ) 
+x_reverse = mapreduce( permutedims, vcat, x_reverse ) 
 
-x_E_0  = x_lambert_reverse[end,:] 
-
-
-oe_E_0 = cart2kep( x_E_0, mu ) 
+x_E_0  = x_reverse[end,:] 
+t_E, x_E = propagate_2Body( x_E_0, tof, mu, 1.0 ) 
+x_E = mapreduce( permutedims, vcat, x_E ) 
 
 ## ============================================ ##
 # plot 
@@ -52,10 +52,15 @@ lines!( x_lambert[:,1], x_lambert[:,2], x_lambert[:,3]; linewidth = 2, label = "
 scatter!( x_lambert[1,1], x_lambert[1,2], x_lambert[1,3]; marker = :circle, markersize = 10, color = :black ) 
 text!( x_lambert[1,1], x_lambert[1,2], x_lambert[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
 
-# plot reverse lambert 
-lines!( x_lambert_reverse[:,1], x_lambert_reverse[:,2], x_lambert_reverse[:,3]; linewidth = 2, label = "reverse" ) 
-scatter!( x_lambert_reverse[1,1], x_lambert_reverse[1,2], x_lambert_reverse[1,3]; marker = :circle, markersize = 10, color = :black ) 
-text!( x_lambert_reverse[1,1], x_lambert_reverse[1,2], x_lambert_reverse[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
+# plot reverse 
+lines!( x_reverse[:,1], x_reverse[:,2], x_reverse[:,3]; linewidth = 2, label = "reverse" ) 
+scatter!( x_reverse[1,1], x_reverse[1,2], x_reverse[1,3]; marker = :circle, markersize = 10, color = :black ) 
+# text!( x_reverse[1,1], x_reverse[1,2], x_reverse[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
+
+# plot E 
+lines!( x_E[:,1], x_E[:,2], x_E[:,3]; linewidth = 2, label = "reverse" ) 
+scatter!( x_E[1,1], x_E[1,2], x_E[1,3]; marker = :circle, markersize = 10, color = :black ) 
+text!( x_E[1,1], x_E[1,2], x_E[1,3]; text = "E IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
 
 # plot target 
 scatter!( r2[1], r2[2], r2[3]; marker = :circle, markersize = 10, color = :black ) 

@@ -1,12 +1,5 @@
 module trajectory_optimization_game_theory
 
-# Write your package code here.
-include("propagator.jl") 
-
-## ============================================ ##
-
-# module AdversarialSpacecraftTrajectories
-
 # Math
 using LinearAlgebra
 using StaticArrays
@@ -22,6 +15,11 @@ using LazySets
 # Tools
 using CSV
 using Suppressor: @suppress_err
+
+## ============================================ ##
+
+# Junette and Sofia Dyn 
+include("Dyn/Dyn.jl") 
 
 # =====================================================================
 # === Sub-Module Includes
