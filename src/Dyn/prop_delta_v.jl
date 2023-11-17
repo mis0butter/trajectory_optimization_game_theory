@@ -7,52 +7,53 @@ prop_state_dt_Nseg_range:
 Description: Propagates an initial state through a vector of N trajectory segments
 
 Inputs: 
-    x0 - Initial state vector of form [r̄; v̄]
-    Δv - Matrix of size (N, 3) where each row is the non-dimensionalized velocity vector at a segment of the trajectory
-    dt - Change in time for each segment 
-    N  - vector of segments of the trajectory
-    mu - Gravitational parameter (default = 1.0) 
+    x0      - Initial state vector of form [r̄; v̄]
+    Δv      - Matrix of size (N, 3) where each row is the velocity vector at a segment of the trajectory
+    N_tof   - Change in time for each segment 
+    N       - vector of segments of the trajectory
+    mu      - Gravitational parameter (default = 1.0) 
 
 Outputs:
-    X  - Matrix of size (N, 6) where each row is the state at each segment of the trajectory
-    Δt - Change in time between initial and final states
+    X_hist  - Matrix of size (N, 6) where each row is the state at each segment of the trajectory
+    t       - Change in time between initial and final states
 
 ============================================================#
 
-export prop_state_dt_Nseg_range 
-function prop_state_dt_Nseg_range(
+export prop_state_dt_Nseg 
+function prop_state_dt_Nseg(
     x0, 
-    Δv, 
-    dt, 
+    Δv_vec, 
     N, 
+    N_tof, 
     mu = 1.0 
     ) 
     
     # Creating Iteration Variables
     xk = copy(x0)
-    Δt = N * dt 
+    Δt = N * N_tof 
 
-    # Output Variable
-    X = zeros(last(N)+1, 6)
-    X[1, :] = xk
+    # Propagating Through Each Segment 
+    X_hist = [ xk ] 
+    t_hist = [ 0 ] 
+    for i = 1 : N 
 
-    # propagate for N segments 
-    for i in 1:N
+        # apply dv 
+        xkdv = apply_dv( xk, Δv_vec[i,:] ) 
 
-        # apply Δv
-        xkdv = apply_dv(xk, Δv[i, :]) 
+        # propagate and save 
+        t, x = propagate_2Body( xkdv, N_tof, mu ) 
+        for j = 2 : length(x) 
+            push!( X_hist, x[j] ) 
+        end 
+        t_hist = [ t_hist ; t_hist[end] .+ t[2:end] ]
 
-        # propagate segment 
-        # xk, δt = propKepUV(xkdv, UV)
-        t, x = propagate_2Body( xkdv, dt, mu) 
+        # set up next iter 
+        xk = x[end]
 
-        # update final state 
-        xk = x[end] 
-        X[i+1, :] = xk 
+    end 
+    X_hist = mapreduce( permutedims, vcat, X_hist ) 
 
-    end
-
-    return X, Δt
+    return X_hist, t_hist 
 end
 
 
@@ -80,5 +81,37 @@ function apply_dv(x, Δv)
     x = vcat(r, v)
 
     return x
+end 
+
+
+#============================================================
+MISS_DISTANCE: 
+
+Description: Calculates miss distance between trajectories
+
+Inputs: 
+    x0      - initial state vector of form [r; v]
+    Δv_vec  - [N,3] matrix of Δv vectors, Δv_i at [i,:] 
+    N       - number of segments 
+    xf      - target state vector of form [r; v] 
+    N_tof      - tof for each segment 
+    mu      - Graviational parameter (default = 1.0) 
+
+Outputs: 
+    Δxf     - Miss distance
+============================================================#
+
+function miss_distance( x0, Δv_vec, N, xf, N_tof = 1.0, mu = 1.0 )
+
+    # Propagating To Final State
+    X_hist, Δt = prop_state_dt_Nseg( x0, Δv_vec, N, N_tof, mu = 1.0 ) 
+
+    # extract final state 
+    xf_prop = X_hist[end,:] 
+
+    # Finding Miss Distance
+    Δxf = abs.(xf_prop[1:3] - xf[1:3])
+
+    return Δxf
 end
 

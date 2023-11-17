@@ -2,7 +2,7 @@ using DifferentialEquations
 
 # propagate orbit based on given initial conditions, time, and gravitational parameter
 export propagate_2Body
-function propagate_2Body(x0, t, mu, dt = nothing)
+function propagate_2Body(x0, t, mu = 1.0, dt = nothing)
 
     prob = ODEProblem(eom_2Body!, x0, t, mu)
 

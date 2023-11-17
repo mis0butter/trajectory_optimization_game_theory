@@ -46,7 +46,7 @@ xk   = [ r1; vz ]
 
 rv_hist = [] 
 for i = 1 : N 
-    xkdv = apply_dv( xk, dv_vec[i,:]) 
+    xkdv = apply_dv( xk, dv_vec[i,:] ) 
     t, x = propagate_2Body( xkdv, dt, mu ) 
     for j = 1 : length(x) 
         push!( rv_hist, x[j] ) 
@@ -54,6 +54,12 @@ for i = 1 : N
     xk = x[end]
 end 
 rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
+
+X, t = prop_state_dt_Nseg( [r1; vz], dv_vec, N, dt, mu )  
+
+
+## ============================================ ##
+# compute miss distance 
 
 ## ============================================ ##
 # plot 
