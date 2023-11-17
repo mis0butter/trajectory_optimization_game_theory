@@ -17,8 +17,8 @@ Dtsec   = tof
 v1, v2 = lambertbattin( r1, r2, mu, dm, tof ) 
 
 rv0 = [ r1; v1 ] 
-t_lambert, rv_hist = propagate_2Body( rv0, tof, mu, 1.0 ) 
-rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
+t_lambert, x_lambert = propagate_2Body( rv0, tof, mu, 1.0 ) 
+x_lambert = mapreduce( permutedims, vcat, x_lambert ) 
 
 ## ============================================ ##
 # break up delta v into smaller segments 
@@ -42,7 +42,7 @@ dv_vec = mapreduce( permutedims, vcat, dv_vec )
 
 dt   = tof / N 
 i    = 1 
-xk   = rv0 
+xk   = [ r1; vz ]
 
 rv_hist = [] 
 for i = 1 : N 
@@ -70,8 +70,18 @@ Axis3(fig[1, 1],
     title = "Lambert Solution") 
     
 # plot lambert solution 
+lines!( x_lambert[:,1], x_lambert[:,2], x_lambert[:,3]; linewidth = 2, label = "lambert" ) 
+scatter!( x_lambert[1,1], x_lambert[1,2], x_lambert[1,3]; marker = :circle, markersize = 10, color = :black ) 
+text!( x_lambert[1,1], x_lambert[1,2], x_lambert[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
+
+
+# plot N segment solution 
 lines!( rv_hist[:,1], rv_hist[:,2], rv_hist[:,3]; linewidth = 2, label = "lambert" ) 
 scatter!( rv_hist[1,1], rv_hist[1,2], rv_hist[1,3]; marker = :circle, markersize = 10, color = :black ) 
-text!( rv_hist[1,1], rv_hist[1,2], rv_hist[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
+# text!( rv_hist[1,1], rv_hist[1,2], rv_hist[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
+
+# target 
+scatter!( r2[1], r2[2], r2[3]; marker = :circle, markersize = 10, color = :black )
+text!( r2[1], r2[2], r2[3]; text = "target", color = :gray, offset = text_offset, align = ( :center, :bottom ) )  
 
 display(fig) 

@@ -3,12 +3,13 @@ using DifferentialEquations
 # propagate orbit based on given initial conditions, time, and gravitational parameter
 export propagate_2Body
 function propagate_2Body(x0, t, mu, dt = nothing)
+
     prob = ODEProblem(eom_2Body!, x0, t, mu)
 
     if isnothing(dt) 
         sol = solve(prob)
     else 
-        sol = solve(prob, dt = dt)
+        sol = solve(prob, saveat = dt)
     end
 
     t = sol.t 
