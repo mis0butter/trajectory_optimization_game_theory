@@ -20,6 +20,7 @@ using Suppressor: @suppress_err
 
 # Junette and Sofia Dyn 
 include("Dyn/Dyn.jl") 
+include("Utils/Utils.jl")
 
 # =====================================================================
 # === Sub-Module Includes

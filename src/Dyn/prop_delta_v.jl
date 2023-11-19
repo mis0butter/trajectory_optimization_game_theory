@@ -2,14 +2,14 @@
 
 #============================================================
 
-prop_state_dt_Nseg_range:
+prop_2Body_dt_Nseg_range:
 
 Description: Propagates an initial state through a vector of N trajectory segments
 
 Inputs: 
     x0      - Initial state vector of form [r̄; v̄]
     Δv      - Matrix of size (N, 3) where each row is the velocity vector at a segment of the trajectory
-    N_tof   - Change in time for each segment 
+    dt_N   - Change in time for each segment 
     N       - vector of segments of the trajectory
     mu      - Gravitational parameter (default = 1.0) 
 
@@ -19,18 +19,18 @@ Outputs:
 
 ============================================================#
 
-export prop_state_dt_Nseg 
-function prop_state_dt_Nseg(
+export prop_2Body_dt_Nseg 
+function prop_2Body_dt_Nseg(
     x0, 
     Δv_vec, 
     N, 
-    N_tof, 
+    dt_N, 
     mu = 1.0 
     ) 
     
     # Creating Iteration Variables
     xk = copy(x0)
-    Δt = N * N_tof 
+    Δt = N * dt_N 
 
     # Propagating Through Each Segment 
     X_hist = [ xk ] 
@@ -41,7 +41,7 @@ function prop_state_dt_Nseg(
         xkdv = apply_dv( xk, Δv_vec[i,:] ) 
 
         # propagate and save 
-        t, x = propagate_2Body( xkdv, N_tof, mu ) 
+        t, x = propagate_2Body( xkdv, dt_N, mu ) 
         for j = 2 : length(x) 
             push!( X_hist, x[j] ) 
         end 
@@ -94,17 +94,18 @@ Inputs:
     Δv_vec  - [N,3] matrix of Δv vectors, Δv_i at [i,:] 
     N       - number of segments 
     xf      - target state vector of form [r; v] 
-    N_tof      - tof for each segment 
+    dt_N   - tof for each segment 
     mu      - Graviational parameter (default = 1.0) 
 
 Outputs: 
     Δxf     - Miss distance
 ============================================================#
 
-function miss_distance( x0, Δv_vec, N, xf, N_tof = 1.0, mu = 1.0 )
+export miss_distance 
+function miss_distance( x0, Δv_vec, N, xf, dt_N = 1.0, mu = 1.0 )
 
     # Propagating To Final State
-    X_hist, Δt = prop_state_dt_Nseg( x0, Δv_vec, N, N_tof, mu = 1.0 ) 
+    X_hist, Δt = prop_2Body_dt_Nseg( x0, Δv_vec, N, dt_N, mu ) 
 
     # extract final state 
     xf_prop = X_hist[end,:] 

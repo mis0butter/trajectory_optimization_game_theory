@@ -35,38 +35,15 @@ t_E, x_E = propagate_2Body( x_E_0, tof, mu, 1.0 )
 x_E = mapreduce( permutedims, vcat, x_E ) 
 
 ## ============================================ ##
-# plot 
 
-using GLMakie 
-
-text_offset = (0,10) 
-
-# initialize figure 
-fig = Figure() 
-Axis3(fig[1, 1], 
-    xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
-    title = "Lambert Solution") 
-    
-# plot lambert solution 
-lines!( x_lambert[:,1], x_lambert[:,2], x_lambert[:,3]; linewidth = 2, label = "lambert" ) 
-scatter!( x_lambert[1,1], x_lambert[1,2], x_lambert[1,3]; marker = :circle, markersize = 10, color = :black ) 
-text!( x_lambert[1,1], x_lambert[1,2], x_lambert[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
-
-# plot reverse 
-lines!( x_reverse[:,1], x_reverse[:,2], x_reverse[:,3]; linewidth = 2, label = "reverse" ) 
-scatter!( x_reverse[1,1], x_reverse[1,2], x_reverse[1,3]; marker = :circle, markersize = 10, color = :black ) 
-# text!( x_reverse[1,1], x_reverse[1,2], x_reverse[1,3]; text = "P IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
-
-# plot E 
-lines!( x_E[:,1], x_E[:,2], x_E[:,3]; linewidth = 2, label = "reverse" ) 
-scatter!( x_E[1,1], x_E[1,2], x_E[1,3]; marker = :circle, markersize = 10, color = :black ) 
-text!( x_E[1,1], x_E[1,2], x_E[1,3]; text = "E IC", color = :gray, offset = text_offset, align = (:center, :bottom) ) 
+fig = plot_orbit( rv_lambert )
+fig = plot_orbit( x_reverse, fig )  
+fig = plot_orbit( x_E, fig )  
 
 # plot target 
 scatter!( r2[1], r2[2], r2[3]; marker = :circle, markersize = 10, color = :black ) 
-text!( r2[1], r2[2], r2[3]; text = "target", color = :gray, offset = text_offset, align = (:center, :bottom) )
+text!( r2[1], r2[2], r2[3]; text = "target", color = :gray, offset = (0,-10), align = (:center, :bottom) )
 
-display(fig) 
 
 
 
