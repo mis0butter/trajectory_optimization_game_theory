@@ -38,6 +38,36 @@ end
 dv_vec = mapreduce( permutedims, vcat, dv_vec ) 
 
 ## ============================================ ##
+# prop_2Body_dt_Nseg 
+
+# Creating Iteration Variables
+xk = copy(rv0)
+dt_N = tof / N 
+Δt = N * dt_N 
+
+# Propagating Through Each Segment 
+X_hist = [ apply_dv( xk, dv_vec[i,:] ) ] 
+t_hist = [ 0 ] 
+# for i = 1 : N 
+i = 1 
+
+    # apply dv 
+    xkdv = apply_dv( xk, dv_vec[i,:] ) 
+
+    # propagate and save 
+    t, x = propagate_2Body( xkdv, dt_N, mu ) 
+    for j = 2 : length(x) 
+        push!( X_hist, x[j] ) 
+    end 
+    t_hist = [ t_hist ; t_hist[end] .+ t[2:end] ]
+
+    # set up next iter 
+    xk = x[end]
+
+# end 
+X_hist = mapreduce( permutedims, vcat, X_hist ) 
+
+## ============================================ ##
 # propagate each segment 
 
 X, t = prop_2Body_dt_Nseg( [r1; vz], dv_vec, N, tof_N, mu )  

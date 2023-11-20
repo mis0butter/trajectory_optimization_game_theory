@@ -2,6 +2,7 @@ using trajectory_optimization_game_theory
 using LinearAlgebra 
 
 ## ============================================ ## 
+# define IC, target state, and lambert solve 
 
 r0      = [20.0e6, 20.0e6, 0]   # [m] 
 rf      = [-20.0e6, 10.0e6, 0]  # [m] 
@@ -31,7 +32,7 @@ fig = plot_orbit( rv_lambert )
 vz  = [ 0; 0; norm(v0) ]
 
 # compute delta v vec for lambert solution 
-dv  = v0 - vz   
+dv = v0 - vz   
 
 # break up delta v into smaller segments 
 N = 10 
@@ -42,27 +43,71 @@ end
 dv_vec = mapreduce( permutedims, vcat, dv_vec ) 
 
 ## ============================================ ##
+# check Kepler TOF eqns 
+
+dt_N = tof / N 
+rv0  = [ r0; v0 ]  
+rvk  = rv0 
+
+# apply delta v 
+rv_dv = apply_dv( rvk, dv_vec[i,:] ) 
+
+# propagate using dynamics integration 
+t, rv = propagate_2Body( rv_dv, dt_N, mu ) 
+
+# set target rv 
+rvf = rv[end] 
+
+# get OE elements 
+oe_dv = cart2kep( rv_dv, mu ) 
+oe_f  = cart2kep( rvf, mu ) 
+a     = oe_dv[1] 
+e     = oe_dv[2] 
+
+# true anomaly 
+nu_dv = oe_dv[6] 
+nu_f  = oe_f[6] 
+dnu   = nu_f - nu_dv  
+
+# eccentric anomaly 
+E_dv = acos( ( e + cos(nu_dv) ) / ( 1 + e * cos(nu_dv) ) ) 
+E_f  = acos( ( e + cos(nu_f) ) / ( 1 + e * cos(nu_f) ) ) 
+dE   = E_f - E_dv  
+
+# compute TOF 
+TOF  = sqrt( a^3 / mu ) * ( E_f - e * sin(E_f) - E_dv + e * sin(E_dv) ) 
+
+# check TOF and propagation t are same  
+println( "TOF = ", TOF ) 
+println( "t   = ", t[end] ) 
+println( "TOF - t = ", TOF - t[end] ) 
+
+
+## ============================================ ##
 # use Kepler TOF equations to propagate each segment 
 
 dt_N = tof / N 
 rv0  = [ r0; v0 ]  
 rvk  = rv0 
 
-rv_hist = [ rvk + [ zeros(3) ; dv_vec[i,:] ] ] 
-for i = 1 : N 
+rv_hist = [ apply_dv( rvk, dv_vec[i,:] ) ] 
+# for i = 1 : N 
 
     println( "i = ", i ) 
 
     # apply delta v 
-    rvk[4:6] = rvk[4:6] + dv_vec[i,:] 
+    rv_dv = apply_dv( rvk, dv_vec[i,:] ) 
+
+    # propagate using dynamics integration 
+    t, x = propagate_2Body( rv_dv, dt_N, mu ) 
 
     # orbital elements 
-    oek = cart2kep( rvk, mu ) 
+    oek = cart2kep( rv_dv, mu ) 
     a   = oek[1]                # semimajor axis 
     e   = oek[2]                # eccentricity       
     n   = sqrt( mu / a^3 )      # mean motion 
     M   = n * dt_N              # mean anomaly 
-    E   = kepler_E( M, e )    # eccentric anomaly  
+    E   = kepler_E( M, e )      # eccentric anomaly  
     
     println( "e = ", e ) 
     println( "E = ", E ) 
@@ -73,35 +118,12 @@ for i = 1 : N
     oek[6] = nu 
 
     rvk = kep2cart( oek, mu ) 
-    push!( rv_hist, rvk ) 
 
-end 
+
+
+    # push!( rv_hist, rvk ) 
+
+# end 
 rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
-
-
-
-## ============================================ ##
-
-# Function solves Kepler's equation M = E-e*sin(E)
-# Input - Mean anomaly M [rad] , Eccentricity e and Epsilon 
-# Output  eccentric anomaly E [rad]. 
-function kepler_E( 
-    M, 
-    e, 
-    eps = 1e-10 
-    )
-
-    En  = M 
-    Ens = En - ( En - e*sin(En)- M ) / ( 1 - e*cos(En) ) 
-
-    while ( abs(Ens-En) > eps )
-        En  = Ens 
-        Ens = En - (En - e*sin(En) - M) / (1 - e*cos(En)) 
-    end 
-    E = Ens 
-
-    return E 
-end 
-
 
 
