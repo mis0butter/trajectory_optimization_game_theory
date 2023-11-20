@@ -43,7 +43,7 @@ end
 dv_vec = mapreduce( permutedims, vcat, dv_vec ) 
 
 ## ============================================ ##
-# check Kepler TOF eqns 
+# check Kepler TOF eqns --> given rv0 and rvf, TOF match 
 
 dt_N = tof / N 
 rv0  = [ r0; v0 ]  
@@ -81,6 +81,47 @@ TOF  = sqrt( a^3 / mu ) * ( E_f - e * sin(E_f) - E_dv + e * sin(E_dv) )
 println( "TOF = ", TOF ) 
 println( "t   = ", t[end] ) 
 println( "TOF - t = ", TOF - t[end] ) 
+
+## ============================================ ##
+# check Kepler TOF eqns --> given rv0 and TOF, rvf match 
+
+dt_N = tof / N 
+rv0  = [ r0; v0 ]  
+rvk  = rv0 
+
+# apply delta v 
+rv_dv = apply_dv( rvk, dv_vec[i,:] ) 
+
+# propagate using dynamics integration 
+t, rv = propagate_2Body( rv_dv, dt_N, mu ) 
+
+# convert to OEs 
+oe_dv = cart2kep( rv_dv, mu ) 
+a     = oe_dv[1] 
+e     = oe_dv[2] 
+nu_dv = oe_dv[6] 
+
+# eccentric anomaly 
+E_dv = acos( ( e + cos(nu_dv) ) / ( 1 + e * cos(nu_dv) ) ) 
+
+# mean motion 
+n = sqrt( mu / a^3 ) 
+
+# mean anomaly 
+dM   = n * dt_N 
+M_dv = E_dv - e * sin(E_dv) 
+M_f  = M_dv + dM 
+
+# eccentric anomaly 
+E_f = kepler_E( M_f, e ) 
+
+# get back true anomaly 
+nu_f = acos( ( cos(E_f) - e ) / ( 1 - e*cos(E_f) ) ) 
+
+# set target rv 
+oe_f = copy(oe_dv) 
+oe_f[6] = nu_f 
+rv_f = kep2cart( oe_f, mu ) 
 
 
 ## ============================================ ##
