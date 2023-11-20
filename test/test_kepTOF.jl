@@ -20,9 +20,7 @@ rv0 = [ r0; v0 ]
 t_lambert, rv_lambert = propagate_2Body( rv0, tof, mu, 1.0 ) 
 rv_lambert = mapreduce( permutedims, vcat, rv_lambert ) 
 
-## ============================================ ##
 # plot 
-
 fig = plot_orbit( rv_lambert ) 
 
 ## ============================================ ##
@@ -45,32 +43,32 @@ dv_vec = mapreduce( permutedims, vcat, dv_vec )
 ## ============================================ ##
 # check Kepler TOF eqns --> given rv0 and rvf, TOF match 
 
-dt_N = tof / N 
+tof = tof / N 
 rv0  = [ r0; v0 ]  
-rvk  = rv0 
+rv_k  = rv0 
 
 # apply delta v 
-rv_dv = apply_dv( rvk, dv_vec[i,:] ) 
+rv_0 = apply_dv( rv_k, dv_vec[i,:] ) 
 
 # propagate using dynamics integration 
-t, rv = propagate_2Body( rv_dv, dt_N, mu ) 
+t, rv = propagate_2Body( rv_0, tof, mu ) 
 
 # set target rv 
 rvf = rv[end] 
 
 # get OE elements 
-oe_dv = cart2kep( rv_dv, mu ) 
+oe_0 = cart2kep( rv_0, mu ) 
 oe_f  = cart2kep( rvf, mu ) 
-a     = oe_dv[1] 
-e     = oe_dv[2] 
+a     = oe_0[1] 
+e     = oe_0[2] 
 
 # true anomaly 
-nu_dv = oe_dv[6] 
-nu_f  = oe_f[6] 
-dnu   = nu_f - nu_dv  
+nu_0 = oe_0[6] 
+nu_f = oe_f[6] 
+dnu  = nu_f - nu_0  
 
 # eccentric anomaly 
-E_dv = acos( ( e + cos(nu_dv) ) / ( 1 + e * cos(nu_dv) ) ) 
+E_dv = acos( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
 E_f  = acos( ( e + cos(nu_f) ) / ( 1 + e * cos(nu_f) ) ) 
 dE   = E_f - E_dv  
 
@@ -85,32 +83,32 @@ println( "TOF - t = ", TOF - t[end] )
 ## ============================================ ##
 # check Kepler TOF eqns --> given rv0 and TOF, rvf match 
 
-dt_N = tof / N 
+tof = tof / N 
 rv0  = [ r0; v0 ]  
-rvk  = rv0 
+rv_k  = rv0 
 
 # apply delta v 
-rv_dv = apply_dv( rvk, dv_vec[i,:] ) 
+rv_0 = apply_dv( rv_k, dv_vec[i,:] ) 
 
 # propagate using dynamics integration 
-t, rv = propagate_2Body( rv_dv, dt_N, mu ) 
+t, rv = propagate_2Body( rv_0, tof, mu ) 
 
 # convert to OEs 
-oe_dv = cart2kep( rv_dv, mu ) 
-a     = oe_dv[1] 
-e     = oe_dv[2] 
-nu_dv = oe_dv[6] 
+oe_0 = cart2kep( rv_0, mu ) 
+a    = oe_0[1] 
+e    = oe_0[2] 
+nu_0 = oe_0[6] 
 
 # eccentric anomaly 
-E_dv = acos( ( e + cos(nu_dv) ) / ( 1 + e * cos(nu_dv) ) ) 
+E_dv = acos( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
 
 # mean motion 
 n = sqrt( mu / a^3 ) 
 
 # mean anomaly 
-dM   = n * dt_N 
-M_dv = E_dv - e * sin(E_dv) 
-M_f  = M_dv + dM 
+dM   = n * tof 
+M_0 = E_dv - e * sin(E_dv) 
+M_f  = M_0 + dM 
 
 # eccentric anomaly 
 E_f = kepler_E( M_f, e ) 
@@ -119,52 +117,45 @@ E_f = kepler_E( M_f, e )
 nu_f = acos( ( cos(E_f) - e ) / ( 1 - e*cos(E_f) ) ) 
 
 # set target rv 
-oe_f = copy(oe_dv) 
+oe_f    = copy(oe_0) 
 oe_f[6] = nu_f 
-rv_f = kep2cart( oe_f, mu ) 
+rv_f    = kep2cart( oe_f, mu ) 
 
+# check with function 
+rv_f_check = kepler_prop_tof( rv_0, tof, mu )  
+
+println( "prop 2Body: rv[end] = ", rv[end] )
+println( "kep prop TOF: rv_f = ", rv_f )  
+println( "kep prop TOF check: rv_f_check = ", rv_f_check )  
 
 ## ============================================ ##
 # use Kepler TOF equations to propagate each segment 
 
-dt_N = tof / N 
-rv0  = [ r0; v0 ]  
-rvk  = rv0 
+tof  = tof / N 
+rv_0 = [ r0; v0 ]  
+rv_k = rv0 
 
-rv_hist = [ apply_dv( rvk, dv_vec[i,:] ) ] 
-# for i = 1 : N 
+rv_hist = [ apply_dv( rv_k, dv_vec[i,:] ) ] 
+for i = 1 : N 
 
     println( "i = ", i ) 
 
     # apply delta v 
-    rv_dv = apply_dv( rvk, dv_vec[i,:] ) 
+    rv_dv = apply_dv( rv_k, dv_vec[i,:] ) 
 
-    # propagate using dynamics integration 
-    t, x = propagate_2Body( rv_dv, dt_N, mu ) 
+    # propagate using kepler TOF 
+    # rv_k = kepler_prop_tof( rv_dv, tof, mu ) 
+    t, x = propagate_2Body( rv_dv, tof, mu ) 
+    rv_k = x[end] 
 
-    # orbital elements 
-    oek = cart2kep( rv_dv, mu ) 
-    a   = oek[1]                # semimajor axis 
-    e   = oek[2]                # eccentricity       
-    n   = sqrt( mu / a^3 )      # mean motion 
-    M   = n * dt_N              # mean anomaly 
-    E   = kepler_E( M, e )      # eccentric anomaly  
-    
-    println( "e = ", e ) 
-    println( "E = ", E ) 
+    println( "e = ", cart2kep( rv_k, mu )[2] ) 
 
-    # compute nu from eccentric anomaly 
-    # nu = 2 * atan( sqrt( (1+e)/(1-e) ) * tan(E/2) ) 
-    nu = acos( ( cos(E) - e ) / ( 1 - e*cos(E) ) ) 
-    oek[6] = nu 
+    push!( rv_hist, rv_k ) 
 
-    rvk = kep2cart( oek, mu ) 
-
-
-
-    # push!( rv_hist, rvk ) 
-
-# end 
+end 
 rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
+
+# plot 
+# fig = plot_orbit( rv_hist ) 
 
 
