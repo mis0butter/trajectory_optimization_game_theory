@@ -28,7 +28,13 @@
 
 using LinearAlgebra 
 
-function lambertbattin( r1, r2, mu, dm, Dtsec ) 
+function lambertbattin( 
+    r1, 
+    r2, 
+    mu, 
+    dm, 
+    Dtsec, 
+) 
 
     small       = 0.000001 
     y1          = 0 
@@ -68,7 +74,7 @@ function lambertbattin( r1, r2, mu, dm, Dtsec )
 
     Loops= 1 
     y    = 1       # init value for y 
-    while  true 
+    while true 
         x     = xn 
         tempx = seebatt(x) 
         Denom = 1.0 / ( (1.0+2.0*x+L) * (4.0*x + tempx*(3.0+x) ) ) 
@@ -77,7 +83,7 @@ function lambertbattin( r1, r2, mu, dm, Dtsec )
         
         # ----------------------- Evaluate CUBIC ------------------
         b = 0.25*27.0*h2 / ((1.0+h1)^3 ) 
-        if (b < -1.0) # reset the initial condition
+        if (b < -1.0) # reset the initial condition 
             xn = 1.0 - 2.0*l 
         else
             if (y1 > lim1)

@@ -21,19 +21,15 @@ using Suppressor: @suppress_err
 # Junette and Sofia Dyn 
 include("Dyn/Dyn.jl") 
 include("Utils/Utils.jl")
-
-# =====================================================================
-# === Sub-Module Includes
-
-include("Dynamics/Dynamics.jl")
-
-include("Modeling/Modeling.jl")
-
-include("Optimization/Optimization.jl")
+include("Lambert/Lambert.jl") 
 
 ## ============================================ ##
+#  Sub-Module Includes
 
-include("Lambert/Lambert.jl") 
+include("old/Dynamics/Dynamics.jl")
+include("old/Modeling/Modeling.jl")
+include("old/Optimization/Optimization.jl")
+
 
 end # module UpdatedAdversarialTourDesign
 

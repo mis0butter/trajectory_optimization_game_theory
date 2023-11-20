@@ -26,7 +26,7 @@ function prop_2Body_dt_Nseg(
     N, 
     dt_N, 
     mu = 1.0 
-    ) 
+) 
     
     # Creating Iteration Variables
     xk = copy(x0)
@@ -102,7 +102,14 @@ Outputs:
 ============================================================#
 
 export miss_distance 
-function miss_distance( x0, Δv_vec, N, xf, dt_N = 1.0, mu = 1.0 )
+function miss_distance( 
+    x0, 
+    Δv_vec, 
+    N, 
+    xf, 
+    dt_N = 1.0, 
+    mu = 1.0, 
+)
 
     # Propagating To Final State
     X_hist, Δt = prop_2Body_dt_Nseg( x0, Δv_vec, N, dt_N, mu ) 

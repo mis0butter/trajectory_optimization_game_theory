@@ -10,8 +10,8 @@ export kepler_E
 function kepler_E( 
     M, 
     e, 
-    eps = 1e-10 
-    )
+    eps = 1e-10, 
+)
 
     En  = M 
     Ens = En - ( En - e*sin(En)- M ) / ( 1 - e*cos(En) ) 
@@ -31,8 +31,8 @@ export kepler_prop_tof
 function kepler_prop_tof( 
     rv_0, 
     tof, 
-    mu = 1.0 
-    )  
+    mu = 1.0, 
+)  
 
     # convert to OEs 
     oe_0 = cart2kep( rv_0, mu ) 
