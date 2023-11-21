@@ -19,7 +19,7 @@ function prop_2Body_tof_Nseg(
     for i = 1 : N 
 
         # apply dv 
-        rv_k_dv = apply_dv( rv_k, Δv_vec[i,:] ) 
+        rv_k_dv = apply_Δv( rv_k, Δv_vec[i,:] ) 
 
         # propagate and save 
         t, rv = propagate_2Body( rv_k_dv, tof_N, mu ) 
@@ -42,7 +42,7 @@ export prop_2Body_tof_Nseg
 ## ============================================ ##
 
 "Adds Δv to a state vector's velocity" 
-function apply_dv(
+function apply_Δv(
     rv,         # state vector 
     Δv,         # velocity vector 
 )
@@ -55,7 +55,7 @@ function apply_dv(
     return rv
 end 
 
-export apply_dv 
+export apply_Δv
 
 ## ============================================ ##
 

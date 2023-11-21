@@ -160,12 +160,12 @@ function prop_kepler_tof_Nseg(
 
     # Propagating Through Each Segment 
     i = 1 
-    rv_hist = [ apply_dv( rv_k, Δv_vec[i,:] ) ] 
+    rv_hist = [ apply_Δv( rv_k, Δv_vec[i,:] ) ] 
     t_hist  = [ 0 ] 
     for i = 1 : N 
 
         # apply dv 
-        rv_k_dv = apply_dv( rv_k, Δv_vec[i,:] ) 
+        rv_k_dv = apply_Δv( rv_k, Δv_vec[i,:] ) 
 
         # propagate and save 
         rv_k = prop_kepler_tof( rv_k_dv, tof_N, mu ) 

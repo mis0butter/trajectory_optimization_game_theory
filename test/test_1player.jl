@@ -90,7 +90,7 @@ fig = nothing
     # Propagating to N
     for i in N_vec
         # Applying Δv
-        xkdv = trajectory_optimization_game_theory.apply_dv(xk, Δv̄[i, :]) 
+        xkdv = trajectory_optimization_game_theory.apply_Δv(xk, Δv̄[i, :]) 
 
         # Propagating
         xk, δt = trajectory_optimization_game_theory.propKepUV(xkdv, UV)

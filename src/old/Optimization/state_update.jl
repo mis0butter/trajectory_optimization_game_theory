@@ -31,7 +31,7 @@ function prop_stateUV_Nseg(
     for i = 1:N 
 
         # Applying Δv
-        xkdv = apply_dv(xk, Δv[i, :])
+        xkdv = apply_Δv(xk, Δv[i, :])
 
         # Propagating
         xk, δt = propKepUV(xkdv, UV) 
@@ -81,7 +81,7 @@ function prop_stateUV_Nseg_range(
     # Propagating to N
     for i in N
         # Applying Δv
-        xkdv = apply_dv(xk, Δv[i, :]) 
+        xkdv = apply_Δv(xk, Δv[i, :]) 
 
         # Propagating
         xk, δt = propKepUV(xkdv, UV)
@@ -94,32 +94,4 @@ function prop_stateUV_Nseg_range(
     # Outputting
     return X, Δt
 end 
-
-
-#============================================================
-
-APPLY_DV:
-
-Description: Helper function for prop_stateUV_Nseg() and prop_stateUV_Nseg_range() that adds Δv to a state vector's velocity
-
-Inputs:
-    1. x̄ - Non-Dimensionalized state vector
-    2. Δv - Non-Dimensionalized velocity vector
-
-Outputs:
-    1. x̄ - Updated state vector
-
-============================================================#
-
-export apply_dv 
-function apply_dv(x̄, Δv)
-
-    # Applying Δv
-    r̄ = x̄[1:3]
-    v̄ = x̄[4:6] + Δv
-    x̄ = vcat(r̄, v̄)
-
-    return x̄
-end
-
 

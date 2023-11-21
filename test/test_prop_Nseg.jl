@@ -46,13 +46,13 @@ dt_N = tof / N
 Δt = N * dt_N 
 
 # Propagating Through Each Segment 
-X_hist = [ apply_dv( xk, dv_vec[i,:] ) ] 
+X_hist = [ apply_Δv( xk, dv_vec[i,:] ) ] 
 t_hist = [ 0 ] 
 # for i = 1 : N 
 i = 1 
 
     # apply dv 
-    xkdv = apply_dv( xk, dv_vec[i,:] ) 
+    xkdv = apply_Δv( xk, dv_vec[i,:] ) 
 
     # propagate and save 
     t, x = propagate_2Body( xkdv, dt_N, mu ) 

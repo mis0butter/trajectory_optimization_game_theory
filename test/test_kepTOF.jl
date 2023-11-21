@@ -18,7 +18,7 @@ rv_k  = rv_0
 
 # apply delta v 
 i = 1 
-rv_0 = apply_dv( rv_k, Δv_vec[i,:] ) 
+rv_0 = apply_Δv( rv_k, Δv_vec[i,:] ) 
 
 # propagate using dynamics integration 
 t, rv = propagate_2Body( rv_0, tof_N, mu ) 
@@ -130,12 +130,12 @@ tof_N = tof / N
 rv_0  = [ r_0; v_0 ]  
 rv_k  = rv_0 
 
-rv_hist = [ apply_dv( rv_k, Δv_vec[1,:] ) ] 
+rv_hist = [ apply_Δv( rv_k, Δv_vec[1,:] ) ] 
 t_hist  = [ 0 ] 
 for i = 1 : N 
 
     # apply delta v 
-    rv_dv = apply_dv( rv_k, Δv_vec[i,:] ) 
+    rv_dv = apply_Δv( rv_k, Δv_vec[i,:] ) 
 
     # propagate using kepler TOF 
     rv_k = prop_kepler_tof( rv_dv, tof_N, mu ) 
