@@ -90,16 +90,22 @@ function cart2kep(cart, mu, tol=1e-20)
 
     # eccentricity vector
     ecc = (cross(v, h) - mu * (r / magR)) / mu
-    magEcc = norm(ecc)
+    magEcc = norm(ecc) 
 
-    # determine orbit type based on eccentricity magnitude
-    if (magEcc <= 1.0)
-        # ellipse
-        sma = -mu / (2.0 * energy)
-    else
-        # hyperbola
-        sma = mu / (2.0 * energy)
-    end
+    # semi-latus rectum 
+    p = (norm(h) ^ 2) / mu 
+
+    # semi-major axis 
+    sma = p / (1 - magEcc^2) 
+
+    # # determine orbit type based on eccentricity magnitude
+    # if (magEcc <= 1.0)
+    #     # ellipse
+    #     sma = -mu / (2.0 * energy)
+    # else
+    #     # hyperbola
+    #     sma = mu / (2.0 * energy)
+    # end
 
     # get mean anomaly
     theta = acos(dot(r, ecc) / (magR * magEcc))

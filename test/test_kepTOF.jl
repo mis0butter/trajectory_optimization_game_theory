@@ -87,7 +87,7 @@ println( "TOF - t = ", TOF - t[end] )
 tof = tof / N 
 
 # test for hyperbolic orbit 
-rv_0  = [ r_0; v_0*1.3 ]  
+rv_0  = [ r_0; v_0 ]  
 
 # check that rv_0 is hyperbolic 
 rv_k  = rv_0 
