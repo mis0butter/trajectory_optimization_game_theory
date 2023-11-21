@@ -4,15 +4,25 @@ import Random
 import Statistics
 import Test 
 
+using trajectory_optimization_game_theory
+
 ## ============================================ ##
 # rosenbrock function
+
+function rosenbrock(x, y)
+    out = (1.0 - x)^2 + 100.0 * (y - x^2)^2 
+  return out
+end
+
+# ----------------------- #
 
 function example_rosenbrock()
     model = Model(Ipopt.Optimizer)
     set_silent(model)
     @variable(model, x)
     @variable(model, y)
-    @objective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+    # @objective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+    @objective(model, Min, rosenbrock(x,y)) 
     optimize!(model)
     Test.@test termination_status(model) == LOCALLY_SOLVED
     Test.@test primal_status(model) == FEASIBLE_POINT
@@ -23,24 +33,27 @@ function example_rosenbrock()
             value.(y) 
 end
 
-x, y = example_rosenbrock() 
-
-# ----------------------- #
-# test solution 
-
-using GLMakie 
-
-function rosenbrock(x::Vector)
-  return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-end
-
-default(size=(600,600), fc=:heat)
-x, y = -1.5:0.1:1.5, -1.5:0.1:1.5
-z = Surface((x,y)->rosenbrock([x,y]), x, y)
-surface(x,y,z, linealpha = 0.3)
+x_min, y_min = example_rosenbrock() 
+z_min = rosenbrock( x_min, y_min ) 
 
 ## ============================================ ##
+# test solution and plotting 
 
+# default(size=(600,600), fc=:heat)
+x, y = collect(-1.5:0.1:1.5), collect(-1.5:0.1:1.5) 
+z = rosenbrock.(x,y') 
+
+fig = plot_surface(x, y, z) 
+fig = plot_surface(x_min, y_min, z_min, fig) 
+
+# title 
+ax = fig.content[1] 
+ax.title = "Rosenbrock function" 
+
+fig 
+
+
+## ============================================ ##
 
 function eq_constraint_1( i, x, h, t )
     
