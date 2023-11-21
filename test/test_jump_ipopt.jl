@@ -5,21 +5,27 @@ import Statistics
 import Test 
 
 ## ============================================ ##
+# rosenbrock function 
 
-function eq_constraint_1( i, x, h, t )
-    
-    out = x[i+1] - x[i] - 0.5 * h * ( sin(t[i+1]) + sin(t[i]) ) 
+function example_rosenbrock()
+    model = Model(Ipopt.Optimizer)
+    set_silent(model)
+    @variable(model, x)
+    @variable(model, y)
+    @objective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+    optimize!(model)
+    Test.@test termination_status(model) == LOCALLY_SOLVED
+    Test.@test primal_status(model) == FEASIBLE_POINT
+    Test.@test objective_value(model) ≈ 0.0 atol = 1e-10
+    Test.@test value(x) ≈ 1.0
+    Test.@test value(y) ≈ 1.0
+    return
+end
 
-    return out 
-end 
-
-function ineq_constraint_1( i, x, h, t )
-    
-    return i, x, h, t 
-
-end 
+example_rosenbrock()
 
 ## ============================================ ##
+# clnlbeam 
 
 function example_clnlbeam()
     N = 1000
@@ -42,34 +48,23 @@ function example_clnlbeam()
     @constraint(
         model,
         [i = 1:N],
-        # x[i+1] - x[i] - 0.5 * h * ( sin(t[i+1]) + sin(t[i] ) ) == 0,
-        eq_constraint_1( i, x, h, t ) == 0 
+        x[i+1] - x[i] - 0.5 * h * (sin(t[i+1]) + sin(t[i])) == 0,
     )
     @constraint(
         model,
         [i = 1:N],
         t[i+1] - t[i] - 0.5 * h * u[i+1] - 0.5 * h * u[i] == 0,
     )
-    # @constraint(
-    #     model,
-    #     [i = 1:N],
-    #     ineq_constraint_1( i, x, h, t ) >= 0,
-    # )
-    out = JuMP.optimize!(model)
+    optimize!(model)
     println("""
     termination_status = $(termination_status(model))
     primal_status      = $(primal_status(model))
-    objective_value    = $(objective_value(model)) 
+    objective_value    = $(objective_value(model))
     """)
-    x = value.(x) 
-    t = value.(t) 
-    u = value.(u) 
-    return x, t, u 
+    return
 end
 
-## ============================================ ##
-
-x, t, u = example_clnlbeam()
+example_clnlbeam()
 
 
 

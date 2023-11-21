@@ -33,7 +33,7 @@ v_z = [ 0; 0; norm(v_0) ]
 dv = v_0 - v_z   
 
 # break up delta v into smaller segments 
-N = 10 
+N = 20 
 Δv_vec = [] 
 for i = 1 : N 
     push!( Δv_vec, dv/N ) 
@@ -188,6 +188,8 @@ t_kep, rv_kep     = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu )
 
 println( "final err norm = ", norm( rv_2Body[end,:] - rv_kep[end,:] ) )
 
+plot_orbit( rv_2Body ) 
+
 ## ============================================ ##
 # test miss distance 
 
@@ -198,4 +200,7 @@ miss_2Body = miss_distance_prop2Body(
 
 miss_kepler = miss_distance_prop_kepler( 
 rv_0, Δv_vec, N, rv_f, tof_N, mu)
+
+## ============================================ ##
+# now try ... minimizing delta v 
 
