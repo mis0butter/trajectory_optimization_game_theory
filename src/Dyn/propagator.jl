@@ -1,7 +1,8 @@
 using DifferentialEquations
 
-# propagate orbit based on given initial conditions, time, and gravitational parameter
-export propagate_2Body
+## ============================================ ##
+
+"propagate orbit based on given initial conditions, time, and gravitational parameter" 
 function propagate_2Body(x0, t, mu = 1.0, dt = nothing)
 
     prob = ODEProblem(eom_2Body!, x0, t, mu)
@@ -18,6 +19,10 @@ function propagate_2Body(x0, t, mu = 1.0, dt = nothing)
     return t, x  
 end
 
+export propagate_2Body
+
+## ============================================ ##
+
 export eom_2Body! 
 function eom_2Body!(dx, x, mu, t)
     x1 = x[1]
@@ -33,6 +38,8 @@ function eom_2Body!(dx, x, mu, t)
     dx[5] = mu_div_r3 * x2
     dx[6] = mu_div_r3 * x3
 end
+
+## ============================================ ##
 
 export kep2cart 
 function kep2cart(kep, mu)
@@ -62,6 +69,8 @@ function kep2cart(kep, mu)
     return cart
 end
 
+## ============================================ ##
+
 function R3(angle)
     R = [cos(angle) sin(angle) 0.0;
          -sin(angle) cos(angle) 0.0;
@@ -69,12 +78,16 @@ function R3(angle)
     return R
 end
 
+## ============================================ ##
+
 function R1(angle)
     R = [1.0 0.0 0.0;
          0.0 cos(angle) sin(angle);
          0.0 -sin(angle) cos(angle)]
     return R
 end
+
+## ============================================ ##
 
 export cart2kep
 function cart2kep(cart, mu, tol=1e-20)
@@ -165,6 +178,8 @@ function cart2kep(cart, mu, tol=1e-20)
 
     return kepState
 end
+
+## ============================================ ##
 
 export orbitPeriod 
 function orbitPeriod(kep, mu)

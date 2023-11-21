@@ -38,7 +38,7 @@ end
 dv_vec = mapreduce( permutedims, vcat, dv_vec ) 
 
 ## ============================================ ##
-# prop_2Body_dt_Nseg 
+# prop_2Body_tof_Nseg 
 
 # Creating Iteration Variables
 xk = copy(rv0)
@@ -70,12 +70,12 @@ X_hist = mapreduce( permutedims, vcat, X_hist )
 ## ============================================ ##
 # propagate each segment 
 
-X, t = prop_2Body_dt_Nseg( [r1; vz], dv_vec, N, tof_N, mu )  
+X, t = prop_2Body_tof_Nseg( [r1; vz], dv_vec, N, tof_N, mu )  
 
 ## ============================================ ##
 # compute miss distance 
 
-dx_miss = miss_distance( x0, dv_vec, N, r2, tof_N, mu ) 
+dx_miss = miss_distance_prop2Body( x0, dv_vec, N, r2, tof_N, mu ) 
 
 ## ============================================ ##
 # plot 

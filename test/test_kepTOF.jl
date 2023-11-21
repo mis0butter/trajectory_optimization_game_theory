@@ -43,16 +43,16 @@ end
 ## ============================================ ##
 # check Kepler TOF eqns --> given rv_0 and rv_f, TOF match 
 
-tof  = tof / N 
-rv_0 = [ r_0; v_0 ]  
-rv_k = rv_0 
+tof_N = tof / N 
+rv_0  = [ r_0; v_0 ]  
+rv_k  = rv_0 
 
 # apply delta v 
 i = 1 
 rv_0 = apply_dv( rv_k, Δv_vec[i,:] ) 
 
 # propagate using dynamics integration 
-t, rv = propagate_2Body( rv_0, tof, mu ) 
+t, rv = propagate_2Body( rv_0, tof_N, mu ) 
 
 # set target rv 
 rv_f = rv[end] 
@@ -84,7 +84,7 @@ println( "TOF - t = ", TOF - t[end] )
 ## ============================================ ##
 # check Kepler TOF eqns --> given rv_0 and TOF, rv_f match 
 
-tof = tof / N 
+tof_N = tof / N 
 
 # test for hyperbolic orbit 
 rv_0  = [ r_0; v_0*1.3 ]  
@@ -95,7 +95,7 @@ oe_k = cart2kep( rv_k, mu )
 println( "e = ", oe_k[2] ) 
 
 # propagate using dynamics integration 
-t, rv = propagate_2Body( rv_0, tof, mu ) 
+t, rv = propagate_2Body( rv_0, tof_N, mu ) 
 
 # convert to OEs 
 oe_0 = cart2kep( rv_0, mu ) 
@@ -147,7 +147,7 @@ oe_f[6] = nu_f
 rv_f    = kep2cart( oe_f, mu ) 
 
 # check with function 
-rv_f = kepler_prop_tof( rv_0, tof, mu )  
+rv_f = prop_kepler_tof( rv_0, tof, mu )  
 
 # println( "prop 2Body: rv[end] = ", rv[end] )
 # println( "kep prop TOF: rv_f = ", rv_f )  
@@ -157,28 +157,33 @@ println( "err norm = ", norm( rv[end] - rv_f ) )
 ## ============================================ ##
 # use Kepler TOF equations to propagate each segment 
 
-tof  = tof / N 
-rv_0 = [ r_0; v_0 ]  
-rv_k = rv_0 
+tof_N = tof / N 
+rv_0  = [ r_0; v_0 ]  
+rv_k  = rv_0 
 
 rv_hist = [ apply_dv( rv_k, Δv_vec[1,:] ) ] 
+t_hist  = [ 0 ] 
 for i = 1 : N 
 
     # apply delta v 
     rv_dv = apply_dv( rv_k, Δv_vec[i,:] ) 
 
     # propagate using kepler TOF 
-    rv_k = kepler_prop_tof( rv_dv, tof, mu ) 
-    t, x = propagate_2Body( rv_dv, tof, mu ) 
+    rv_k = prop_kepler_tof( rv_dv, tof_N, mu ) 
+    t, x = propagate_2Body( rv_dv, tof_N, mu ) 
 
     println( "prop err norm = ", norm( rv_k - x[end] ) ) 
     
     push!( rv_hist, rv_k ) 
+    push!( t_hist, t_hist[end] + tof ) 
 
 end 
 rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
 
-# plot 
-# fig = plot_orbit( rv_hist ) 
+## ============================================ ##
+# test N segment propagation
 
+t_2Body, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu )  
+t_kep, rv_kep     = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
+println( "final err norm = ", norm( rv_2Body[end,:] - rv_kep[end,:] ) )

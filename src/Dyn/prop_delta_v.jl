@@ -1,7 +1,7 @@
 ## ============================================ ##
 
-"Propagates an initial state through a vector of N trajectory segments" 
-function prop_2Body_dt_Nseg(
+"Propagates an initial state through a vector of N trajectory segments using dynamics integration" 
+function prop_2Body_tof_Nseg(
     rv_0,           # initial state vector of form [r; v] 
     Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
     N,              # number of segments 
@@ -34,27 +34,14 @@ function prop_2Body_dt_Nseg(
     end 
     rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
  
-    return rv_hist, t_hist 
+    return t_hist, rv_hist 
 end
 
-export prop_2Body_dt_Nseg 
+export prop_2Body_tof_Nseg 
 
-#============================================================
+## ============================================ ##
 
-APPLY_DV:
-
-Description: Helper function for prop_stateUV_Nseg() and prop_stateUV_Nseg_range() that adds Δv to a state vector's velocity
-
-Inputs:
-    1. rv  - state vector
-    2. Δv - velocity vector
-
-Outputs:
-    1. rv - updated state vector
-
-============================================================#
-
-export apply_dv 
+"Adds Δv to a state vector's velocity" 
 function apply_dv(
     rv,         # state vector 
     Δv,         # velocity vector 
@@ -68,36 +55,22 @@ function apply_dv(
     return rv
 end 
 
+export apply_dv 
 
-#============================================================
-MISS_DISTANCE: 
+## ============================================ ##
 
-Description: Calculates miss distance between trajectories
-
-Inputs: 
-    rv_0      - initial state vector of form [r; v]
-    Δv_vec  - [N,3] matrix of Δv vectors, Δv_i at [i,:] 
-    N       - number of segments 
-    xf      - target state vector of form [r; v] 
-    tof_N   - tof for each segment 
-    mu      - Graviational parameter (default = 1.0) 
-
-Outputs: 
-    Δxf     - Miss distance
-============================================================#
-
-export miss_distance 
-function miss_distance( 
-    rv_0, 
-    Δv_vec, 
-    N, 
-    xf, 
-    tof_N = 1.0, 
-    mu = 1.0, 
+"Description: Calculates miss distance between trajectories" 
+function miss_distance_prop2Body( 
+    rv_0,           # initial state vector of form [r; v] 
+    Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
+    N,              # number of segments 
+    xf,             # target state vector of form [r; v] 
+    tof_N = 1.0,    # tof for each segment 
+    mu = 1.0,       # gravitational parameter 
 )
 
     # Propagating To Final State
-    rv_hist, Δt = prop_2Body_dt_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
+    rv_hist, Δt = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
     # extract final state 
     xf_prop = rv_hist[end,:] 
@@ -107,4 +80,6 @@ function miss_distance(
 
     return Δxf
 end
+
+export miss_distance_prop2Body 
 

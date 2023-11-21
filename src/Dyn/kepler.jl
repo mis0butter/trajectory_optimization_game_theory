@@ -2,7 +2,7 @@ using LinearAlgebra
 
 ## ============================================ ##
 
-"Function solves Kepler's equation M = e*sinh(H) - H" 
+"Solve Kepler's equation M = e*sinh(H) - H" 
 function kepler_H( 
     M,              # mean anomaly [rad] 
     e,              # eccentricity 
@@ -27,7 +27,7 @@ export kepler_H
 
 ## ============================================ ## 
 
-"Function solves Kepler's equation M = E-e*sin(E)" 
+"Solve Kepler's equation M = E-e*sin(E)" 
 function kepler_E( 
     M,              # mean anomaly [rad] 
     e,              # eccentricity 
@@ -55,7 +55,7 @@ export kepler_E
 # Resource: BMW 
 
 "Propagate Keplerian orbit using TOF"
-function kepler_prop_tof( 
+function prop_kepler_tof( 
     rv_0,           # initial position and velocity vectors 
     tof,            # time of flight 
     mu = 1.0,       # gravitational parameter 
@@ -85,7 +85,7 @@ function kepler_prop_tof(
     return rv_f     # target rv 
 end 
 
-export kepler_prop_tof 
+export prop_kepler_tof 
 
 ## ============================================ ##
 
@@ -137,3 +137,37 @@ function hyperbolic_nu(
     return nu_f     # final true anomaly 
 end
 
+## ============================================ ##
+
+"Propagate an initial state through a vector of N trajectory segments using Kepler's equations" 
+function prop_kepler_tof_Nseg(
+    rv_0,           # initial state vector of form [r; v] 
+    Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
+    N,              # number of segments 
+    tof_N,          # tof for each segment 
+    mu = 1.0        # gravitational parameter 
+) 
+    
+    # Creating Iteration Variables
+    rv_k = copy(rv_0)
+
+    # Propagating Through Each Segment 
+    rv_hist = [ apply_dv( rv_k, Δv_vec[1,:] ) ] 
+    t_hist  = [ 0 ] 
+    for i = 1 : N 
+
+        # apply dv 
+        rv_k_dv = apply_dv( rv_k, Δv_vec[i,:] ) 
+
+        # propagate and save 
+        rv_k = prop_kepler_tof( rv_k_dv, tof_N, mu ) 
+        push!( rv_hist, rv_k ) 
+        push!( t_hist, t_hist[end] + tof_N ) 
+
+    end 
+    rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
+ 
+    return t_hist, rv_hist
+end
+
+export prop_kepler_tof_Nseg 
