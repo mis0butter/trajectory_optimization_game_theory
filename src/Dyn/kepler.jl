@@ -2,7 +2,7 @@ using LinearAlgebra
 
 ## ============================================ ##
 
-"Function solves Kepler's equation M = E-e*sin(E)" 
+"Function solves Kepler's equation M = e*sinh(H) - H" 
 function kepler_H( 
     M,              # mean anomaly [rad] 
     e,              # eccentricity 
