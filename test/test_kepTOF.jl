@@ -161,23 +161,18 @@ tof  = tof / N
 rv_0 = [ r_0; v_0 ]  
 rv_k = rv_0 
 
-rv_hist = [ apply_dv( rv_k, dv_vec[i,:] ) ] 
+rv_hist = [ apply_dv( rv_k, dv_vec[1,:] ) ] 
 for i = 1 : N 
-
-    println( "i = ", i ) 
 
     # apply delta v 
     rv_dv = apply_dv( rv_k, dv_vec[i,:] ) 
 
-    println( "rv_dv e = ", cart2kep( rv_dv, mu )[2] ) 
-
     # propagate using kepler TOF 
     rv_k = kepler_prop_tof( rv_dv, tof, mu ) 
-    # t, x = propagate_2Body( rv_dv, tof, mu ) 
-    # rv_k = x[end] 
+    t, x = propagate_2Body( rv_dv, tof, mu ) 
 
-    println( "rv_k e = ", cart2kep( rv_k, mu )[2] ) 
-
+    println( "prop err norm = ", norm( rv_k - x[end] ) ) 
+    
     push!( rv_hist, rv_k ) 
 
 end 

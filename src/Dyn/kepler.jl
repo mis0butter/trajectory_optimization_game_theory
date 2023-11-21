@@ -25,7 +25,7 @@ end
 
 export kepler_H 
 
-## ============================================ ##
+## ============================================ ## 
 
 "Function solves Kepler's equation M = E-e*sin(E)" 
 function kepler_E( 
@@ -70,34 +70,11 @@ function kepler_prop_tof(
     # mean motion 
     n = sqrt( mu / (abs(a))^3 ) 
 
+    # get true anomaly 
     if e < 1.0 
-
-        # initial eccentric anomaly 
-        E_0 = acos( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
-
-        # mean anomaly - propagate! 
-        dM  = n * tof 
-        M_0 = E_0 - e * sin(E_0) 
-        M_f = M_0 + dM 
-        
-        # find final eccentric anomaly 
-        E_f  = kepler_E( M_f, e ) 
-        nu_f = acos( ( cos(E_f) - e ) / ( 1 - e*cos(E_f) ) ) 
-
+        nu_f = elliptic_nu( e, n, nu_0, tof ) 
     else 
-
-        # initial hyperbolic anomaly 
-        H_0 = acosh( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
-        
-        # mean anomaly - propagate! 
-        dM  = n * tof 
-        M_0 = e * sinh(H_0) - H_0 
-        M_f = M_0 + dM 
-
-        # find final hyperbolic anomaly 
-        H_f  = kepler_H( M_f, e ) 
-        nu_f = 2*atan( sqrt( (e+1)/(e-1) ) * tanh(H_f/2) ) 
-
+        nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
     end 
 
     # set target rv 
@@ -109,3 +86,54 @@ function kepler_prop_tof(
 end 
 
 export kepler_prop_tof 
+
+## ============================================ ##
+
+"Compute true anomaly from eccentric anomaly for elliptic orbits"
+function elliptic_nu(  
+    e,              # eccentricity 
+    n,              # mean motion 
+    nu_0,           # initial true anomaly 
+    tof,            # time of flight 
+) 
+
+    # initial eccentric anomaly 
+    E_0 = acos( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
+
+    # mean anomaly - propagate! 
+    dM  = n * tof 
+    M_0 = E_0 - e * sin(E_0) 
+    M_f = M_0 + dM 
+    
+    # find final eccentric anomaly 
+    E_f  = kepler_E( M_f, e ) 
+    nu_f = acos( ( cos(E_f) - e ) / ( 1 - e*cos(E_f) ) ) 
+
+    return nu_f     # final true anomaly 
+end 
+
+## ============================================ ##
+
+"Compute true anomaly from hyperbolic anomaly for hyperbolic orbits"
+function hyperbolic_nu(  
+    e,              # eccentricity 
+    n,              # mean motion 
+    nu_0,           # initial true anomaly 
+    tof,            # time of flight 
+) 
+    
+    # initial hyperbolic anomaly 
+    H_0 = acosh( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
+    
+    # mean anomaly - propagate! 
+    dM  = n * tof 
+    M_0 = e * sinh(H_0) - H_0 
+    M_f = M_0 + dM 
+
+    # find final hyperbolic anomaly 
+    H_f  = kepler_H( M_f, e ) 
+    nu_f = 2*atan( sqrt( (e+1)/(e-1) ) * tanh(H_f/2) ) 
+
+    return nu_f     # final true anomaly 
+end
+
