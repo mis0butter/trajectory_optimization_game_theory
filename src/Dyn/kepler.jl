@@ -171,3 +171,29 @@ function prop_kepler_tof_Nseg(
 end
 
 export prop_kepler_tof_Nseg 
+
+## ============================================ ##
+
+"Description: Calculates miss distance between trajectories using kepler propagation" 
+function miss_distance_prop_kepler( 
+    rv_0,           # initial state vector of form [r; v] 
+    Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
+    N,              # number of segments 
+    rv_f,           # target state vector of form [r; v] 
+    tof_N = 1.0,    # tof for each segment 
+    mu = 1.0,       # gravitational parameter 
+)
+
+    # Propagating To Final State
+    t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
+
+    # extract final state 
+    rv_f_prop = rv_hist[end,:] 
+
+    # Finding Miss Distance
+    Δrv_f = abs.(rv_f_prop[1:3] - rv_f[1:3])
+
+    return Δrv_f
+end
+
+export miss_distance_prop_kepler

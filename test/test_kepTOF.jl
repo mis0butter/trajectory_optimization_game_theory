@@ -187,3 +187,15 @@ t_2Body, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu )
 t_kep, rv_kep     = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
 println( "final err norm = ", norm( rv_2Body[end,:] - rv_kep[end,:] ) )
+
+## ============================================ ##
+# test miss distance 
+
+rv_f = [r_f ; v_f]
+
+miss_2Body = miss_distance_prop2Body( 
+    rv_0, Δv_vec, N, rv_f, tof_N, mu)
+
+miss_kepler = miss_distance_prop_kepler( 
+rv_0, Δv_vec, N, rv_f, tof_N, mu)
+

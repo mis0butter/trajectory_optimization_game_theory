@@ -59,26 +59,26 @@ export apply_dv
 
 ## ============================================ ##
 
-"Description: Calculates miss distance between trajectories" 
+"Calculate miss distance between trajectories using 2 body propagation" 
 function miss_distance_prop2Body( 
     rv_0,           # initial state vector of form [r; v] 
     Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
     N,              # number of segments 
-    xf,             # target state vector of form [r; v] 
+    rv_f,           # target state vector of form [r; v] 
     tof_N = 1.0,    # tof for each segment 
     mu = 1.0,       # gravitational parameter 
 )
 
     # Propagating To Final State
-    rv_hist, Δt = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
+    t, rv_hist = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
     # extract final state 
-    xf_prop = rv_hist[end,:] 
+    rv_f_prop = rv_hist[end,:] 
 
     # Finding Miss Distance
-    Δxf = abs.(xf_prop[1:3] - xf[1:3])
+    Δrv_f = abs.(rv_f_prop[1:3] - rv_f[1:3])
 
-    return Δxf
+    return Δrv_f
 end
 
 export miss_distance_prop2Body 
