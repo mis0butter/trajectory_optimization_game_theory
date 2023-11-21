@@ -46,3 +46,5 @@ function lambert_IC()
 end 
 
 export lambert_IC 
+# r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
+

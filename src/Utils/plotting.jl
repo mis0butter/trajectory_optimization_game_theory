@@ -5,8 +5,8 @@ using GLMakie
 function plot_orbit( 
     rv,                 # [N,3] matrix of state vectors 
     fig    = nothing,   # figure handle 
-    labels = false     # boolean for labeling start and end points 
-    ) 
+    labels = false      # boolean for labeling start and end points 
+) 
 
     if isnothing(fig) 
         # initialize figure 
@@ -33,4 +33,64 @@ function plot_orbit(
 end 
     
 export plot_orbit 
+
+## ============================================ ##
+
+"Plot a surface with a colorbar using GLMakie"
+function plot_surface( 
+    x,              # [N,1] grid of points 
+    y,              # [N,1] grid of points 
+    z,              # [N,N] grid of points evaluated at x and y 
+    fig = nothing   # figure handle 
+) 
+
+    fignothing = false 
+    if isnothing(fig) 
+        fignothing = true 
+        fig = Figure() 
+    end 
+
+    ax1 = Axis3(fig[1,1]) 
+    hm  = GLMakie.surface!(ax1, x, y, z) 
+
+    if fignothing 
+        Colorbar(fig[1, 2], hm, height=Relative(0.5))
+    end 
+
+    return fig 
+end 
+
+export plot_surface 
+
+## ============================================ ##
+
+"Plot a contour with a colorbar using GLMakie"
+function plot_contour3d( 
+    x,              # [N,1] grid of points 
+    y,              # [N,1] grid of points 
+    z,              # [N,N] grid of points evaluated at x and y 
+    fig = nothing,  # figure handle 
+    levels = 20,    # number of contour levels 
+) 
+
+    fignothing = false 
+    if isnothing(fig) 
+        fignothing = true 
+        fig = Figure() 
+    end 
+
+    ax1 = Axis3(fig[1,1]) 
+    hm  = GLMakie.contour3d!(ax1, x, y, z, levels = levels) 
+
+    clim = ( minimum(z), maximum(z) ) 
+
+    if fignothing 
+        Colorbar( fig[1, 2], limits = clim, height = Relative(0.5) )
+    end 
+
+    return fig 
+end 
+
+export plot_contour3d 
+
 

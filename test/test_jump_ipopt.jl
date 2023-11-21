@@ -19,10 +19,25 @@ function example_rosenbrock()
     Test.@test objective_value(model) ≈ 0.0 atol = 1e-10
     Test.@test value(x) ≈ 1.0
     Test.@test value(y) ≈ 1.0
-    return
+    return  value.(x),  
+            value.(y) 
 end
 
-example_rosenbrock()
+x, y = example_rosenbrock() 
+
+# ----------------------- #
+# test solution 
+
+using GLMakie 
+
+function rosenbrock(x::Vector)
+  return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+end
+
+default(size=(600,600), fc=:heat)
+x, y = -1.5:0.1:1.5, -1.5:0.1:1.5
+z = Surface((x,y)->rosenbrock([x,y]), x, y)
+surface(x,y,z, linealpha = 0.3)
 
 ## ============================================ ##
 

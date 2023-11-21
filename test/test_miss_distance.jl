@@ -2,7 +2,7 @@ using trajectory_optimization_game_theory
 
 ## ============================================ ##
 
-r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof = lambert_IC() 
+r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
 
 ## ============================================ ##
 # test miss distance 
@@ -14,4 +14,6 @@ miss_2Body = miss_distance_prop2Body(
 
 miss_kepler = miss_distance_prop_kepler( 
     rv_0, Δv_vec, N, rv_f, tof_N, mu )
+
+
 

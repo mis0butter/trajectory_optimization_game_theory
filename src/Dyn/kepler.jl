@@ -24,6 +24,7 @@ function kepler_H(
 end 
 
 export kepler_H 
+# H = kepler_H( M, e )
 
 ## ============================================ ## 
 
@@ -49,6 +50,7 @@ function kepler_E(
 end 
 
 export kepler_E 
+# E = kepler_E( M, e )
 
 ## ============================================ ## 
 
@@ -86,6 +88,7 @@ function prop_kepler_tof(
 end 
 
 export prop_kepler_tof 
+# rv_f = prop_keper_tof( rv_0, tof, mu ) 
 
 ## ============================================ ##
 
@@ -112,6 +115,8 @@ function elliptic_nu(
     return nu_f     # final true anomaly 
 end 
 
+# nu_f = elliptic_nu( e, n, nu_0, tof ) 
+
 ## ============================================ ##
 
 "Compute true anomaly from hyperbolic anomaly for hyperbolic orbits"
@@ -136,6 +141,8 @@ function hyperbolic_nu(
 
     return nu_f     # final true anomaly 
 end
+
+# nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
 
 ## ============================================ ##
 
@@ -167,14 +174,16 @@ function prop_kepler_tof_Nseg(
     end 
     rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
  
-    return t_hist, rv_hist
+    return  t_hist, 
+            rv_hist
 end
 
 export prop_kepler_tof_Nseg 
+# t_kep, rv_kep = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
 ## ============================================ ##
 
-"Description: Calculates miss distance between trajectories using kepler propagation" 
+"Calculate miss distance between trajectories using kepler propagation" 
 function miss_distance_prop_kepler( 
     rv_0,           # initial state vector of form [r; v] 
     Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
@@ -194,6 +203,8 @@ function miss_distance_prop_kepler(
     Δrv_f = abs.(rv_f_prop[1:3] - rv_f[1:3])
 
     return Δrv_f
-end
+end 
 
-export miss_distance_prop_kepler
+export miss_distance_prop_kepler 
+# miss_kepler = miss_distance_prop_kepler( rv_0, Δv_vec, N, rv_f, tof_N, mu )
+
