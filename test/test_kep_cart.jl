@@ -21,8 +21,9 @@ rv_0 = [ r_0; v_0 ]
 ## ============================================ ##
 # cart2kep 
 
-
 cart = [ r_0 ; v_0*1.3 ]
+kep  = cart2kep( cart, mu ) 
+
 # cart = rv_0 
 
     # get position and velocity components
