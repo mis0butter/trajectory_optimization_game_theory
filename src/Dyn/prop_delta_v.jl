@@ -1,61 +1,43 @@
+## ============================================ ##
 
-
-#============================================================
-
-prop_2Body_dt_Nseg_range:
-
-Description: Propagates an initial state through a vector of N trajectory segments
-
-Inputs: 
-    x0      - Initial state vector of form [r̄; v̄]
-    Δv      - Matrix of size (N, 3) where each row is the velocity vector at a segment of the trajectory
-    dt_N   - Change in time for each segment 
-    N       - vector of segments of the trajectory
-    mu      - Gravitational parameter (default = 1.0) 
-
-Outputs:
-    X_hist  - Matrix of size (N, 6) where each row is the state at each segment of the trajectory
-    t       - Change in time between initial and final states
-
-============================================================#
-
-export prop_2Body_dt_Nseg 
+"Propagates an initial state through a vector of N trajectory segments" 
 function prop_2Body_dt_Nseg(
-    x0, 
-    Δv_vec, 
-    N, 
-    dt_N, 
-    mu = 1.0 
+    rv_0,           # initial state vector of form [r; v] 
+    Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
+    N,              # number of segments 
+    tof_N,          # tof for each segment 
+    mu = 1.0        # gravitational parameter 
 ) 
     
     # Creating Iteration Variables
-    xk = copy(x0)
-    Δt = N * dt_N 
+    rv_k = copy(rv_0)
+    Δt   = N * tof_N 
 
     # Propagating Through Each Segment 
-    X_hist = [ xk ] 
-    t_hist = [ 0 ] 
+    rv_hist = [ rv_k ] 
+    t_hist  = [ 0 ] 
     for i = 1 : N 
 
         # apply dv 
-        xkdv = apply_dv( xk, Δv_vec[i,:] ) 
+        rv_k_dv = apply_dv( rv_k, Δv_vec[i,:] ) 
 
         # propagate and save 
-        t, x = propagate_2Body( xkdv, dt_N, mu ) 
-        for j = 2 : length(x) 
-            push!( X_hist, x[j] ) 
+        t, rv = propagate_2Body( rv_k_dv, tof_N, mu ) 
+        for j = 2 : length(rv) 
+            push!( rv_hist, rv[j] ) 
         end 
         t_hist = [ t_hist ; t_hist[end] .+ t[2:end] ]
 
         # set up next iter 
-        xk = x[end]
+        rv_k = rv[end]
 
     end 
-    X_hist = mapreduce( permutedims, vcat, X_hist ) 
-
-    return X_hist, t_hist 
+    rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
+ 
+    return rv_hist, t_hist 
 end
 
+export prop_2Body_dt_Nseg 
 
 #============================================================
 
@@ -64,23 +46,26 @@ APPLY_DV:
 Description: Helper function for prop_stateUV_Nseg() and prop_stateUV_Nseg_range() that adds Δv to a state vector's velocity
 
 Inputs:
-    1. x  - state vector
+    1. rv  - state vector
     2. Δv - velocity vector
 
 Outputs:
-    1. x - updated state vector
+    1. rv - updated state vector
 
 ============================================================#
 
 export apply_dv 
-function apply_dv(x, Δv)
+function apply_dv(
+    rv,         # state vector 
+    Δv,         # velocity vector 
+)
 
     # Applying Δv
-    r = x[1:3]
-    v = x[4:6] + Δv
-    x = vcat(r, v)
+    r = rv[1:3]
+    v = rv[4:6] + Δv
+    rv = vcat(r, v)
 
-    return x
+    return rv
 end 
 
 
@@ -90,11 +75,11 @@ MISS_DISTANCE:
 Description: Calculates miss distance between trajectories
 
 Inputs: 
-    x0      - initial state vector of form [r; v]
+    rv_0      - initial state vector of form [r; v]
     Δv_vec  - [N,3] matrix of Δv vectors, Δv_i at [i,:] 
     N       - number of segments 
     xf      - target state vector of form [r; v] 
-    dt_N   - tof for each segment 
+    tof_N   - tof for each segment 
     mu      - Graviational parameter (default = 1.0) 
 
 Outputs: 
@@ -103,19 +88,19 @@ Outputs:
 
 export miss_distance 
 function miss_distance( 
-    x0, 
+    rv_0, 
     Δv_vec, 
     N, 
     xf, 
-    dt_N = 1.0, 
+    tof_N = 1.0, 
     mu = 1.0, 
 )
 
     # Propagating To Final State
-    X_hist, Δt = prop_2Body_dt_Nseg( x0, Δv_vec, N, dt_N, mu ) 
+    rv_hist, Δt = prop_2Body_dt_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
     # extract final state 
-    xf_prop = X_hist[end,:] 
+    xf_prop = rv_hist[end,:] 
 
     # Finding Miss Distance
     Δxf = abs.(xf_prop[1:3] - xf[1:3])

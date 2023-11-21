@@ -34,11 +34,11 @@ dv = v_0 - v_z
 
 # break up delta v into smaller segments 
 N = 10 
-dv_vec = [] 
+Δv_vec = [] 
 for i = 1 : N 
-    push!( dv_vec, dv/N ) 
+    push!( Δv_vec, dv/N ) 
 end 
-dv_vec = mapreduce( permutedims, vcat, dv_vec ) 
+Δv_vec = mapreduce( permutedims, vcat, Δv_vec ) 
 
 ## ============================================ ##
 # check Kepler TOF eqns --> given rv_0 and rv_f, TOF match 
@@ -49,7 +49,7 @@ rv_k = rv_0
 
 # apply delta v 
 i = 1 
-rv_0 = apply_dv( rv_k, dv_vec[i,:] ) 
+rv_0 = apply_dv( rv_k, Δv_vec[i,:] ) 
 
 # propagate using dynamics integration 
 t, rv = propagate_2Body( rv_0, tof, mu ) 
@@ -161,11 +161,11 @@ tof  = tof / N
 rv_0 = [ r_0; v_0 ]  
 rv_k = rv_0 
 
-rv_hist = [ apply_dv( rv_k, dv_vec[1,:] ) ] 
+rv_hist = [ apply_dv( rv_k, Δv_vec[1,:] ) ] 
 for i = 1 : N 
 
     # apply delta v 
-    rv_dv = apply_dv( rv_k, dv_vec[i,:] ) 
+    rv_dv = apply_dv( rv_k, Δv_vec[i,:] ) 
 
     # propagate using kepler TOF 
     rv_k = kepler_prop_tof( rv_dv, tof, mu ) 
