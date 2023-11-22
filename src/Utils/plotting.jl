@@ -48,8 +48,8 @@ function plot_surface(
     x,                  # [N,1] grid of points 
     y,                  # [N,1] grid of points 
     z,                  # [N,N] grid of points evaluated at x and y 
-    alpha = 1.0,        # transparency 
     fig   = nothing,    # figure handle 
+    alpha = 1.0,        # transparency 
 ) 
 
     fignothing = false 
@@ -78,7 +78,8 @@ function plot_scatter(
     x,              # [N,1] grid of points 
     y,              # [N,1] grid of points 
     z,              # [N,N] grid of points evaluated at x and y 
-    fig = nothing   # figure handle 
+    fig  = nothing, # figure handle 
+    text = nothing, # text to add to plot 
 ) 
 
     fignothing = false 
@@ -90,6 +91,9 @@ function plot_scatter(
 
     if isequal(length(z), 1)
         GLMakie.scatter!( x, y, z, marker = :utriangle, markersize = 20, color = :black ) 
+        if !isnothing(text) 
+            text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
+        end
     else 
         hm = GLMakie.scatter!( x, y, z, markersize = 5, color = :black, strokecolor = :black ) 
     end 

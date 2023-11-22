@@ -15,7 +15,6 @@ function rosenbrock(x, y)
 end
 
 # ----------------------- #
-
 function example_rosenbrock()
     model = Model(Ipopt.Optimizer)
     set_silent(model)
@@ -32,25 +31,21 @@ function example_rosenbrock()
     return  value.(x),  
             value.(y) 
 end
+# ----------------------- #
 
+# test solution 
 x_min, y_min = example_rosenbrock() 
 z_min = rosenbrock( x_min, y_min ) 
 
-## ============================================ ##
-# test solution and plotting 
-
-# default(size=(600,600), fc=:heat)
+# plot  
 x, y = collect(-1.5:0.1:1.5), collect(-1.5:0.1:1.5) 
-z = rosenbrock.(x,y') 
-
-fig = plot_surface(x, y, z) 
-fig = plot_surface(x_min, y_min, z_min, fig) 
-
-# title 
+z    = rosenbrock.(x,y') 
+fig  = plot_surface(x, y, z) 
+fig  = plot_scatter(x_min, y_min, z_min, fig, "min") 
 ax = fig.content[1] 
 ax.title = "Rosenbrock function" 
 
-fig 
+display(fig)  
 
 ## ============================================ ##
 # test on minimizing miss distance 
@@ -75,6 +70,13 @@ set_silent(model)
 @objective(model, Min, obj( Δv_vec ) ) 
 optimize!(model)
 
+
+
+
+
+
+
+## ============================================ ##
 ## ============================================ ##
 
 function eq_constraint_1( i, x, h, t )
