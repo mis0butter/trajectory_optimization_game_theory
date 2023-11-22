@@ -45,6 +45,36 @@ export plot_orbit
 
 "Plot a surface with a colorbar using GLMakie"
 function plot_surface( 
+    x,                  # [N,1] grid of points 
+    y,                  # [N,1] grid of points 
+    z,                  # [N,N] grid of points evaluated at x and y 
+    alpha = 1.0,        # transparency 
+    fig   = nothing,    # figure handle 
+) 
+
+    fignothing = false 
+    if isnothing(fig) 
+        fignothing = true 
+        fig = Figure() 
+        Axis3( fig[1,1] ) 
+    end 
+
+    cmap = ( :diverging_tritanopic_cwr_75_98_c20_n256, alpha )
+    hm   = GLMakie.surface!( x, y, z, colormap = cmap ) 
+
+    if fignothing 
+        Colorbar( fig[1,2], hm, height = Relative(0.5) )
+    end 
+
+    return fig 
+end 
+
+export plot_surface 
+
+## ============================================ ##
+
+"Plot scatter using GLMakie"
+function plot_scatter( 
     x,              # [N,1] grid of points 
     y,              # [N,1] grid of points 
     z,              # [N,N] grid of points evaluated at x and y 
@@ -59,19 +89,15 @@ function plot_surface(
     end 
 
     if isequal(length(z), 1)
-        GLMakie.scatter!( x, y, z, marker = :utriangle, markersize = 20, color = :red ) 
+        GLMakie.scatter!( x, y, z, marker = :utriangle, markersize = 20, color = :black ) 
     else 
-        hm = GLMakie.surface!( x, y, z, colormap = :diverging_tritanopic_cwr_75_98_c20_n256 ) 
-    end 
-
-    if fignothing 
-        Colorbar( fig[1,2], hm, height = Relative(0.5) )
+        hm = GLMakie.scatter!( x, y, z, markersize = 5, color = :black, strokecolor = :black ) 
     end 
 
     return fig 
 end 
 
-export plot_surface 
+export plot_scatter 
 
 ## ============================================ ##
 

@@ -29,7 +29,6 @@ dfn(x) = [ 4*x[1]^3 + x[2] ; x[1] + 6*x[2] ]
 # initial guess 
 x0 = [3.0, 3.0] ;
 
-
 # loop options 
 tol     = 1e-6 ;   # termination tolerance
 maxiter = 1000 ;   # maximum number of allowed iterations
@@ -100,7 +99,22 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
     push!( x_hist, x )
     push!( f_hist, f )  
 
-end
+end 
+
+## ============================================ ##
+
+function fn_xy( x,y )
+    return fn( [x,y] )
+end 
+
+x, y = collect( -2 : 0.1 : 2 ), collect( -2 : 0.1 : 2 ) 
+z = fn_xy.( x, y' ) 
+
+x_sol = x_hist[end] 
+
+fig = plot_surface( x, y, z ) 
+fig = plot_scatter( x_sol[1], x_sol[2] , fn(x_sol), fig ) 
+
     
     # end 
     

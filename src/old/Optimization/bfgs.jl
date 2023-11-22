@@ -25,8 +25,8 @@ function bfgs(
     params::Union{NamedTuple, Tuple, AbstractArray} = (;)
 )
 
-    # Initializing
-    δx = Inf
+    # Initializing 
+    δx = Inf 
     n  = length(x₀)
     gk = zeros(n)
     Qk = zeros(n, n)
