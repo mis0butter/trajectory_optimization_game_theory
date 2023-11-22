@@ -50,19 +50,20 @@ end
 
 out = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
 
-obj_fn( Δv_vec_flat ) = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+# define objective fn 
+fn( Δv_vec_flat ) = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+fn( Δv_vec_flat ) 
 
-obj_fn( Δv_vec_flat ) 
-dobj_fn = Δv_vec_flat -> ForwardDiff.gradient( obj_fn, Δv_vec_flat ) 
-
-dobj_fn( Δv_vec_flat ) 
+# create gradient 
+dfn = Δv_vec_flat -> ForwardDiff.gradient( obj_fn, Δv_vec_flat ) 
+dfn( Δv_vec_flat ) 
 
 ## ============================================ ##
-    
+# BFGS 
     
 # initial guess 
 # x0 = [3.0, 3.0] ;
-x0 = Δv_vec 
+x0 = Δv_vec_flat 
 
 # loop options 
 tol     = 1e-6 ;   # termination tolerance
