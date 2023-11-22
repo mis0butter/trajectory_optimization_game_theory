@@ -1,7 +1,9 @@
 using trajectory_optimization_game_theory 
 using ForwardDiff 
+using LinearAlgebra 
 
 ## ============================================ ##
+# test miss distance 
 
 r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
 rv_0 = [ r_0 ; v_0 ] 
@@ -16,18 +18,51 @@ obj( Δv_vec ) = miss_distance_prop_kepler(
 
 dobj = Δv_vec -> ForwardDiff.jacobian( obj, Δv_vec ) 
 
+Δv_soln = min_bfgs( obj, dobj, Δv_vec )
+
+# using Optim 
+
+# # optimization 
+# od       = OnceDifferentiable( obj, Δv_vec ; autodiff = :forward ) 
+# result   = optimize( od, Δv_vec, BFGS() ) 
+# hp       = result.minimizer 
+
 
 ## ============================================ ##
-# BFGS 
+# test miss distance (min_bfgs exploded) 
 
-using LinearAlgebra 
+r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
+rv_0 = [ r_0 ; v_0 ] 
+rv_f = [ r_f ; v_f ] 
+tof_N = tof / N 
 
-# obj fn and gradient 
-fn(x)  = x[1]^4 + x[1]*x[2] + 3*x[2]^2 ;
-dfn(x) = [ 4*x[1]^3 + x[2] ; x[1] + 6*x[2] ]  
+# x starts off as a [N*3, 1] vector 
+Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
+
+function miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+    
+    Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
+    miss   = miss_distance_prop_kepler( 
+    rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+    
+    return miss 
+end 
+
+out = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+
+obj_fn( Δv_vec_flat ) = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+
+obj_fn( Δv_vec_flat ) 
+dobj_fn = Δv_vec_flat -> ForwardDiff.gradient( obj_fn, Δv_vec_flat ) 
+
+dobj_fn( Δv_vec_flat ) 
+
+## ============================================ ##
+    
     
 # initial guess 
-x0 = [3.0, 3.0] ;
+# x0 = [3.0, 3.0] ;
+x0 = Δv_vec 
 
 # loop options 
 tol     = 1e-6 ;   # termination tolerance
@@ -65,7 +100,7 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
     pk = - Hk * g ; 
 
     # take step:
-    xnew = x + alpha * pk ; 
+    xnew = x + alpha .* pk ; 
 
     # backtracking line search 
     alpha = alpha0 ; 
@@ -82,7 +117,8 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
     # secant equation 
     sk     = xnew - x ; 
     yk     = dfn(xnew) - dfn(x) ; 
-    rhok   = 1/( yk' * sk ) ; 
+    # rhok   = 1/( yk' * sk ) ; 
+    rhok   = inv( yk' * sk ) 
     # I      = eye(size(Hk)) ; 
     Hk_new = ( I - rhok*sk*yk' ) * Hk * ( I - rhok*yk*sk' ) + rhok*sk*sk' ; 
 
@@ -100,21 +136,3 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
     push!( f_hist, f )  
 
 end 
-
-## ============================================ ##
-
-function fn_xy( x,y )
-    return fn( [x,y] )
-end 
-
-x, y = collect( -2 : 0.1 : 2 ), collect( -2 : 0.1 : 2 ) 
-z = fn_xy.( x, y' ) 
-
-x_sol = x_hist[end] 
-
-fig = plot_surface( x, y, z ) 
-fig = plot_scatter( x_sol[1], x_sol[2] , fn(x_sol), fig ) 
-
-    
-    # end 
-    

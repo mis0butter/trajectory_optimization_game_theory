@@ -17,9 +17,9 @@ Outputs:
 ============================================================#
 
 function bfgs(
-    x₀::AbstractVector, 
-    f::Function, 
-    g::Function; 
+    x₀ , 
+    f  , 
+    g  ; 
     tol = 1e-8, 
     itermax = 100,
     params::Union{NamedTuple, Tuple, AbstractArray} = (;)

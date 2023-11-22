@@ -76,7 +76,7 @@ function miss_distance_prop2Body(
     rv_f_prop = rv_hist[end,:] 
 
     # Finding Miss Distance
-    Δrv_f = abs.(rv_f_prop[1:3] - rv_f[1:3])
+    Δrv_f = norm(rv_f_prop[1:3] - rv_f[1:3])
 
     return Δrv_f
 end
