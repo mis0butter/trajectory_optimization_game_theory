@@ -120,7 +120,17 @@ function cart2kep(cart, mu, tol=1e-20)
     #     sma = mu / (2.0 * energy)
     # end
 
-    # get mean anomaly
+    # get mean anomaly 
+
+    # check_val = dot(r, ecc) / (magR * magEcc) 
+    # # if abs.(check_val) > 1.0 
+    #     println( "check_val = ", check_val ) 
+    # #     println( "dot(r, ecc) = ", dot(r, ecc) )
+    # #     println( "magR = ", magR )
+    # #     println( "magEcc = ", magEcc ) 
+    # #     println( "magR * magEcc = ", magR * magEcc )  
+    # # end 
+
     theta = acos(dot(r, ecc) / (magR * magEcc))
     if (dot(r, v) < 0.0)
         theta = 2.0 * pi - theta

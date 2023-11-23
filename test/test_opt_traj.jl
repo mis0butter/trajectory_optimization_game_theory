@@ -13,23 +13,27 @@ tof_N = tof / N
 # x starts off as a [N*3, 1] vector 
 Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
 
-function miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+function miss_Δv_flat( 
+    rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
     
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
     miss   = miss_distance_prop_kepler( 
-    rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+        rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
     
     return miss 
 end 
 
-out = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+out = miss_Δv_flat( 
+    rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
 
 # define objective fn 
-fn( Δv_vec_flat ) = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu ) 
+fn( Δv_vec_flat ) = miss_Δv_flat( 
+    rv_0, Δv_vec_flat, N, rv_f, tof_N, mu ) 
 fn( Δv_vec_flat ) 
 
 # create gradient 
-dfn = Δv_vec_flat -> ForwardDiff.gradient( obj_fn, Δv_vec_flat ) 
+dfn = Δv_vec_flat -> ForwardDiff.gradient( 
+    fn, Δv_vec_flat ) 
 dfn( Δv_vec_flat ) 
 
 ## ============================================ ##
@@ -115,6 +119,18 @@ end
 ## ============================================ ##
 # get solution 
 
+# tof_N = tof / N / 2.4 
+
+# define objective fn 
+fn( Δv_vec_flat ) = miss_Δv_flat( 
+    rv_0, Δv_vec_flat, N, rv_f, tof_N, mu ) 
+fn( Δv_vec_flat ) 
+
+# create gradient 
+dfn = Δv_vec_flat -> ForwardDiff.gradient( 
+    fn, Δv_vec_flat ) 
+dfn( Δv_vec_flat ) 
+
 x_min = min_bfgs( fn, dfn, Δv_vec_flat ) 
 
 Δv_sol = reshape(x_min, N, 3) 
@@ -127,3 +143,33 @@ t_kep, rv_kep = prop_kepler_tof_Nseg(
     rv_0, Δv_sol, N, tof_N, mu ) 
 
 fig = plot_orbit( rv_kep ) 
+
+## ============================================ ##
+# test miss distance with minimizing tof 
+
+tof_Δv_vec_flat = [ tof_N ; Δv_vec_flat ] 
+
+function miss_tof_Δv_flat( 
+    rv_0, tof_N_Δv_vec_flat, N, rv_f, mu ) 
+
+    # get tof and Δv 
+    tof_N       = tof_N_Δv_vec_flat[1] 
+    Δv_vec_flat = tof_N_Δv_vec_flat[2:end] 
+    
+    Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
+    miss   = miss_distance_prop_kepler( 
+        rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+    
+    return miss 
+end 
+
+# define objective fn 
+fn( tof_N_Δv_vec_flat ) = miss_tof_Δv_flat( 
+    rv_0, tof_N_Δv_vec_flat, N, rv_f, mu ) 
+fn( tof_Δv_vec_flat ) 
+
+# create gradient 
+dfn = tof_Δv_vec_flat -> ForwardDiff.gradient( 
+    fn, tof_Δv_vec_flat ) 
+    
+dfn( tof_Δv_vec_flat ) 
