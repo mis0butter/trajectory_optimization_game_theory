@@ -145,12 +145,56 @@ t_kep, rv_kep = prop_kepler_tof_Nseg(
 fig = plot_orbit( rv_kep ) 
 
 ## ============================================ ##
+# test tof gradient 
+
+function miss_Δv_flat( 
+    rv_0, 
+    Δv_vec_flat, 
+    N, 
+    rv_f, 
+    tof_N, 
+    mu 
+)
+    
+    Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
+    miss   = miss_distance_prop_kepler( 
+        rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+    
+    return miss 
+end 
+
+# define objective fn 
+fn( Δv_vec_flat ) = miss_Δv_flat( 
+    rv_0, Δv_vec_flat, N, rv_f, tof_N, mu ) 
+fn( Δv_vec_flat ) 
+
+# create gradient 
+dfn = Δv_vec_flat -> ForwardDiff.gradient( 
+    fn, Δv_vec_flat  ) 
+dfn( Δv_vec_flat ) 
+
+# define objective fn 
+fn( tof_N ) = miss_Δv_flat( 
+    rv_0, Δv_vec_flat, N, rv_f, tof_N, mu ) 
+fn( tof_N ) 
+
+# create gradient 
+dfn = tof_N -> ForwardDiff.gradient( 
+    fn, Δv_vec_flat  ) 
+dfn( tof_N ) 
+
+## ============================================ ##
 # test miss distance with minimizing tof 
 
-tof_Δv_vec_flat = [ tof_N ; Δv_vec_flat ] 
+tof_Δv = [ tof_N ; Δv_vec_flat ] 
 
 function miss_tof_Δv_flat( 
-    rv_0, tof_N_Δv_vec_flat, N, rv_f, mu ) 
+    rv_0, 
+    tof_N_Δv_vec_flat :: AbstractVector{T} , 
+    N, 
+    rv_f, 
+    mu 
+) where T<:AbstractFloat 
 
     # get tof and Δv 
     tof_N       = tof_N_Δv_vec_flat[1] 
@@ -166,10 +210,10 @@ end
 # define objective fn 
 fn( tof_N_Δv_vec_flat ) = miss_tof_Δv_flat( 
     rv_0, tof_N_Δv_vec_flat, N, rv_f, mu ) 
-fn( tof_Δv_vec_flat ) 
+fn( tof_Δv ) 
 
 # create gradient 
-dfn = tof_Δv_vec_flat -> ForwardDiff.gradient( 
-    fn, tof_Δv_vec_flat ) 
+dfn = tof_Δv -> ForwardDiff.gradient( 
+    fn, tof_Δv ) 
     
-dfn( tof_Δv_vec_flat ) 
+dfn( tof_Δv ) 
