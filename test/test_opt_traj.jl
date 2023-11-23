@@ -3,37 +3,11 @@ using ForwardDiff
 using LinearAlgebra 
 
 ## ============================================ ##
-# test miss distance 
-
-r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
-rv_0 = [ r_0 ; v_0 ] 
-rv_f = [ r_f ; v_f ] 
-tof_N = tof / N 
-
-miss_kepler = miss_distance_prop_kepler( 
-    rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
-
-obj( Δv_vec ) = miss_distance_prop_kepler( 
-        rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
-
-dobj = Δv_vec -> ForwardDiff.jacobian( obj, Δv_vec ) 
-
-Δv_soln = min_bfgs( obj, dobj, Δv_vec )
-
-# using Optim 
-
-# # optimization 
-# od       = OnceDifferentiable( obj, Δv_vec ; autodiff = :forward ) 
-# result   = optimize( od, Δv_vec, BFGS() ) 
-# hp       = result.minimizer 
-
-
-## ============================================ ##
 # test miss distance (min_bfgs exploded) 
 
 r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
-rv_0 = [ r_0 ; v_0 ] 
-rv_f = [ r_f ; v_f ] 
+rv_0  = [ r_0 ; v_0 ] 
+rv_f  = [ r_f ; v_f ] 
 tof_N = tof / N 
 
 # x starts off as a [N*3, 1] vector 
@@ -51,7 +25,7 @@ end
 out = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
 
 # define objective fn 
-fn( Δv_vec_flat ) = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+fn( Δv_vec_flat ) = miss_Δv_flat( rv_0, Δv_vec_flat, N, rv_f, tof_N, mu ) 
 fn( Δv_vec_flat ) 
 
 # create gradient 
@@ -105,7 +79,7 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
 
     # backtracking line search 
     alpha = alpha0 ; 
-    while fn(xnew) > fn(x) + c * alpha * g' * pk 
+    while fn(xnew) > fn(x) + ( c * alpha * g' * pk )[1] || isnan(fn(xnew))
         alpha = alpha * beta ; 
         xnew  = x + alpha * pk ; 
     end 
@@ -118,8 +92,8 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
     # secant equation 
     sk     = xnew - x ; 
     yk     = dfn(xnew) - dfn(x) ; 
-    # rhok   = 1/( yk' * sk ) ; 
-    rhok   = inv( yk' * sk ) 
+    rhok   = 1/( yk' * sk )[1] ; 
+    # rhok   = inv( yk' * sk ) 
     # I      = eye(size(Hk)) ; 
     Hk_new = ( I - rhok*sk*yk' ) * Hk * ( I - rhok*yk*sk' ) + rhok*sk*sk' ; 
 
@@ -137,3 +111,19 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
     push!( f_hist, f )  
 
 end 
+
+## ============================================ ##
+# get solution 
+
+x_min = min_bfgs( fn, dfn, Δv_vec_flat ) 
+
+Δv_sol = reshape(x_min, N, 3) 
+# Δv_sol = reshape(x_hist[end], N, 3) 
+
+miss_kepler = miss_distance_prop_kepler( 
+    rv_0, Δv_sol, N, rv_f, tof_N, mu)
+
+t_kep, rv_kep = prop_kepler_tof_Nseg( 
+    rv_0, Δv_sol, N, tof_N, mu ) 
+
+fig = plot_orbit( rv_kep ) 

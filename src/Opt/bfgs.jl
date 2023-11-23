@@ -29,52 +29,53 @@ function min_bfgs(
     # BFGS 
     k = 0 
     while norm(g) >= tol && niter <= maxiter && dx >= dxmin 
-
+    
         # increase iter 
         k += 1 
         println( "k = ", k ) 
-
+    
         # calculate gradient 
         g = dfn(x) ; 
-
+    
         # search direction 
         pk = - Hk * g ; 
-
+    
         # take step:
-        xnew = x + alpha * pk ; 
-
+        xnew = x + alpha .* pk ; 
+    
         # backtracking line search 
         alpha = alpha0 ; 
-        while fn(xnew) > fn(x) + c * alpha * g' * pk 
+        while fn(xnew) > fn(x) + ( c * alpha * g' * pk )[1] || isnan(fn(xnew))
             alpha = alpha * beta ; 
             xnew  = x + alpha * pk ; 
         end 
-
+    
         # check step 
         if ~isfinite(norm(xnew)) 
             println("x is inf or NaN") 
         end 
-
+    
         # secant equation 
         sk     = xnew - x ; 
         yk     = dfn(xnew) - dfn(x) ; 
-        rhok   = 1/( yk' * sk ) ; 
+        rhok   = 1/( yk' * sk )[1] ; 
+        # rhok   = inv( yk' * sk ) 
         # I      = eye(size(Hk)) ; 
         Hk_new = ( I - rhok*sk*yk' ) * Hk * ( I - rhok*yk*sk' ) + rhok*sk*sk' ; 
-
+    
         # update termination metrics
         niter = niter + 1 ;
         dx    = norm(xnew-x) ; 
         x     = xnew ;
         Hk    = Hk_new ; 
-
+    
         # save function output 
         f = fn(x) ; 
-
+    
         # save hist 
         push!( x_hist, x )
         push!( f_hist, f )  
-
+    
     end 
 
     x_sol = x_hist[end] 
