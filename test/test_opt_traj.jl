@@ -190,11 +190,11 @@ tof_Δv = [ tof_N ; Δv_vec_flat ]
 
 function miss_tof_Δv_flat( 
     rv_0, 
-    tof_N_Δv_vec_flat :: AbstractVector{T} , 
+    tof_N_Δv_vec_flat, 
     N, 
     rv_f, 
     mu 
-) where T<:AbstractFloat 
+) 
 
     # get tof and Δv 
     tof_N       = tof_N_Δv_vec_flat[1] 

@@ -161,7 +161,7 @@ function prop_kepler_tof_Nseg(
     # Propagating Through Each Segment 
     i = 1 
     rv_hist = [ apply_Δv( rv_k, Δv_vec[i,:] ) ] 
-    t_hist  = [ 0.0 ] 
+    t_hist  = [ ] ; push!( t_hist, 0.0 ) 
     for i = 1 : N 
 
         # apply dv 
@@ -170,7 +170,8 @@ function prop_kepler_tof_Nseg(
         # propagate and save 
         rv_k = prop_kepler_tof( rv_k_dv, tof_N, mu ) 
         push!( rv_hist, rv_k ) 
-        push!( t_hist, t_hist[end] + tof_N ) 
+        # push!( t_hist, t_hist[end] .+ tof_N ) 
+        push!( t_hist, tof_N ) 
 
     end 
     rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
