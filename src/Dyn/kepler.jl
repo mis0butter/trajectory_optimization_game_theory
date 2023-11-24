@@ -36,8 +36,8 @@ function kepler_E(
 )
 
     # starting guess 
-    E_k  = M 
-    E_kp1 = E_k - ( E_k - e*sin(E_k)- M ) / ( 1 - e*cos(E_k) ) 
+    E_k   = M 
+    E_kp1 = E_k .- ( E_k .- e*sin(E_k) .- M ) ./ ( 1 .- e*cos(E_k) ) 
 
     # Newton-Raphson iteration 
     while abs(E_kp1-E_k) > eps 
@@ -106,7 +106,7 @@ function elliptic_nu(
     # mean anomaly - propagate! 
     dM  = n * tof 
     M_0 = E_0 - e * sin(E_0) 
-    M_f = M_0 + dM 
+    M_f = M_0 .+ dM 
     
     # find final eccentric anomaly 
     E_f  = kepler_E( M_f, e ) 

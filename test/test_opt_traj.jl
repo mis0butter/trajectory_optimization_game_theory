@@ -217,3 +217,45 @@ dfn = tof_Δv -> ForwardDiff.gradient(
     fn, tof_Δv ) 
     
 dfn( tof_Δv ) 
+
+## ============================================ ##
+# test forwarddiff gradient with finite differencing 
+
+# define objective fn 
+fn( Δv_vec_flat ) = miss_Δv_flat( 
+    rv_0, Δv_vec_flat, N, rv_f, tof_N, mu ) 
+fn( Δv_vec_flat ) 
+
+# create gradient 
+dfn = Δv_vec_flat -> ForwardDiff.gradient( 
+    fn, Δv_vec_flat  ) 
+g = dfn( Δv_vec_flat ) 
+
+# try using finite differencing from library 
+central_fdm(5, 1)(sin, 1.0) 
+x = 1.0 
+central_fdm(5, 1)(sin, x) 
+x = [1.0, 2.0]
+central_fdm(5, 1)(sin, x[1] + x[2]) 
+central_fdm(5, 1)(sin, x[1] + x[2]) 
+
+# gradient 
+a    = randn(3, 3); a = a * a'
+f(x) = 0.5 * x' * a * x
+x    = rand(3) 
+g_fdm = grad( central_fdm(5, 1), f, x )[1] 
+
+# compare with ForwardDiff 
+g_fd  = ForwardDiff.gradient( f, x )  
+
+# test on our problem 
+g_fdm = grad( central_fdm(5, 1), fn, Δv_vec_flat )[1]  
+g_fd  = ForwardDiff.gradient( fn, Δv_vec_flat ) 
+
+# print out difference 
+println( "err norm: g_fdm - g_fd = ", norm(g_fdm - g_fd) ) 
+
+
+
+
+
