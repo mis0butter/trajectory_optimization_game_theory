@@ -255,6 +255,43 @@ g_fd  = ForwardDiff.gradient( fn, Δv_vec_flat )
 # print out difference 
 println( "err norm: g_fdm - g_fd = ", norm(g_fdm - g_fd) ) 
 
+dfn_fdm = Δv_vec_flat -> grad( central_fdm(5, 1), fn, Δv_vec_flat )[1] 
+g_fdm = dfn_fdm( Δv_vec_flat ) 
+g_fd  = dfn(Δv_vec_flat) 
+
+# print out difference 
+println( "err norm: g_fdm - g_fd = ", norm(g_fdm - g_fd) ) 
+
+# try with BFGS 
+
+x_min_fd  = min_bfgs( fn, dfn, Δv_vec_flat )  
+x_min_fdm = min_bfgs( fn, dfn_fdm, Δv_vec_flat )  
+
+
+Δv_sol_fd  = reshape(x_min_fd, N, 3) 
+Δv_sol_fdm = reshape(x_min_fdm, N, 3) 
+
+# Δv_sol = reshape(x_hist[end], N, 3) 
+
+miss_kepler_fd  = miss_distance_prop_kepler( 
+    rv_0, Δv_sol_fd, N, rv_f, tof_N, mu)
+miss_kepler_fdm = miss_distance_prop_kepler( 
+    rv_0, Δv_sol_fdm, N, rv_f, tof_N, mu)
+    
+t_kep, rv_kep_fd  = prop_kepler_tof_Nseg( 
+    rv_0, Δv_sol_fd, N, tof_N, mu ) 
+t_kep, rv_kep_fdm = prop_kepler_tof_Nseg( 
+    rv_0, Δv_sol_fdm, N, tof_N, mu ) 
+    
+fig = plot_orbit( rv_kep_fd ) 
+fig = plot_orbit( rv_kep_fdm, fig ) 
+
+
+
+
+
+
+
 
 
 
