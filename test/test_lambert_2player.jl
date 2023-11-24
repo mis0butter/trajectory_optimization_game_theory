@@ -1,4 +1,5 @@
 using trajectory_optimization_game_theory 
+using LinearAlgebra
 
 ## ============================================ ## 
 # define IC and target state 
@@ -6,8 +7,8 @@ using trajectory_optimization_game_theory
 mu = 398600.4415
 r = 6378.0
 kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
-kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 20*pi/180]
-t = (0.0, 3/4*orbitPeriod(kep0_E, mu)) 
+kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 90*pi/180]
+t = (0.0, 0.5*orbitPeriod(kep0_E, mu)) 
 prop_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
 prop_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
 
@@ -22,7 +23,7 @@ r1 = x₀_P[1:3]
 r2 = xf_E[1:3] 
 
 tof     = t[end]
-mu      = 398600.4418e9         # [m^3/s^2] 
+mu      = 398600.4415         # [km^3/s^2] 
 dm      = "retro" 
 Dtsec   = tof 
 v1, v2  = lambertbattin(r1, r2, mu, dm, tof) 
@@ -72,10 +73,30 @@ lines!( x_P_lambert[:,1], x_P_lambert[:,2], x_P_lambert[:,3]; linewidth = 2, lab
 
 display(fig) 
 
+## ============================================ ##
 
+# compute dv magnitudes 
+dv1 = norm(x₀_P[4:6] - v1)
+dv2 = norm(xf_E[4:6] - v2)
 
+println("Δv1 = ", dv1, " [km/s]")
+println("Δv2 = ", dv2, " [km/s]")
 
+# # solve for improved dv solution
+# output = minLambert(x₀_P, xf_E, mu, t)
 
+## ============================================ ##
+varyT0(kep0_P, x₀_E, t, mu)
+
+## ============================================ ##
+varyTF(kep0_P, x₀_E, (0.2*t[2], t[2]), mu)
+# varyTF(kep0_P, x₀_E, t, mu)
+
+## ============================================ ##
+# generate contour plot to vary both t0 and tf
+
+## ============================================ ##
+# simulate retargeting the maneuver given an updated target state 
 
 
 
