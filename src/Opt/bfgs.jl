@@ -1,5 +1,6 @@
 using LinearAlgebra 
 
+"Minimize a function using BFGS method"
 function min_bfgs(  
     fn,                 # objective function 
     dfn,                # gradient of objective function 
