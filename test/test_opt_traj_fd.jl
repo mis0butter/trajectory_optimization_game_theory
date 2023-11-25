@@ -87,22 +87,29 @@ fn( tof_N_Δv_vec_flat ) = miss_tof_Δv_flat(
     rv_0, tof_N_Δv_vec_flat, N, rv_f, mu ) 
 fn( tof_Δv ) 
 
-# create gradient fn and compute 
+# create gradient fn  
+dfn_fd  = tof_Δv -> ForwardDiff.gradient( 
+    fn, tof_Δv ) 
 dfn_fdm = tof_Δv -> grad( 
     central_fdm(5, 1), fn, tof_Δv )[1]
+
+# compute gradient 
+g_fd  = dfn_fd( tof_Δv ) 
 g_fdm = dfn_fdm( tof_Δv ) 
+println( "err norm = ", norm( g_fd - g_fdm ) ) 
 
 # minimize 
-x_min_fdm  = min_bfgs( fn, dfn_fdm, tof_Δv )  
+x_min_fd   = min_bfgs( fn, dfn_fd, tof_Δv )  
+# x_min_fdm  = min_bfgs( fn, dfn_fdm, tof_Δv )  
 
 # get soln 
-tof_N_fdm  = x_min_fdm[1] 
-Δv_sol_fdm = reshape( x_min_fdm[2:end], N, 3 ) 
+tof_N_fd  = x_min_fd[1] 
+Δv_sol_fd = reshape( x_min_fd[2:end], N, 3 ) 
 
 # plot solution 
-t_kep, rv_kep_fdm = prop_kepler_tof_Nseg( 
-    rv_0, Δv_sol_fdm, N, tof_N, mu ) 
-fig = plot_orbit( rv_kep_fdm ) 
+t_kep, rv_kep_fd = prop_kepler_tof_Nseg( 
+    rv_0, Δv_sol_fd, N, tof_N, mu ) 
+fig = plot_orbit( rv_kep_fd ) 
 
 ## ============================================ ##
 ## ============================================ ##
@@ -110,7 +117,7 @@ fig = plot_orbit( rv_kep_fdm )
 
 tof_Δv = [ tof_N ; Δv_vec_flat ] 
 
-function min_tof_Δv_flat_miss( 
+function miss_mag_tof_Δv_flat( 
     rv_0, 
     tof_N_Δv_vec_flat, 
     N, 
@@ -122,39 +129,45 @@ function min_tof_Δv_flat_miss(
     tof_N       = tof_N_Δv_vec_flat[1] 
     Δv_vec_flat = tof_N_Δv_vec_flat[2:end] 
     
-    # get final miss 
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
     miss   = miss_distance_prop_kepler( 
         rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
 
-    # get magnitude of state 
-    state_mag = norm( tof_N_Δv_vec_flat )
+    # state magnitude 
+    state_mag = norm( tof_N_Δv_vec_flat ) 
     
     return miss + state_mag 
 end 
 
 # define objective fn 
-fn( tof_N_Δv_vec_flat ) = min_tof_Δv_flat_miss( 
+fn( tof_N_Δv_vec_flat ) = miss_mag_tof_Δv_flat( 
     rv_0, tof_N_Δv_vec_flat, N, rv_f, mu ) 
 fn( tof_Δv ) 
 
-# create gradient fn and compute 
+# create gradient fn  
+dfn_fd  = tof_Δv -> ForwardDiff.gradient( 
+    fn, tof_Δv ) 
 dfn_fdm = tof_Δv -> grad( 
     central_fdm(5, 1), fn, tof_Δv )[1]
+
+# compute gradient 
+g_fd  = dfn_fd( tof_Δv ) 
 g_fdm = dfn_fdm( tof_Δv ) 
+println( "err norm = ", norm( g_fd - g_fdm ) ) 
 
 # minimize 
-x_min_fdm  = min_bfgs( fn, dfn_fdm, tof_Δv )  
+x_min_fd   = min_bfgs( fn, dfn_fd, tof_Δv )  
+# x_min_fdm  = min_bfgs( fn, dfn_fdm, tof_Δv )  
 
 # get soln 
-tof_N_fdm  = x_min_fdm[1] 
-Δv_sol_fdm = reshape( x_min_fdm[2:end], N, 3 ) 
+tof_N_fd  = x_min_fd[1] 
+Δv_sol_fd = reshape( x_min_fd[2:end], N, 3 ) 
 
 # plot solution 
-t_kep, rv_kep_fdm = prop_kepler_tof_Nseg( 
-    rv_0, Δv_sol_fdm, N, tof_N, mu ) 
-fig = plot_orbit( rv_kep_fdm ) 
- 
+t_kep, rv_kep_fd = prop_kepler_tof_Nseg( 
+    rv_0, Δv_sol_fd, N, tof_N, mu ) 
+fig = plot_orbit( rv_kep_fd ) 
+
 
  
 
