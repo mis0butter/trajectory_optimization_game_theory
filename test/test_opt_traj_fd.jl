@@ -148,7 +148,7 @@ fn( tof_Δv )
 dfn_fd  = tof_Δv -> ForwardDiff.gradient( 
     fn, tof_Δv ) 
 dfn_fdm = tof_Δv -> grad( 
-    central_fdm(5, 1), fn, tof_Δv )[1]
+    central_fdm(5, 1), fn, tof_Δv )[1] 
 
 # compute gradient 
 g_fd  = dfn_fd( tof_Δv ) 
@@ -165,7 +165,7 @@ tof_N_fd  = x_min_fd[1]
 
 # plot solution 
 t_kep, rv_kep_fd = prop_kepler_tof_Nseg( 
-    rv_0, Δv_sol_fd, N, tof_N, mu ) 
+    rv_0, Δv_sol_fd, N, tof_N_fd, mu ) 
 fig = plot_orbit( rv_kep_fd ) 
 
 
