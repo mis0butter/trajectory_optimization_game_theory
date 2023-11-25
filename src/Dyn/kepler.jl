@@ -117,7 +117,7 @@ end
 
 # nu_f = elliptic_nu( e, n, nu_0, tof ) 
 
-## ============================================ ##
+## ============================================ ## 
 
 "Compute true anomaly from hyperbolic anomaly for hyperbolic orbits"
 function hyperbolic_nu(  
@@ -144,7 +144,7 @@ end
 
 # nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
 
-## ============================================ ##
+## ============================================ ## 
 
 "Propagate an initial state through a vector of N trajectory segments using Kepler's equations" 
 function prop_kepler_tof_Nseg(
@@ -155,23 +155,21 @@ function prop_kepler_tof_Nseg(
     mu = 1.0        # gravitational parameter 
 ) 
     
-    # Creating Iteration Variables
-    rv_k = copy(rv_0)
-
-    # Propagating Through Each Segment 
-    i = 1 
-    rv_hist = [ apply_Δv( rv_k, Δv_vec[i,:] ) ] 
+    # set up time and state hists 
+    rv_hist = [ apply_Δv( rv_k, Δv_vec[1,:] ) ] 
     t_hist  = [ ] ; push!( t_hist, 0.0 ) 
+
+    # propagate Through Each Segment 
+    rv_k = copy(rv_0)
     for i = 1 : N 
 
-        # apply dv 
+        # apply dv and propagate 
         rv_k_dv = apply_Δv( rv_k, Δv_vec[i,:] ) 
+        rv_k    = prop_kepler_tof( rv_k_dv, tof_N, mu ) 
 
-        # propagate and save 
-        rv_k = prop_kepler_tof( rv_k_dv, tof_N, mu ) 
+        # save 
         push!( rv_hist, rv_k ) 
-        # push!( t_hist, t_hist[end] .+ tof_N ) 
-        push!( t_hist, tof_N ) 
+        push!( t_hist, t_hist[end] .+ tof_N ) 
 
     end 
     rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
