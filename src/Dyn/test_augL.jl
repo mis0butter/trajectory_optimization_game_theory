@@ -14,8 +14,8 @@ c_fn(x) = [ x[2] - 1 ;
             x[3] - 1 ] 
 
 # lagrange multipliers and penalty parameters 
-λ_0 = [ 0.0 ; 0.0 ]  
-p_0 = [ 10.0 ; 10.0 ]  
+λ_0 = [ 0.0, 0.0 ]   
+p_0 = [ 10.0, 10.0 ]   
 γ   = 2.0 
 
 # define tol 
@@ -25,22 +25,25 @@ tol = 1e-6
 x_0 = [ 2.0, 2.0, 2.0 ] 
 
 # augmented lagrangian 
-function augL_fn(x, λ, p, γ) 
+function augL_fn( x, λ, p, γ, obj_fn, ψ_fn ) 
 
-    augL = obj_fn(x) + λ' * c_fn(x) + (p./2)' * c_fn(x).^2 
+    # augL = obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 
+
+    augL = obj_fn(x) 
+    for i in eachindex(λ)
+        augL += λ[i] * ψ_fn(x)[i] + (p[i]/2) * ψ_fn(x)[i]^2 
+    end 
 
     return augL 
 end 
-augL_fn( x_0, λ_0, p_0, γ ) 
+augL_fn( x_0, λ_0, p_0, γ, obj_fn, c_fn ) 
 
 # assign  
-fn(x) = augL_fn(x, λ_0, p_0, γ_0) 
+fn(x) = augL_fn( x, λ_0, p_0, γ, obj_fn, c_fn ) 
 
-# gradient fn 
+# gradient fn and compute 
 dfn  = x -> ForwardDiff.gradient( fn, x ) 
-
-# compute gradient 
-g  = dfn( x_0 ) 
+g    = dfn( x_0 ) 
 
 ## ============================================ ##
 # augmented Lagrangian method (equality-constrained) 
@@ -56,7 +59,7 @@ while loop
     k += 1 
 
     # step 1: assign augmented Lagrangian fn 
-    fn(x_k) = augL_fn(x_k, λ_k, p_k, γ) 
+    fn(x_k) = augL_fn( x_k, λ_k, p_k, γ, obj_fn, c_fn ) 
     dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
     # step 2: minimize unconstrained problem  
@@ -72,20 +75,28 @@ while loop
 
 end 
 
+println( "x min = ", x_k ) 
+
 ## ============================================ ##
 ## ============================================ ##
-# let's deal with one inequality constraint 
+# let's deal with inequality constraints  
 
 # obj fn 
 obj_fn(x) = (x[1] + 1)^2 + x[2]^2  + x[3]^2 
 
-# want x[1] >= 0 . h_fn formulated as <= 0 
-h_fn(x) = -x[1] + 1 
+# want: 
+#   x[1] >= 1 --> -x[1] + 1 <= 0 
+#   x[2] >= 1 --> -x[2] + 1 <= 0 
+# h_fn formulated as <= 0 
+h_fn(x) = [ -x[1] + 1 ; 
+            -x[2] + 1 ] 
+# h_fn(x) = -x[1] + 1  
 ψ_fn    = h_fn 
+N_h     = length( h_fn(x_0) ) 
 
 # lagrange multipliers and penalty parameters 
-λ_0 = 0.0  
-p_0 = 10.0  
+λ_0 = zeros(N_h) 
+p_0 = 10.0 * ones(N_h) 
 γ   = 2.0 
 
 # define tol 
@@ -94,15 +105,12 @@ tol = 1e-6
 # initial guess 
 x_0 = [ 2.0, 2.0, 2.0 ] 
 
-# augmented lagrangian 
-function augL_fn(x, λ, p, γ) 
+# assign  
+fn(x) = augL_fn( x, λ_0, p_0, γ, obj_fn, ψ_fn ) 
 
-    augL = obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 
-
-    return augL 
-end 
-augL_fn( x_0, λ_0, p_0, γ ) 
-
+# gradient fn and compute 
+dfn  = x -> ForwardDiff.gradient( fn, x ) 
+g    = dfn( x_0 ) 
 
 ## ============================================ ##
 
@@ -110,20 +118,20 @@ augL_fn( x_0, λ_0, p_0, γ )
 λ_k = copy( λ_0 )
 p_k = copy( p_0 ) 
 x_k = copy( x_0 ) 
-h_k = h_fn( x_k )
+ψ_k = ψ_fn( x_k )
 
 k = 0 ; loop = true 
 while loop 
 
     k += 1 
+    println( "k = ", k ) 
 
     # step 1: assign augmented Lagrangian fn 
-    fn(x_k) = augL_fn(x_k, λ_k, p_k, γ) 
-    dfn  = x_k -> ForwardDiff.gradient( fn, x_k ) 
+    fn(x_k) = augL_fn( x_k, λ_k, p_k, γ, obj_fn, ψ_fn ) 
+    dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
     # step 2: minimize unconstrained problem  
     x_min = min_bfgs( fn, dfn, x_k )  
-    println( "x min = ", x_min ) 
 
     # step 3 check convergence ... 
     dx = norm(x_min - x_k) 
@@ -131,11 +139,20 @@ while loop
         loop = false 
     end 
 
+    # update constraint values 
+    ψ_k = ψ_fn( x_min )
+
     # ... and update parameters 
-    λ_k = max( λ_k + p_k' * h_k, 0.0 ) 
-    h_k = h_fn( x_min ) 
-    if h_k > 0 
-        p_k *= γ
+    for i in eachindex(λ_k)
+
+        # update λ
+        λ_k[i] = max( λ_k[i] + p_k[i] * ψ_k[i] , 0.0 ) 
+
+        # update p 
+        if ψ_k[i] > 0 
+            p_k[i] *= γ 
+        end 
+
     end 
 
     # step 4: update x 
@@ -145,13 +162,6 @@ end
 
 ## ============================================ ##
 
-# ----------------------- #
-# plot for sanity check 
 
-fn(x,y) = obj_fn([x,y]) 
-x, y = -2:0.1:2, -2:0.1:2 
-z_obj = fn.(x,y')
 
-# plot 
-fig = plot_surface( x, y, z_obj ) 
-fig = plot_scatter( x_min[1], x_min[2], obj_fn(x_min), fig ) 
+
