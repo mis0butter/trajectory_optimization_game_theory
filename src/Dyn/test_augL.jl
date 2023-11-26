@@ -57,7 +57,7 @@ while loop
 
     # step 1: assign augmented Lagrangian fn 
     fn(x_k) = augL_fn(x_k, λ_k, p_k, γ) 
-    dfn  = x_k -> ForwardDiff.gradient( fn, x_k ) 
+    dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
     # step 2: minimize unconstrained problem  
     x_k = min_bfgs( fn, dfn, x_k )  
@@ -73,10 +73,38 @@ while loop
 end 
 
 ## ============================================ ##
+## ============================================ ##
 # let's deal with one inequality constraint 
 
+# obj fn 
+obj_fn(x) = (x[1] + 1)^2 + x[2]^2  + x[3]^2 
+
 # want x[1] >= 0 . h_fn formulated as <= 0 
-h_fn(x) = -x[1] + 1
+h_fn(x) = -x[1] + 1 
+ψ_fn    = h_fn 
+
+# lagrange multipliers and penalty parameters 
+λ_0 = 0.0  
+p_0 = 10.0  
+γ   = 2.0 
+
+# define tol 
+tol = 1e-6 
+
+# initial guess 
+x_0 = [ 2.0, 2.0, 2.0 ] 
+
+# augmented lagrangian 
+function augL_fn(x, λ, p, γ) 
+
+    augL = obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 
+
+    return augL 
+end 
+augL_fn( x_0, λ_0, p_0, γ ) 
+
+
+## ============================================ ##
 
 # step 0: initialize 
 λ_k = copy( λ_0 )
@@ -114,6 +142,8 @@ while loop
     x_k = x_min 
 
 end 
+
+## ============================================ ##
 
 # ----------------------- #
 # plot for sanity check 
