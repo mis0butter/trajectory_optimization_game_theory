@@ -29,10 +29,10 @@ function min_aug_L_eq(
     obj_fn,                                         # objective function 
     c_fn,                                           # constraint function: c = 0 
     x_0,                                            # initial guess 
+    tol     = 1e-6, 
     λ_0     = zeros(length(c_fn(x_0))),             # initial Lagrange multiplier  
     p_0     = 10.0 * ones(length(c_fn(x_0))),       # initial penalty parameter  
     γ       = 2.0,                                  # penalty parameter 
-    tol     = 1e-6, 
 ) 
 
     # step 0: initialize 
@@ -82,10 +82,10 @@ function min_aug_L_ineq(
     obj_fn,                                         # objective function 
     h_fn,                                           # inequality constraint function: h <= 0  
     x_0,                                            # initial guess 
+    tol     = 1e-6, 
     λ_0     = zeros(length(h_fn(x_0))),             # initial Lagrange multiplier  
     p_0     = 10.0 * ones(length(h_fn(x_0))),       # initial penalty parameter  
     γ       = 2.0,                                  # penalty parameter 
-    tol     = 1e-6, 
 ) 
 
     # step 0: initialize 
@@ -145,10 +145,10 @@ function min_aug_L_eq_ineq(
     c_fn,                                                           # constraint function: c = 0 
     h_fn,                                                           # inequality constraint function: h <= 0  
     x_0,                                                            # initial guess 
+    tol     = 1e-6, 
     λ_0     = zeros(length( [ c_fn(x_0) ; h_fn(x_0) ] )),           # initial Lagrange multiplier  
     p_0     = 10.0 * ones(length( [ c_fn(x_0) ; h_fn(x_0) ] )),     # initial penalty parameter  
     γ       = 2.0,                                                  # penalty parameter 
-    tol     = 1e-6, 
 ) 
 
     # step 0: initialize 

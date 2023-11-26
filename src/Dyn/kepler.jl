@@ -156,7 +156,7 @@ function prop_kepler_tof_Nseg(
 ) 
     
     # set up time and state hists 
-    rv_hist = [ apply_Δv( rv_k, Δv_vec[1,:] ) ] 
+    rv_hist = [ apply_Δv( rv_0, Δv_vec[1,:] ) ] 
     t_hist  = [ ] ; push!( t_hist, 0.0 ) 
 
     # propagate Through Each Segment 
@@ -211,24 +211,24 @@ export miss_distance_prop_kepler
 
 # ## ============================================ ##
 
-# "Calculate miss distance between trajectories using kepler propagation with FLATTENED Δv vector" 
-# function miss_Δv_flat( 
-#     rv_0,           # initial state vector of form [r; v] 
-#     Δv_vec_flat,    # [N*3,3] matrix of FLATTENED Δv vectors  
-#     N,              # number of segments 
-#     rv_f,           # target state vector of form [r; v] 
-#     tof_N = 1.0,    # tof for each segment 
-#     mu = 1.0        # gravitational parameter 
-# )
-    
-#     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
-#     miss   = miss_distance_prop_kepler( 
-#         rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
-    
-#     return miss 
-# end 
+"Compute miss distance between trajectories using kepler propagation and tof_N as part of the objective function with decision variable as [ tof_n ; Δv_flat ]"
+function miss_tof_Δv_flat( 
+    rv_0,               # initial state vector of form [r; v] 
+    tof_N_Δv_flat,      # [N*3+1,1] vector of tof_N and Δv_flat 
+    N,                  # number of segments 
+    rv_f,               # target state vector of form [r; v] 
+    mu = 1.0            # gravitational parameter 
+) 
 
-# export miss_Δv_flat 
-# # Δv_flat_sol = miss_Δv_flat( 
-# #     rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
+    # get tof and Δv 
+    tof_N   = tof_N_Δv_flat[1] 
+    Δv_flat = tof_N_Δv_flat[2:end] 
+    
+    Δv_vec  = reshape( Δv_flat, N, 3 ) 
+    miss    = miss_distance_prop_kepler( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+    
+    return miss 
+end 
+
+export miss_tof_Δv_flat 
 
