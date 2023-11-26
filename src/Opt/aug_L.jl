@@ -6,10 +6,10 @@ using LinearAlgebra
 = obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 "
 function aug_L_fn( 
     obj_fn,     # objective function 
-    ψ_fn,       # constraint function 
+    ψ_fn,       # constraint function(s) 
     x,          # state vector 
-    λ,          # Lagrange multiplier 
-    p,          # penalty parameter 
+    λ,          # Lagrange multiplier(s) 
+    p,          # penalty parameter(s) 
 ) 
 
     augL = obj_fn(x) 
@@ -45,28 +45,25 @@ function min_aug_L_eq(
 
         k += 1 
 
-        # step 1: assign augmented Lagrangian fn 
+        # assign augmented Lagrangian fn 
         fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_k, p_k ) 
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
-        # step 2: minimize unconstrained problem  
+        # minimize unconstrained problem  
         x_min = min_bfgs( fn, dfn, x_k )  
         
-        # step 3 check convergence ... 
-        dx = norm(x_min - x_k) 
-        if dx < tol 
-            loop = false 
+        # check convergence 
+        dx = norm( x_min - x_k ) 
+        if  ( dx < tol ) && 
+            ( norm(c_fn(x_min)) < tol ) 
+                loop = false 
         else 
             x_k = x_min 
         end 
 
-        # step 3: check constraint function and update parameters 
-        if norm( c_fn(x_k) ) > tol 
-            λ_k += p_k .* c_fn(x_k) 
-            p_k *= γ 
-        else 
-            loop = false 
-        end 
+        # update parameters 
+        λ_k += p_k .* c_fn(x_k) 
+        p_k *= γ 
 
     end 
 
@@ -89,10 +86,8 @@ function min_aug_L_ineq(
 ) 
 
     # step 0: initialize 
-    λ_k = copy( λ_0 )
-    p_k = copy( p_0 ) 
-    x_k = copy( x_0 ) 
-    h_k = h_fn( x_k )
+    λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
+    x_k = copy( x_0 ) ;     h_k = h_fn( x_k )
 
     k = 0 ; loop = true 
     while loop 
@@ -107,17 +102,16 @@ function min_aug_L_ineq(
         x_min = min_bfgs( fn, dfn, x_k )  
     
         # step 3 check convergence ... 
-        dx = norm(x_min - x_k) 
-        if dx < tol 
-            loop = false 
+        dx = norm( x_min - x_k ) 
+        if  ( dx < tol ) && 
+            ( norm(h_fn(x_min)) < tol ) 
+                loop = false 
         else 
             x_k = x_min 
         end 
     
-        # update constraint values 
-        h_k = h_fn( x_k )
-    
-        # ... and update parameters 
+        # update constraints and parameters 
+        h_k = h_fn(x_k)
         for i in eachindex(λ_k)
     
             # update λ
@@ -152,10 +146,8 @@ function min_aug_L_eq_ineq(
 ) 
 
     # step 0: initialize 
-    λ_k = copy( λ_0 )
-    p_k = copy( p_0 ) 
-    x_k = copy( x_0 ) 
-    h_k = h_fn( x_k ) 
+    λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
+    x_k = copy( x_0 ) ;     h_k = h_fn( x_k ) 
 
     # get number of equality constraints 
     N_c = length( c_fn(x_0) ) 
@@ -166,6 +158,8 @@ function min_aug_L_eq_ineq(
     k = 0 ; loop = true 
     while loop 
 
+        k += 1 
+
         # assign augmented Lagrangian fn 
         fn(x_k) = aug_L_fn( obj_fn, ψ_fn, x_k, λ_k, p_k ) 
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
@@ -174,7 +168,7 @@ function min_aug_L_eq_ineq(
         x_min = min_bfgs( fn, dfn, x_k )  
 
         # check convergence ... 
-        dx = norm(x_min - x_k) 
+        dx = norm( x_min - x_k ) 
         if  ( dx < tol ) && 
             ( norm(c_fn(x_min)) < tol ) && 
             ( norm(h_fn(x_min)) < tol ) 
@@ -196,7 +190,7 @@ function min_aug_L_eq_ineq(
         end 
 
         # now inequality constraints 
-        h_k = h_fn( x_k ) 
+        h_k = h_fn(x_k) 
         for i in eachindex( λ_h )
                 
             # update λ
