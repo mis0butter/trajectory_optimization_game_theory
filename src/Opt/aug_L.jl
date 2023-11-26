@@ -139,8 +139,7 @@ export min_aug_L_ineq
 
 ## ============================================ ##
 
-
-
+"Minimize equality and inequality-constrained Augmented Lagrangian"
 function min_aug_L_eq_ineq(  
     obj_fn,                                                         # objective function 
     c_fn,                                                           # constraint function: c = 0 
@@ -160,6 +159,9 @@ function min_aug_L_eq_ineq(
 
     # get number of equality constraints 
     N_c = length( c_fn(x_0) ) 
+    
+    # put constraints together 
+    ψ_fn(x) = [ c_fn(x) ; h_fn(x) ]  
 
     k = 0 ; loop = true 
     while loop 
@@ -177,6 +179,8 @@ function min_aug_L_eq_ineq(
             ( norm(c_fn(x_min)) < tol ) && 
             ( norm(h_fn(x_min)) < tol ) 
                 loop = false 
+        else 
+            x_k = x_min 
         end 
 
         # update multipliers!!!  
@@ -186,13 +190,13 @@ function min_aug_L_eq_ineq(
         p_c = p_k[1:N_c] ;  p_h = p_k[N_c+1:end] 
 
         # deal with equality constraints first 
-        if norm( c_fn(x_min) ) > tol 
-            λ_c += p_c .* c_fn(x_min) 
+        if norm( c_fn(x_k) ) > tol 
+            λ_c += p_c .* c_fn(x_k) 
             p_c *= γ 
         end 
 
         # now inequality constraints 
-        h_k = h_fn( x_min ) 
+        h_k = h_fn( x_k ) 
         for i in eachindex( λ_h )
                 
             # update λ
@@ -209,8 +213,6 @@ function min_aug_L_eq_ineq(
         λ_k = [ λ_c ; λ_h ] 
         p_k = [ p_c ; p_h ] 
 
-        # update x 
-        x_k = x_min 
     end 
 
     return x_k
