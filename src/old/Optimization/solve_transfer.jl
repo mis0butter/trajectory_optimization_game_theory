@@ -94,13 +94,19 @@ function solve_transfer(
 
         # Branching
         for i in eachindex(p_vec)
+
+            # equality constraints 
             if i ≤ mC && abs(h[i]) ≥ 1e-4
                 λ_vec[i] += p_vec[i]*abs(h[i])
                 p_vec[i] *= γ
 
-            elseif i > mC && ψ[i - mC] > -λ_vec[i]/p_vec[i]
-                λ_vec[i] = max(λ_vec[i] + p_vec[i]*ψ[i - mC], 0.0)
-                p_vec[i] *= ψ[i - mC] > 0.0 ? γ : 1
+            # inequality constraints 
+            elseif i > mC 
+
+                if ψ[i - mC] > -λ_vec[i]/p_vec[i] 
+                    λ_vec[i] = max(λ_vec[i] + p_vec[i]*ψ[i - mC], 0.0)
+                    p_vec[i] *= ψ[i - mC] > 0.0 ? γ : 1
+                end 
 
             end
         end

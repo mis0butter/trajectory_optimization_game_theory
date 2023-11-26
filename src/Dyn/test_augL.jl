@@ -14,7 +14,7 @@ c_fn(x) = [ x[2] - 1 ;
             x[3] - 1 ] 
 
 # lagrange multipliers and penalty parameters 
-λ_0 = [ 0.0; 0.0 ]  
+λ_0 = [ 0.0 ; 0.0 ]  
 p_0 = [ 10.0 ; 10.0 ]  
 γ   = 2.0 
 
@@ -60,22 +60,17 @@ while loop
     dfn  = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
     # step 2: minimize unconstrained problem  
-    x_min = min_bfgs( fn, dfn, x_k )  
-    println( "x min = ", x_min ) 
+    x_k = min_bfgs( fn, dfn, x_k )  
 
     # step 3: check constraint function and update parameters 
-    if norm( c_fn(x_min) ) > tol 
-        λ_k += p_k .* c_fn(x_min) 
+    if norm( c_fn(x_k) ) > tol 
+        λ_k += p_k .* c_fn(x_k) 
         p_k *= γ 
     else 
         loop = false 
     end 
 
-    # step 4: update x 
-    x_k = x_min 
-
 end 
-
 
 ## ============================================ ##
 # let's deal with one inequality constraint 
@@ -95,11 +90,7 @@ while loop
     k += 1 
 
     # step 1: assign augmented Lagrangian fn 
-    if h_k < -λ_k / p_k 
-        fn(x_k) = obj_fn(x_k) - λ_k^2 / (2*p_k) 
-    else 
-        fn(x_k) = obj_fn(x_k) + λ_k' * h_fn(x_k) + (p_k/2)' * h_k^2 
-    end
+    fn(x_k) = augL_fn(x_k, λ_k, p_k, γ) 
     dfn  = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
     # step 2: minimize unconstrained problem  

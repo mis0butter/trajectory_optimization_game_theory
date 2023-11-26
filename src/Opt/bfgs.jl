@@ -33,7 +33,6 @@ function min_bfgs(
     
         # increase iter 
         k += 1 
-        println( "k = ", k ) 
     
         # calculate gradient 
         g = dfn(x) ; 
