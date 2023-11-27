@@ -207,10 +207,6 @@ function nondim_rv(
     R,          # Earth radius 
 ) 
 
-    # extract position and velocity vectors 
-    r_vec = rv_vec[1:3] 
-    v_vec = rv_vec[4:6] 
-
     # Distance unit DU is defined by the Earth radius 
     DU = R
 

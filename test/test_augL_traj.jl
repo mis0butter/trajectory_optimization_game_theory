@@ -12,6 +12,7 @@ rv_f  = [ r_f ; v_f ]
 
 # reshape Δv_vec and add tof_N  
 tof_N       = tof / N 
+# tof_N       = tof 
 Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
 
 # set initial guess 
@@ -22,13 +23,13 @@ x_0 = [ tof_N ; Δv_vec_flat ]
 
 # define objective fn 
 fn( tof_Δv ) = miss_mag_tof_Δv_flat( rv_0, tof_Δv, N, rv_f, mu ) 
-fn( tof_Δv ) 
+fn( x_0 ) 
 
 # create gradient fn  
 dfn_fd  = tof_Δv -> ForwardDiff.gradient( fn, tof_Δv ) 
 
 # compute gradient 
-g_fd  = dfn_fd( tof_Δv ) 
+g_fd  = dfn_fd( x_0 ) 
 
 # minimize 
 x_min_fd   = min_bfgs( fn, dfn_fd, x_0 )  
@@ -49,7 +50,7 @@ fig = plot_scatter3d( r_f[1], r_f[2], r_f[3], fig )
 
 # define objective fn 
 obj_fn( tof_Δv ) = miss_mag_tof_Δv_flat( rv_0, tof_Δv, N, rv_f, mu ) 
-obj_fn( tof_Δv ) 
+obj_fn( x_0 ) 
 
 # ineq constraint function 
 h_fn(x) = -x[1] 
@@ -72,7 +73,6 @@ x_k = copy( x_0 )
 h_k = h_fn( x_k )
 
 k = 0 ; loop = true 
-
 while loop 
 
     k += 1 
@@ -133,9 +133,9 @@ println( "x min = ", x_k )
 # augmented Lagrangian ... equality-constrained 
 
 # objective function 
-# obj_fn(x) = sum_Δv_flat( x, N ) 
+obj_fn(x) = sum_Δv_flat( x, N ) 
 # obj_fn(x) = norm( x[2:end] )^2 
-obj_fn(x) = miss_mag_tof_Δv_flat( rv_0, x, N, rv_f, mu ) 
+# obj_fn(x) = miss_mag_tof_Δv_flat( rv_0, x, N, rv_f, mu ) 
 
 # eq constraint function 
 c_fn(x) = miss_tof_Δv_flat( rv_0, x, N, rv_f, mu ) 
