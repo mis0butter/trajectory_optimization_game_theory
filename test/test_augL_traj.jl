@@ -45,7 +45,7 @@ fig = plot_scatter3d( r_f[1], r_f[2], r_f[3], fig )
 
 ## ============================================ ##
 ## ============================================ ##
-# time to explode augmented Lagrangian 
+# inequality-constrained augmented Lagrangian 
 
 # define objective fn 
 obj_fn( tof_Δv ) = miss_mag_tof_Δv_flat( rv_0, tof_Δv, N, rv_f, mu ) 
@@ -63,14 +63,7 @@ p_0 = 10.0 * ones(N_h)
 # define tol 
 tol = 1e-6 
 
-# assign augmented objective function 
-fn(x) = aug_L_fn( obj_fn, h_fn, x, λ_0, p_0 ) 
-
-# gradient fn and compute 
-dfn  = x -> ForwardDiff.gradient( fn, x ) 
-g    = dfn( x_0 ) 
-
-## ============================================ ##
+# ----------------------- #
 
 # step 0: initialize 
 λ_k = copy( λ_0 )
@@ -140,14 +133,15 @@ println( "x min = ", x_k )
 # augmented Lagrangian ... equality-constrained 
 
 # objective function 
-obj_fn(x) = norm( x[2:end] )^2 
-# obj_fn(x) = miss_mag_tof_Δv_flat( rv_0, x, N, rv_f, mu ) 
+# obj_fn(x) = sum_Δv_flat( x, N ) 
+# obj_fn(x) = norm( x[2:end] )^2 
+obj_fn(x) = miss_mag_tof_Δv_flat( rv_0, x, N, rv_f, mu ) 
 
 # eq constraint function 
 c_fn(x) = miss_tof_Δv_flat( rv_0, x, N, rv_f, mu ) 
 N_c     = length( c_fn(x_0) ) 
 
-## ============================================ ##
+# ----------------------- #
 # augmented Lagrangian method (equality-constrained) 
 
 # step 0: initialize 

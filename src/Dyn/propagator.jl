@@ -196,3 +196,33 @@ function orbitPeriod(kep, mu)
     T = 2.0 * pi * sqrt(kep[1]^3 / mu)
     return T
 end
+
+## ============================================ ##
+
+"Non-dimensionalize position and velocity vectors"
+function nondim_rv(
+    r_vec,      # position vector  
+    v_vec,      # velocity vector 
+    mu,         # gravitational parameter 
+    R,          # Earth radius 
+) 
+
+    # extract position and velocity vectors 
+    r_vec = rv_vec[1:3] 
+    v_vec = rv_vec[4:6] 
+
+    # Distance unit DU is defined by the Earth radius 
+    DU = R
+
+    # Time unit TU is defined by Earth mu
+    TU = sqrt( DU^3 / mu )
+
+    # Converting Units
+    r̄_vec = r_vec / DU
+    v̄_vec = v_vec / (DU/TU)
+
+    # Outputting
+    return r̄_vec, v̄_vec, DU, TU
+end
+
+export nondim_rv 
