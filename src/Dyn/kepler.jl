@@ -200,7 +200,11 @@ function miss_distance_prop_kepler(
     rv_f_prop = rv_hist[end,:] 
 
     # Finding Miss Distance
-    Δrv_f = norm(rv_f_prop[1:3] - rv_f[1:3])
+    Δrv_f = norm( rv_f_prop[1:3] - rv_f[1:3] ) 
+
+    if isnan(Δrv_f) 
+        println("Δrv_f is nan")
+    end 
 
     return Δrv_f
 end 
@@ -231,4 +235,29 @@ function miss_tof_Δv_flat(
 end 
 
 export miss_tof_Δv_flat 
+
+## ============================================ ##
+
+function miss_mag_tof_Δv_flat( 
+    rv_0,               # initial state vector of form [r; v] 
+    tof_N_Δv_flat,      # [N*3+1,1] vector of tof_N and Δv_flat 
+    N,                  # number of segments 
+    rv_f,               # target state vector of form [r; v] 
+    mu = 1.0            # gravitational parameter 
+) 
+
+    # get tof and Δv 
+    tof_N       = tof_N_Δv_flat[1] 
+    Δv_vec_flat = tof_N_Δv_flat[2:end] 
+    
+    Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
+    miss   = miss_distance_prop_kepler( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+
+    # state magnitude 
+    state_mag = norm( tof_N_Δv_flat ) 
+    
+    return miss + state_mag 
+end 
+
+export miss_mag_tof_Δv_flat 
 

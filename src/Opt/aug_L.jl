@@ -55,7 +55,7 @@ function min_aug_L_eq(
         # check convergence 
         dx = norm( x_min - x_k ) 
         if  ( dx < tol ) && 
-            ( norm(c_fn(x_min)) < tol ) 
+            ( norm( c_fn(x_min) ) < tol ) 
                 loop = false 
         else 
             x_k = x_min 
@@ -94,17 +94,17 @@ function min_aug_L_ineq(
     
         k += 1 
     
-        # step 1: assign augmented Lagrangian fn 
+        # assign augmented Lagrangian fn 
         fn(x_k) = aug_L_fn( obj_fn, h_fn, x_k, λ_k, p_k ) 
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
     
-        # step 2: minimize unconstrained problem  
+        # minimize unconstrained problem  
         x_min = min_bfgs( fn, dfn, x_k )  
     
-        # step 3 check convergence ... 
+        # check convergence 
         dx = norm( x_min - x_k ) 
         if  ( dx < tol ) && 
-            ( norm(h_fn(x_min)) < tol ) 
+            ( norm( h_fn(x_min) ) < tol ) 
                 loop = false 
         else 
             x_k = x_min 
@@ -170,8 +170,8 @@ function min_aug_L_eq_ineq(
         # check convergence ... 
         dx = norm( x_min - x_k ) 
         if  ( dx < tol ) && 
-            ( norm(c_fn(x_min)) < tol ) && 
-            ( norm(h_fn(x_min)) < tol ) 
+            ( norm( c_fn(x_min) ) < tol ) && 
+            ( norm( h_fn(x_min) ) < tol ) 
                 loop = false 
         else 
             x_k = x_min 

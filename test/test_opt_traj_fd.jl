@@ -132,12 +132,12 @@ fn( tof_Δv )
 
 # create gradient fn  
 dfn_fd  = tof_Δv -> ForwardDiff.gradient( fn, tof_Δv ) 
-dfn_fdm = tof_Δv -> grad( central_fdm(5, 1), fn, tof_Δv )[1] 
+# dfn_fdm = tof_Δv -> grad( central_fdm(5, 1), fn, tof_Δv )[1] 
 
 # compute gradient 
 g_fd  = dfn_fd( tof_Δv ) 
-g_fdm = dfn_fdm( tof_Δv ) 
-println( "err norm = ", norm( g_fd - g_fdm ) ) 
+# g_fdm = dfn_fdm( tof_Δv ) 
+# println( "err norm = ", norm( g_fd - g_fdm ) ) 
 
 # minimize 
 x_min_fd   = min_bfgs( fn, dfn_fd, tof_Δv )  

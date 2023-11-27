@@ -41,7 +41,7 @@ z_min = rosenbrock( x_min, y_min )
 x, y = collect(-1.5:0.1:1.5), collect(-1.5:0.1:1.5) 
 z    = rosenbrock.(x,y') 
 fig  = plot_surface(x, y, z) 
-fig  = plot_scatter(x_min, y_min, z_min, fig, "min") 
+fig  = plot_scatter3d(x_min, y_min, z_min, fig, "min") 
 ax = fig.content[1] 
 ax.title = "Rosenbrock function" 
 

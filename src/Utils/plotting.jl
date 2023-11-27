@@ -74,7 +74,7 @@ export plot_surface
 ## ============================================ ##
 
 "Plot scatter using GLMakie"
-function plot_scatter( 
+function plot_scatter3d( 
     x,              # [N,1] grid of points 
     y,              # [N,1] grid of points 
     z,              # [N,N] grid of points evaluated at x and y 
@@ -90,7 +90,7 @@ function plot_scatter(
     end 
 
     if isequal(length(z), 1)
-        GLMakie.scatter!( x, y, z, marker = :utriangle, markersize = 20, color = :black ) 
+        GLMakie.scatter!( x, y, z, marker = :utriangle, markersize = 20, color = :red ) 
         if !isnothing(text) 
             text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
         end
@@ -101,7 +101,7 @@ function plot_scatter(
     return fig 
 end 
 
-export plot_scatter 
+export plot_scatter3d 
 
 ## ============================================ ##
 

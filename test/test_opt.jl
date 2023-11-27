@@ -99,6 +99,6 @@ x_sol  = x_hist[end]
 x_bfgs = min_bfgs( fn, dfn, x0 )
 
 fig = plot_surface( x, y, z ) 
-fig = plot_scatter( x_sol[1], x_sol[2] , fn(x_sol), fig ) 
+fig = plot_scatter3d( x_sol[1], x_sol[2] , fn(x_sol), fig ) 
 
 

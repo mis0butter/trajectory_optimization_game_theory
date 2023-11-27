@@ -16,7 +16,7 @@ obj_fn(x) = (x[1] + 1)^2 + x[2]^2  + x[3]^2
 c_fn(x) = x[3] - 1          # x[3] = 1 
 
 # ineq constraints: h_fn formulated as <= 0 
-h_fn(x) = [ -x[1] + 2.5 ;     # x[1] >= 1  
+h_fn(x) = [ -x[1] + 1 ;     # x[1] >= 1  
             -x[2] + 1 ]     # x[2] >= 1  
 
 
@@ -177,7 +177,7 @@ tol = 1e-6
 # initial guess 
 x_0 = [ 2.0, 2.0, 2.0 ] 
 
-# assign  
+# assign augmented objective function 
 fn(x) = aug_L_fn( obj_fn, h_fn, x, λ_0, p_0 ) 
 
 # gradient fn and compute 

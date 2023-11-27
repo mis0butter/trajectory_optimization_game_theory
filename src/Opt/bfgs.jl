@@ -13,7 +13,7 @@ function min_bfgs(
 ) 
 
     # init step size 
-    alpha = 1     ; alpha0 = alpha ; 
+    alpha = 1 ;     alpha0 = copy(alpha) ; 
 
     # initialize gradient norm, optimization vector, iteration counter, perturbation
     g = Inf ; x = x0 ; niter = 0 ; dx = Inf ;
@@ -29,7 +29,9 @@ function min_bfgs(
 
     # BFGS 
     k = 0 
-    while norm(g) >= tol && niter <= maxiter && dx >= dxmin 
+    while ( norm(g) >= tol ) && 
+          ( niter <= maxiter ) && 
+          ( dx >= dxmin ) 
     
         # increase iter 
         k += 1 
@@ -44,10 +46,11 @@ function min_bfgs(
         xnew = x + alpha .* pk ; 
     
         # backtracking line search 
-        alpha = alpha0 ; 
-        while fn(xnew) > fn(x) + ( c * alpha * g' * pk )[1] || isnan(fn(xnew))
-            alpha = alpha * beta ; 
-            xnew  = x + alpha * pk ; 
+        alpha = copy(alpha0) ; 
+        while fn(xnew) > fn(x) + ( c * alpha * g' * pk )[1] || 
+              isnan(fn(xnew))
+                alpha = alpha * beta ; 
+                xnew  = x + alpha * pk ; 
         end 
     
         # check step 
@@ -64,10 +67,13 @@ function min_bfgs(
         Hk_new = ( I - rhok*sk*yk' ) * Hk * ( I - rhok*yk*sk' ) + rhok*sk*sk' ; 
     
         # update termination metrics
-        niter = niter + 1 ;
         dx    = norm(xnew-x) ; 
         x     = xnew ;
         Hk    = Hk_new ; 
+        niter = niter + 1 ;
+        if niter == maxiter 
+            println("maxiter exceeded") 
+        end
     
         # save function output 
         f = fn(x) ; 

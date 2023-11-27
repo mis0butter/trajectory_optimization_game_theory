@@ -83,3 +83,17 @@ end
 
 export miss_distance_prop2Body 
 
+## ============================================ ##
+
+"Sum of Δv vector norms"
+function sum_Δv_flat( tof_N_Δv_vec_flat, N )
+
+    Δv_vec_flat = tof_N_Δv_vec_flat[2:end] 
+    Δv_vec      = reshape( Δv_vec_flat, N, 3 ) 
+    Δv          = [norm(Δv_vec[i, :]) for i in 1:N]
+    fuel_norm   = sum(Δv)
+
+    return fuel_norm
+end
+
+export sum_Δv_flat 
