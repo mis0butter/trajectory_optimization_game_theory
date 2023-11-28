@@ -7,7 +7,8 @@ using LinearAlgebra
 # init 
 
 r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
-rv_0  = [ r_0 ; v_0 ] 
+# rv_0  = [ r_0 ; v_0 ]
+rv_0  = [ r_0 ; 0*v_0 ] 
 rv_f  = [ r_f ; v_f ] 
 
 # reshape Δv_vec and add tof_N  
@@ -17,6 +18,13 @@ tof_N       = tof / N
 
 # set initial guess 
 x_0 = [ tof_N ; Δv_vec_flat ]  
+
+# plot solution 
+t_kep, rv_kep_fd = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N_fd, mu ) 
+fig = plot_orbit( rv_kep_fd ) 
+fig = plot_scatter3d( rv_kep_fd[:,1], rv_kep_fd[:,2], rv_kep_fd[:,3], fig ) 
+fig = plot_scatter3d( r_f[1], r_f[2], r_f[3], fig ) 
+
 
 ## ============================================ ##
 # test BFGS directly 

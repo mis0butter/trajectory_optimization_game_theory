@@ -18,10 +18,10 @@ function lambert_IC()
     # solve lambert orbit 
     v_0, v_f = lambertbattin( r_0, r_f, mu, dm, tof ) 
 
-    # # let's non-dimensionalize everything 
-    r_0, v_0 = nondim_rv( r_0, v_0, mu, R )
-    r_f, v_f = nondim_rv( r_f, v_f, mu, R )  
-    mu = 1.0 
+    # # # let's non-dimensionalize everything 
+    # r_0, v_0 = nondim_rv( r_0, v_0, mu, R )
+    # r_f, v_f = nondim_rv( r_f, v_f, mu, R )  
+    # mu = 1.0 
 
     rv_0     = [ r_0; v_0 ] 
 
@@ -31,22 +31,22 @@ function lambert_IC()
 
     # N segments 
     N = 20 
-    # Δv_vec = zeros(N, 3) 
-    # Δv_vec[1,:] = v_0 
+    Δv_vec = zeros(N, 3) 
+    Δv_vec[1,:] = v_0 
 
-    # initial position has all z velocity 
-    v_z = [ 0; 0; norm(v_0) ]
+    # # initial position has all z velocity 
+    # v_z = [ 0; 0; norm(v_0) ]
 
-    # compute delta v vec for lambert solution 
-    dv = v_0 - v_z   
+    # # compute delta v vec for lambert solution 
+    # dv = v_0 - v_z   
     # dv = v_0 
 
-    # break up delta v into smaller segments 
-    Δv_vec = [] 
-    for i = 1 : N 
-        push!( Δv_vec, dv/N ) 
-    end 
-    Δv_vec = mapreduce( permutedims, vcat, Δv_vec ) 
+    # # break up delta v into smaller segments 
+    # Δv_vec = [] 
+    # for i = 1 : N 
+    #     push!( Δv_vec, dv/N ) 
+    # end 
+    # Δv_vec = mapreduce( permutedims, vcat, Δv_vec ) 
 
     return  r_0,            # initial position 
             r_f,            # final position 

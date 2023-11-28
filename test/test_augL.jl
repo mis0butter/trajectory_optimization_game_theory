@@ -17,7 +17,7 @@ c_fn(x) = x[3] - 1          # x[3] = 1
 
 # ineq constraints: h_fn formulated as <= 0 
 h_fn(x) = [ -x[1] + 1 ;     # x[1] >= 1  
-            -x[2] + 1 ]     # x[2] >= 1  
+            -x[2] - 1 ]     # x[2] >= -1  
 
 
 x_k_check = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 ) 

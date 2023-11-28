@@ -35,15 +35,11 @@ function min_bfgs(
     
         # increase iter 
         k += 1 
-    
-        # calculate gradient 
-        g = dfn(x) ; 
-    
+
         # search direction 
-        pk = - Hk * g ; 
-    
-        # take step:
-        xnew = x + alpha .* pk ; 
+        g    = dfn(x)               # gradient   
+        pk   = - Hk * g             # search direction 
+        xnew = x + alpha .* pk      # take step 
     
         # backtracking line search 
         alpha = copy(alpha0) ; 
@@ -89,7 +85,7 @@ function min_golden_ratio(
     x, 
     fn; 
     tol = 1e-8, 
-    itermax = 50
+    itermax = 50, 
 )
 
     # Initializing

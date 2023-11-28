@@ -6,6 +6,6 @@ include("seebatt.jl")
 include("seebattk.jl") 
 
 # Exports
-export lambertbattin
+export lambertbattin, seebatt, seebattk 
 
 

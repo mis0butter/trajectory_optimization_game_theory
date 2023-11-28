@@ -29,7 +29,8 @@ function eom_2Body!(dx, x, mu, t)
     x2 = x[2]
     x3 = x[3]
 
-    mu_div_r3 = -mu/sqrt(x1^2 + x2^2 + x3^2) ^ 3
+    # mu_div_r3 = -mu/sqrt(x1^2 + x2^2 + x3^2) ^ 3
+    mu_div_r3 = -mu / norm(x[1:3])^3
 
     dx[1] = x[4]
     dx[2] = x[5]
@@ -211,7 +212,7 @@ function nondim_rv(
     DU = R
 
     # Time unit TU is defined by Earth mu
-    TU = sqrt( DU^3 / mu )
+    TU = sqrt( DU^3 / mu ) 
 
     # Converting Units
     r̄_vec = r_vec / DU
