@@ -20,7 +20,7 @@ c       = 1e-4     # backtracking line search parameter
 
 ## ============================================ ##
 
-function update_Hk_nocedal( x_k, x_kp1, H_k, dfn ) 
+function update_Hk( x_k, x_kp1, H_k, dfn ) 
 
     # secant equation 
     s_k     = x_kp1 - x_k  
@@ -33,7 +33,7 @@ function update_Hk_nocedal( x_k, x_kp1, H_k, dfn )
     return H_kp1 
 end 
 
-function update_Qk_russell( x_k, x_kp1, Q_k, dfn ) 
+function update_Qk( x_k, x_kp1, Q_k, dfn ) 
 
     y = dfn(x_kp1) - dfn(x_k) 
     p = x_kp1 - x_k 
@@ -105,8 +105,8 @@ while ( norm(g) >= tol ) &&
     # I      = eye(size(Hk)) ; 
     Hk_new = ( I - rhok*sk*yk' ) * Hk * ( I - rhok*yk*sk' ) + rhok*sk*sk' ; 
 
-    Hk_new_test = update_Hk_nocedal( x, xnew, Hk, dfn ) 
-    Qk_new_test = update_Qk_russell( x, xnew, Hk, dfn ) 
+    Hk_new_test = update_Hk( x, xnew, Hk, dfn ) 
+    Qk_new_test = update_Qk( x, xnew, Hk, dfn ) 
 
     # update termination metrics
     dx    = norm(xnew-x) ; 

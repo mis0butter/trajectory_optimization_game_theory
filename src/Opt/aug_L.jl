@@ -13,14 +13,86 @@ function aug_L_fn(
 ) 
 
     augL = obj_fn(x) 
-    for i in eachindex(λ)
-        augL += λ[i] * ψ_fn(x)[i] + (p[i]/2) * ψ_fn(x)[i]^2 
+    ψ    = ψ_fn(x) 
+
+    for i in eachindex(λ) 
+        augL += λ[i] * ψ[i] + (p[i]/2) * ψ[i]^2 
     end 
 
     return augL 
 end 
 
 export aug_L_fn 
+
+## ============================================ ##
+
+"Construct inequality-constrained Augmented Lagrangian function 
+= obj_fn(x) - λ^2 / 2p OR 
+= obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 "
+function aug_L_ineq_fn( 
+    obj_fn,     # objective function 
+    h_fn,       # inequality constraint function(s) 
+    x,          # state vector 
+    λ,          # Lagrange multiplier(s) 
+    p,          # penalty parameter(s) 
+) 
+
+    augL = obj_fn(x) 
+    h    = h_fn(x)
+
+    for i in eachindex(λ) 
+        if h[i] < -λ[i]/p[i] 
+            augL -= λ[i]^2 / (2*p[i]) 
+        else
+            augL += λ[i] * h[i] + (p[i]/2) * h[i]^2 
+        end 
+    end 
+
+    return augL 
+end 
+
+export aug_L_ineq_fn 
+
+
+
+## ============================================ ##
+
+"Construct equality and inequality-constrained Augmented Lagrangian function 
+= obj_fn(x) - λ^2 / 2p OR 
+= obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 "
+function aug_L_eq_ineq_fn( 
+    obj_fn,     # objective function 
+    c_fn,       # equality constraint function(s) 
+    h_fn,       # inequality constraint function(s) 
+    x,          # state vector 
+    λ_c,        # Lagrange multiplier(s) 
+    λ_h,        # Lagrange multiplier(s) 
+    p_c,        # penalty parameter(s) 
+    p_h,        # penalty parameter(s) 
+) 
+
+    augL = obj_fn(x) 
+    h    = h_fn(x)
+    c    = c_fn(x) 
+
+    # equality constraints 
+    for i in eachindex(λ_c) 
+        augL += λ_c[i] * c[i] + (p_c[i]/2) * c[i]^2 
+    end 
+
+    # inequality constraints 
+    for i in eachindex(λ_h) 
+        if h[i] < -λ_h[i]/p_h[i] 
+            augL -= λ_h[i]^2 / (2*p_h[i]) 
+        else
+            augL += λ_h[i] * h[i] + (p_h[i]/2) * h[i]^2 
+        end 
+    end 
+
+    return augL 
+end 
+
+export aug_L_eq_ineq_fn 
 
 ## ============================================ ##
 
@@ -45,14 +117,14 @@ function min_aug_L_eq(
 
         k += 1 
 
-        # assign augmented Lagrangian fn 
+        # step 1: assign augmented Lagrangian fn 
         fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_k, p_k ) 
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
-        # minimize unconstrained problem  
+        # step 2: minimize unconstrained problem  
         x_min = min_bfgs( fn, dfn, x_k )  
         
-        # check convergence 
+        # step 3 check convergence ... 
         dx = norm( x_min - x_k ) 
         if  ( dx < tol ) && 
             ( norm( c_fn(x_min) ) < tol ) 
@@ -61,7 +133,7 @@ function min_aug_L_eq(
             x_k = x_min 
         end 
 
-        # update parameters 
+        # step 3: check constraint function and update parameters 
         λ_k += p_k .* c_fn(x_k) 
         p_k *= γ 
 
@@ -91,39 +163,28 @@ function min_aug_L_ineq(
 
     k = 0 ; loop = true 
     while loop 
-    
+
         k += 1 
-    
-        # assign augmented Lagrangian fn 
-        fn(x_k) = aug_L_fn( obj_fn, h_fn, x_k, λ_k, p_k ) 
+
+        # step 1: assign augmented Lagrangian fn 
+        fn(x_k) = aug_L_ineq_fn( obj_fn, h_fn, x_k, λ_k, p_k ) 
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
-    
-        # minimize unconstrained problem  
+
+        # step 2: minimize unconstrained problem  
         x_min = min_bfgs( fn, dfn, x_k )  
-    
-        # check convergence 
-        dx = norm( x_min - x_k ) 
-        if  ( dx < tol ) && 
-            ( norm( h_fn(x_min) ) < tol ) 
-                loop = false 
+
+        # step 3 check convergence ... 
+        dx = norm(x_min - x_k) 
+        if dx < tol 
+            loop = false 
         else 
             x_k = x_min 
         end 
-    
-        # update constraints and parameters 
-        h_k = h_fn(x_k)
-        for i in eachindex(λ_k)
-    
-            # update λ
-            λ_k[i] = max( λ_k[i] + p_k[i] * h_k[i] , 0.0 ) 
-    
-            # update p 
-            if h_k[i] > 0 
-                p_k[i] *= γ 
-            end 
-    
-        end 
-    
+
+        # update constraint values 
+        h_k = h_fn( x_k )
+        λ_k, p_k = update_λ_p_ineq( λ_k, p_k, h_k, γ ) 
+
     end 
 
     return x_k 
@@ -147,65 +208,44 @@ function min_aug_L_eq_ineq(
 
     # step 0: initialize 
     λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
-    x_k = copy( x_0 ) ;     h_k = h_fn( x_k ) 
+    x_k = copy( x_0 ) ;     h_k = h_fn( x_k )
 
-    # get number of equality constraints 
-    N_c = length( c_fn(x_0) ) 
-    
-    # put constraints together 
-    ψ_fn(x) = [ c_fn(x) ; h_fn(x) ]  
+    # first split λ and p into eq and ineq constraints 
+    N_c = length( c_fn(x_k) ) 
+    λ_c = λ_k[1:N_c] ;      p_c = p_k[1:N_c] 
+    λ_h = λ_k[N_c+1:end] ;  p_h = p_k[N_c+1:end] 
 
     k = 0 ; loop = true 
     while loop 
 
-        k += 1 
-
-        # assign augmented Lagrangian fn 
-        fn(x_k) = aug_L_fn( obj_fn, ψ_fn, x_k, λ_k, p_k ) 
+        # step 1: assign augmented Lagrangian fn 
+        fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_c, p_c ) + 
+                  aug_L_ineq_fn( obj_fn, h_fn, x_k, λ_h, p_h ) 
+        # fn(x_k) = aug_L_eq_ineq_fn( obj_fn, c_fn, h_fn, x_k, λ_c, λ_h, p_c, p_h )
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
-        # minimize unconstrained problem  
+        # step 2: minimize unconstrained problem  
         x_min = min_bfgs( fn, dfn, x_k )  
 
-        # check convergence ... 
-        dx = norm( x_min - x_k ) 
+        # step 3 check convergence ... 
+        dx = norm(x_min - x_k) 
         if  ( dx < tol ) && 
-            ( norm( c_fn(x_min) ) < tol ) && 
-            ( norm( h_fn(x_min) ) < tol ) 
+            ( norm(c_fn(x_min)) < tol )  
+        #    ( norm(h_fn(x_min)) < tol ) 
                 loop = false 
         else 
             x_k = x_min 
         end 
 
-        # update multipliers!!!  
-
-        # first split λ and p into eq and ineq constraints 
-        λ_c = λ_k[1:N_c] ;  λ_h = λ_k[N_c+1:end] 
-        p_c = p_k[1:N_c] ;  p_h = p_k[N_c+1:end] 
-
-        # deal with equality constraints first 
+        # update equality constraints first 
         if norm( c_fn(x_k) ) > tol 
             λ_c += p_c .* c_fn(x_k) 
             p_c *= γ 
         end 
 
         # now inequality constraints 
-        h_k = h_fn(x_k) 
-        for i in eachindex( λ_h )
-                
-            # update λ
-            λ_h[i] = max( λ_h[i] + p_h[i] * h_k[i] , 0.0 ) 
-
-            # update p 
-            if h_k[i] > 0 
-                p_h[i] *= γ 
-            end 
-
-        end 
-
-        # assign multipliers back in 
-        λ_k = [ λ_c ; λ_h ] 
-        p_k = [ p_c ; p_h ] 
+        h_k      = h_fn(x_k) 
+        λ_h, p_h = update_λ_p_ineq( λ_h, p_h, h_k, γ ) 
 
     end 
 
@@ -213,3 +253,39 @@ function min_aug_L_eq_ineq(
 end 
 
 export min_aug_L_eq_ineq 
+
+## ============================================ ##
+
+"Update Lagrange multipliers and penalty parameters for inequality constraints"
+function update_λ_p_ineq( 
+    λ_k,        # Lagrange multiplier(s) 
+    p_k,        # penalty parameter(s) 
+    h_k,        # evaluated inequality constraint function: h <= 0 
+    γ           # step size 
+) 
+
+    # update parameters
+    if length(λ_k) == 1 
+
+        λ_k = max( λ_k + p_k * h_k , 0.0 ) 
+        if h_k > 0 
+            p_k *= γ 
+        end 
+
+    else 
+
+        for i in eachindex(λ_k)
+            λ_k[i] = max( λ_k[i] + p_k[i] * h_k[i] , 0.0 ) 
+            if h_k[i] > 0 
+                p_k[i] *= γ 
+            end     
+        end     
+
+    end 
+
+    return λ_k, p_k 
+end 
+
+export update_λ_p_ineq 
+
+
