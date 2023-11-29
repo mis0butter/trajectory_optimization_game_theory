@@ -30,7 +30,7 @@ x_min = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 )
 # define IC and target state 
 
 mu = 398600.4415
-r = 6378.0
+r  = 6378.0
 kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
 kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 90*pi/180]
 t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
@@ -44,15 +44,15 @@ xf_E = x_E[end]
 # ----------------------- #
 # lambert solve 
 
-r1 = x₀_P[1:3] 
-r2 = xf_E[1:3] 
+r_0 = x₀_P[1:3] 
+r_f = xf_E[1:3] 
 
 tof     = t[end]
 dm      = "retro" 
 Dtsec   = tof 
-v1, v2  = lambertbattin(r1, r2, mu, dm, tof) 
+v_0, v_f  = lambertbattin(r_0, r_f, mu, dm, tof) 
 
-x₀_P_lambert   = [r1; v1] 
+x₀_P_lambert   = [r_0; v_0] 
 t_P_lambert, x_P_lambert = propagate_2Body( x₀_P_lambert, tof, mu )
 
 # ----------------------- #
@@ -73,22 +73,28 @@ fig = plot_orbit( x_P_lambert, fig )
 # intercept problem: 
 # 
 # minimize 
-# 		delta_v_1 
+# 		v_0 = lambertbattin(r_0, r_f, mu, dm, tof) 
 # 
 # subject to: 	
-# 		tof = min( tof_pro, tof_retro ) 
-# 		v0  = min( v0_pro, v0_retro ) 
-# 
-# 		tof_pro,   v0_pro   = lambert( r_init, r_target, 'pro' )
-# 		tof_retro, v0_retro = lambert( r_init, r_target, 'pro' )
 # 
 # 		delta_v <= constraint 
 # 
 # state: 		
 # 		tof, v0 
 
-tof = 1.0 
-v0  = [ 1.0, 0.0, 0.0 ] 
+# first guess 
+x_0 = [ tof; v_0 ] 
+
+# obj fn 
+obj_fn(x) = norm(lambertbattin( r_0, r_f, mu, dm, x[1] )[1])
+
+# ineq constraints: h(x) <= 0  
+h_fn(x) = x[2:end] .- 10.0 
+
+x_min = min_aug_L_ineq( obj_fn, h_fn, x_0 ) 
+
+
+        
 
 
 
