@@ -8,7 +8,7 @@ mu = 398600.4415
 r = 6378.0
 kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
 kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 90*pi/180]
-t = (0.0, 0.5*orbitPeriod(kep0_E, mu)) 
+t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
 prop_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
 prop_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
 
@@ -76,29 +76,50 @@ display(fig)
 ## ============================================ ##
 
 # compute dv magnitudes 
-dv1 = norm(x₀_P[4:6] - v1)
-dv2 = norm(xf_E[4:6] - v2)
+dv1_mag = norm(x₀_P[4:6] - v1)
+dv2_mag = norm(xf_E[4:6] - v2)
 
-println("Δv1 = ", dv1, " [km/s]")
-println("Δv2 = ", dv2, " [km/s]")
-
-# # solve for improved dv solution
-# output = minLambert(x₀_P, xf_E, mu, t)
+println("Δv1 = ", dv1_mag, " [km/s]")
+println("Δv2 = ", dv2_mag, " [km/s]")
 
 ## ============================================ ##
-varyT0(kep0_P, x₀_E, t, mu)
+# varyT0(kep0_P, x₀_E, t, mu)
 
 ## ============================================ ##
-varyTF(kep0_P, x₀_E, (0.2*t[2], t[2]), mu)
+# varyTF(kep0_P, x₀_E, (0.2*t[2], t[2]), mu)
 # varyTF(kep0_P, x₀_E, t, mu)
 
 ## ============================================ ##
 # generate contour plot to vary both t0 and tf
 
+# lambertContour(t, x₀_P, x₀_E, mu)
+
 ## ============================================ ##
-# simulate retargeting the maneuver given an updated target state 
+# repeat above tests but for a shorter time of flight 
 
+mu = 398600.4415
+r = 6378.0
 
+kep0_P = [r+400.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+kep0_E = kep0_P
+kep0_E[3] = 5*pi/180
+kep0_E[4] = 5*pi/180
+
+tspan = (0.0, t[2])
+prop_P = propagate_2Body(kep2cart(kep0_P, mu), tspan, mu, 1.0)
+prop_E = propagate_2Body(kep2cart(kep0_E, mu), tspan, mu, 1.0)
+
+x₀_P = prop_P.u[1] 
+x₀_E = prop_E.u[1] 
+xf_E = prop_E.u[end] 
+
+varyT0(kep0_P, x₀_E, tspan, mu)
+varyTF(kep0_P, x₀_E, tspan, mu)
+output = lambertContour(tspan, x₀_P, x₀_E, mu)
+arg = argmin(output[1][:, 3])
+println("t0 = ", output[1][arg, 1])
+println("tf = ", output[1][arg, 2])
+println("|Δv1| + |Δv2| = ", output[1][arg, 3])
 
 
 

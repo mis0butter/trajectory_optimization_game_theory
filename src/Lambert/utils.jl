@@ -1,5 +1,5 @@
 #============================================
-minLambert: 
+minLambert: THIS IS BROKEN
 
 Description: solve for the minimum total delta V solution by iterating through Lambert outputs
 
@@ -63,7 +63,7 @@ function minLambert(x0_P, x0_E, mu, timeLims)
             end
  
         end
-        plotDV(output, dm[i])
+        # plotDV(output, dm[i])
         
         # println(dm[i])
         # println("Δv1 = ", minimum(dv1_vals), " [km/s]")
@@ -73,63 +73,76 @@ function minLambert(x0_P, x0_E, mu, timeLims)
     return output
 end
 
+export lambertContour
 #============================================
 plotDV:
 
-Description: plot total delta V solution from lambertbattin()
+Description: generate contour plot to vary both t0 and tf 
 
 Inputs: 
 
 Outputs: 
-    1. Plot
+    1. Plot for prograde solutions, log(|Δv|)
+    2. Plot for prograde solutions, |Δv|
+    3. Plot for retrograde solutions, log(|Δv|)
+    4. Plot for retrograde solutions, |Δv|
 ============================================#
-function plotDV(output, dm)
+function lambertContour(t, x₀_P, x₀_E, mu)
 
-    # unpack data from output
-    dv1 = []
-    dv2 = []
-    tStart = []
-    tEnd = []
+    t0 = 0.0001:t[2]/100:t[2]
+    tf = 0.0001:t[2]/100:t[2]
 
-    for i in 1:length(output)
-        push!(dv1, output[i][1])
-        push!(dv2, output[i][2])
-        push!(tStart, output[i][3])
-        push!(tEnd, output[i][4])
+    dm = ["pro", "retro"]
+    output = []
+
+    for i in 1:length(dm)
+        dir = dm[i]
+        vals = []
+        for i=1:length(t0)
+            for j=1:length(tf)
+                if t0[i] >= tf[j]
+                    continue
+                end
+        
+                dv1, dv2 = testLambert(x₀_P, x₀_E, mu, t0[i], tf[j], dir)
+                push!(vals, [t0[i], tf[j], dv1+dv2])
+            end
+        end
+        
+        vals = mapreduce( permutedims, vcat, vals) 
+        
+        fig = Figure()
+        ax = Axis(fig[1, 1]; aspect=DataAspect())
+        c = contourf!(ax, vals[:,1], vals[:,2], log.(vals[:,3]), levels=100, extendlow = :auto, extendhigh = :auto)
+        Colorbar(fig[1, 2], c, label="log(|Δv|) (km/s)")
+        ax.xlabel = "Maneuver 1 time (s)"
+        ax.ylabel = "Maneuver 2 time (s)"
+        if dm == "pro"
+            ax.title = "Prograde Lambert Solution: log(|Δv|) (km/s)"
+        else
+            ax.title = "Retrograde Lambert Solution: log(|Δv|) (km/s)"
+        end
+        save("plots/lambert_"*dir*"_logdvTotal_contour.png", fig)
+        
+        fig = Figure()
+        ax = Axis(fig[1, 1]; aspect=DataAspect())
+        c = contourf!(ax, vals[:,1], vals[:,2], vals[:,3], levels=100, extendlow = :auto, extendhigh = :auto)
+        Colorbar(fig[1, 2], c, label="|Δv| (km/s)")
+        ax.xlabel = "Maneuver 1 time (s)"
+        ax.ylabel = "Maneuver 2 time (s)"
+        if dm == "pro"
+            ax.title = "Prograde Lambert Solution: |Δv| (km/s)"
+        else
+            ax.title = "Retrograde Lambert Solution: |Δv| (km/s)"
+        end
+        
+        save("plots/lambert_"*dir*"_dvTotalcontour.png", fig)
+
+        push!(output, vals)
     end
 
-    dv1 = Float32.(dv1)
-    dv2 = Float32.(dv2)
-    tStart = Float32.(tStart)
-    tEnd = Float32.(tEnd)
-
-    # totalDV = sqrt(dv1.^2 + dv2.^2)
-
-    # contour map stuff - currently broken
-    # fig = Figure()
-    # axs = [Axis(fig[1, i]; aspect=DataAspect()) for i = 1:3]
-    # hm = heatmap!(axs[1], dv1, dv2, t)
-    # contour!(axs[2], dv1, dv2, t; levels=20)
-    # contourf!(axs[3], dv1, dv2, t)
-    # Colorbar(fig[1, 4], hm, height=Relative(0.5))
-    # fig
-    # display(fig)
-
-    # 2D plot 
-    fig = Figure()
-    # axs = [Axis(fig[1, i]; aspect=DataAspect()) for i = 1:3]
-    ax = Axis(fig[1, 1]; aspect=DataAspect())
-    scatter!(ax, tStart, dv1; markersize=2, color=:black)
-    ax.xlabel = "Maneuver 1 Time (s)"
-    ax.ylabel = "Maneuver 1 Δv (km/s)"
-    if dm == "pro"
-        ax.title = "Prograde Lambert Solution"
-    else
-        ax.title = "Retrograde Lambert Solution"
-    end
-    display(fig)
-
-end
+    return output
+end 
 
 export varyT0
 #============================================
@@ -317,13 +330,13 @@ function generateLambertPlots(fixedTraj, variableTraj, traj_prograde, traj_retro
         if dm[i] == "pro"
             ax.title = "Prograde Lambert Solutions"
             for j in 1:length(traj_prograde)
-                lines!(ax, traj_prograde[j][:,1], traj_prograde[j][:,2], traj_prograde[j][:,3]; linewidth = 2, color = :gray)
+                lines!(ax, traj_prograde[j][:,1], traj_prograde[j][:,2], traj_prograde[j][:,3]; linewidth = 2)
             end
             save("plots/lambert_"*source*"_prograde.png", fig)
         else
             ax.title = "Retrograde Lambert Solutions"
             for j in 1:length(traj_retrograde)
-                lines!(ax, traj_retrograde[j][:,1], traj_retrograde[j][:,2], traj_retrograde[j][:,3]; linewidth = 2, color = :gray)
+                lines!(ax, traj_retrograde[j][:,1], traj_retrograde[j][:,2], traj_retrograde[j][:,3]; linewidth = 2)
             end
             save("plots/lambert_"*source*"_retrograde.png", fig)
         end
@@ -390,3 +403,32 @@ function generateLambertPlots(fixedTraj, variableTraj, traj_prograde, traj_retro
     axislegend(ax, position = :rt)
     save("plots/lambert_"*source*"_rendezvous.png", fig)
 end 
+
+export testLambert
+function testLambert(r1_t0, r2_t0, mu, t1, t2, dm)
+    # propagate orbits to t1 and t2
+    r1_t1 = propagate_2Body(r1_t0, t1, mu).u[end]
+    
+    r2_t0_withDV = applyDV(r2_t0)
+    r2_t2 = propagate_2Body(r2_t0_withDV, t2, mu).u[end]
+
+    tof = t2 - t1
+
+    v1, v2 = lambertbattin(r1_t1[1:3], r2_t2[1:3], mu, dm, tof)
+    dv1 = norm(r1_t1[4:6] - v1)
+    dv2 = norm(r2_t2[4:6] - v2)
+    return dv1, dv2
+end
+
+export applyDV
+function applyDV(r2_t0, dvMag=0/1000)
+    r2_t0_new = r2_t0
+    
+    dir = rand(3)
+    dir = dir / norm(dir)
+    dv = dvMag * dir
+
+    r2_t0_new[4:6] = r2_t0_new[4:6] + dv
+
+    return r2_t0_new
+end
