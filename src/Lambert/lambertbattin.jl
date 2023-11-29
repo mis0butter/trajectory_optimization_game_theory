@@ -146,13 +146,20 @@ function lambertbattin(r1, r2, mu, dm, Dtsec)
         end
     end
 
-    v1 = zeros(3) 
-    v2 = zeros(3) 
-    for i= 1:3 
-        v1[i] = ( r2[i] - F*r1[i] )/G 
-        v2[i]  = ( GDot*r2[i] - r1[i] )/G 
-    end
+    # v1 = zeros(3) 
+    # v2 = zeros(3) 
+    # for i= 1:3 
+    #     v1[i] = ( r2[i] - F*r1[i] )/G 
+    #     v2[i]  = ( GDot*r2[i] - r1[i] )/G 
+    # end 
 
-    return v1, v2 
+    
+    v1 = [] ;  v2 = [] 
+    for i = 1:3
+        push!( v1, ( r2[i] - F*r1[i] )/G )
+        push!( v2,  ( GDot*r2[i] - r1[i] )/G ) 
+    end 
+
+    return v1 
 
 end 

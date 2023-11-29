@@ -46,3 +46,5 @@ function seebattk(v)
 
     return k 
 end 
+
+export seebattk 
