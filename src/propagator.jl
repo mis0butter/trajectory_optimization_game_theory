@@ -8,7 +8,7 @@ function propagate_2Body(x0, t, mu, dt = nothing)
     if isnothing(dt) 
         sol = solve(prob)
     else 
-        sol = solve(prob, dt = dt)
+        sol = solve(prob, saveat = dt)
     end
 
     t = sol.t 
