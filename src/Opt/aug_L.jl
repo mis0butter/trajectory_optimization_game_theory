@@ -120,7 +120,11 @@ function min_aug_L_eq(
 
         # step 1: assign augmented Lagrangian fn 
         fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_k, p_k ) 
-        dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
+        if length(x_k) == 1 
+            dfn = x_k -> ForwardDiff.derivative( fn, x_k )             
+        else 
+            dfn = x_k -> ForwardDiff.gradient( fn, x_k ) 
+        end 
 
         # step 2: minimize unconstrained problem  
         x_min = min_bfgs( fn, dfn, x_k )  
@@ -170,7 +174,11 @@ function min_aug_L_ineq(
 
         # step 1: assign augmented Lagrangian fn 
         fn(x_k) = aug_L_ineq_fn( obj_fn, h_fn, x_k, λ_k, p_k ) 
-        dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
+        if length(x_k) == 1 
+            dfn = x_k -> ForwardDiff.derivative( fn, x_k )             
+        else 
+            dfn = x_k -> ForwardDiff.gradient( fn, x_k ) 
+        end 
 
         # step 2: minimize unconstrained problem  
         x_min = min_bfgs( fn, dfn, x_k )  
@@ -268,14 +276,14 @@ function update_λ_p_ineq(
 ) 
 
     # update parameters
-    if length(λ_k) == 1 
+    # if length(λ_k) == 1 
 
-        λ_k = max( λ_k + p_k * h_k , 0.0 ) 
-        if h_k > 0 
-            p_k *= γ 
-        end 
+    #     λ_k = max( λ_k + p_k * h_k , 0.0 ) 
+    #     if h_k > 0 
+    #         p_k *= γ 
+    #     end 
 
-    else 
+    # else 
 
         for i in eachindex(λ_k)
             λ_k[i] = max( λ_k[i] + p_k[i] * h_k[i] , 0.0 ) 
@@ -284,7 +292,7 @@ function update_λ_p_ineq(
             end     
         end     
 
-    end 
+    # end 
 
     return λ_k, p_k 
 end 

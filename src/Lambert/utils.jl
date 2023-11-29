@@ -249,10 +249,11 @@ Outputs:
     6. Plot of tStart vs dv1 + dv2
 
 ============================================#
-function varyTF(kep0_P, x₀_E, t, mu)
+# function varyTF(kep0_P, x₀_E, t, mu)
+function varyTF(x0_P, x0_E, t, mu)
 
     # define initial pursuer state
-    x0_P = kep2cart(kep0_P, mu)
+    # x0_P = kep2cart(kep0_P, mu)
 
     # define times between t0 and tf
     tEnd = LinRange(t[1], t[2], 100)
@@ -273,7 +274,7 @@ function varyTF(kep0_P, x₀_E, t, mu)
     for j in 1:length(tEnd)
 
         # propagate evader orbit to specified time
-        x_E = propagate_2Body(x₀_E, tEnd[j], mu, 1.0).u
+        x_E = propagate_2Body(x0_E, tEnd[j], mu, 1.0).u
         rt_E = x_E[end][1:3]
         vt_E = x_E[end][4:6]
 

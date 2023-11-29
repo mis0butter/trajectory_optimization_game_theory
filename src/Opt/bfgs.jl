@@ -13,7 +13,7 @@ function min_bfgs(
 ) 
 
     # init step size 
-    alpha = 1 ;     alpha0 = copy(alpha) ; 
+    alpha = 1.0 ;     alpha0 = copy(alpha) ; 
 
     # initialize gradient norm, optimization vector, iteration counter, perturbation
     g = Inf ; x = x0 ; niter = 0 ; dx = Inf ;
