@@ -50,7 +50,7 @@ r_f = xf_E[1:3]
 tof     = t[end]
 dm      = "retro" 
 Dtsec   = tof 
-v_0, v_f  = lambertbattin(r_0, r_f, mu, dm, tof) 
+v_0  = lambertbattin(r_0, r_f, mu, dm, tof) 
 
 x₀_P_lambert   = [r_0; v_0] 
 t_P_lambert, x_P_lambert = propagate_2Body( x₀_P_lambert, tof, mu )

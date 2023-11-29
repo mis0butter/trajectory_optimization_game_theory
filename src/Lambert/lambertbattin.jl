@@ -159,6 +159,7 @@ function lambertbattin(r1, r2, mu, dm, Dtsec)
         push!( v1, ( r2[i] - F*r1[i] )/G )
         push!( v2,  ( GDot*r2[i] - r1[i] )/G ) 
     end 
+    v1 = [ v_i for v_i in v1 ]
 
     return v1 
 
