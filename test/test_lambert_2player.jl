@@ -9,12 +9,12 @@ r = 6378.0
 kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
 kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 90*pi/180]
 t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
-prop_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
-prop_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
+prop_P_t, prop_P_u = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
+prop_E_t, prop_E_u = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
 
-x₀_P = prop_P.u[1] 
-x₀_E = prop_E.u[1] 
-xf_E = prop_E.u[end] 
+x₀_P = prop_P_u[1]
+x₀_E = prop_E_u[1] 
+xf_E = prop_E_u[end] 
 
 ## ============================================ ##
 # lambert solve 
@@ -29,15 +29,15 @@ Dtsec   = tof
 v1, v2  = lambertbattin(r1, r2, mu, dm, tof) 
 
 x₀_P_lambert   = [r1; v1] 
-prop_P_lambert = propagate_2Body( x₀_P_lambert, tof, mu )
+prop_P_lambert_t, prop_P_lambert_u = propagate_2Body( x₀_P_lambert, tof, mu )
 
 ## ============================================ ##
 # propagate lambert orbit 
 
-x_P = prop_P.u 
+x_P = prop_P_u 
 x_P = mapreduce( permutedims, vcat, x_P ) 
 
-x_E = prop_E.u 
+x_E = prop_E_u 
 x_E = mapreduce( permutedims, vcat, x_E ) 
 
 x_P_lambert = prop_P_lambert.u 
@@ -75,43 +75,43 @@ display(fig)
 
 ## ============================================ ##
 
-# compute dv magnitudes 
-dv1_mag = norm(x₀_P[4:6] - v1)
-dv2_mag = norm(xf_E[4:6] - v2)
+# # compute dv magnitudes 
+# dv1_mag = norm(x₀_P[4:6] - v1)
+# dv2_mag = norm(xf_E[4:6] - v2)
 
-println("Δv1 = ", dv1_mag, " [km/s]")
-println("Δv2 = ", dv2_mag, " [km/s]")
+# println("Δv1 = ", dv1_mag, " [km/s]")
+# println("Δv2 = ", dv2_mag, " [km/s]")
 
-## ============================================ ##
-# varyT0(kep0_P, x₀_E, t, mu)
+# ## ============================================ ##
+# # varyT0(kep0_P, x₀_E, t, mu)
 
-## ============================================ ##
-# varyTF(kep0_P, x₀_E, (0.2*t[2], t[2]), mu)
-# varyTF(kep0_P, x₀_E, t, mu)
+# ## ============================================ ##
+# # varyTF(kep0_P, x₀_E, (0.2*t[2], t[2]), mu)
+# # varyTF(kep0_P, x₀_E, t, mu)
 
-## ============================================ ##
-# generate contour plot to vary both t0 and tf
+# ## ============================================ ##
+# # generate contour plot to vary both t0 and tf
 
-# lambertContour(t, x₀_P, x₀_E, mu)
+lambertContour(t, x₀_P, x₀_E, mu)
 
-## ============================================ ##
-# repeat above tests but for a shorter time of flight 
+# ## ============================================ ##
+# # repeat above tests but for a shorter time of flight 
 
 mu = 398600.4415
 r = 6378.0
 
 kep0_P = [r+400.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 kep0_E = kep0_P
-kep0_E[3] = 5*pi/180
-kep0_E[4] = 5*pi/180
+kep0_E[3] = 5*pi/180 # inclination
+kep0_E[4] = 5*pi/180 # RAAN
 
-tspan = (0.0, t[2])
-prop_P = propagate_2Body(kep2cart(kep0_P, mu), tspan, mu, 1.0)
-prop_E = propagate_2Body(kep2cart(kep0_E, mu), tspan, mu, 1.0)
+tspan = (0.0, 20*60)
+prop_P_t, prop_P_u = propagate_2Body(kep2cart(kep0_P, mu), tspan, mu, 1.0)
+prop_E_t, prop_E_u = propagate_2Body(kep2cart(kep0_E, mu), tspan, mu, 1.0)
 
-x₀_P = prop_P.u[1] 
-x₀_E = prop_E.u[1] 
-xf_E = prop_E.u[end] 
+x₀_P = prop_P_u[1] 
+x₀_E = prop_E_u[1] 
+xf_E = prop_E_u[end] 
 
 varyT0(kep0_P, x₀_E, tspan, mu)
 varyTF(kep0_P, x₀_E, tspan, mu)

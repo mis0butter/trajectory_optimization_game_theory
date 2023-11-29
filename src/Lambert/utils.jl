@@ -33,7 +33,8 @@ function minLambert(x0_P, x0_E, mu, timeLims)
         for j in 1:length(tStart)
             
             # propagate pursuer to start time
-            xt_P = propagate_2Body(x0_P, tStart[j], mu).u[end]
+            xt_P_t, xt_P_u = propagate_2Body(x0_P, tStart[j], mu)
+            xt_P = xt_P_u[end]
             rt_P = xt_P[1:3]
             vt_P = xt_P[4:6]
 
@@ -47,7 +48,8 @@ function minLambert(x0_P, x0_E, mu, timeLims)
                 end
 
                 # propagate evader to end time
-                xf_E = propagate_2Body(xt_E, tEnd[j], mu).u[end]
+                xf_E_t, xf_E_u = propagate_2Body(xt_E, tEnd[j], mu)
+                xf_E = xf_E_U[end]
 
                 # get final state components for evader
                 rf_E = xf_E[1:3]
@@ -175,12 +177,13 @@ function varyT0(kep0_P, x₀_E, t, mu)
     x0_P = kep2cart(kep0_P, mu)
 
     # propagate final evader state
-    x_E = propagate_2Body(x₀_E, tStart[end], mu).u
-    rf_E = x_E[end][1:3]
-    vf_E = x_E[end][4:6]
+    x_E_t, x_E_u = propagate_2Body(x₀_E, tStart[end], mu)
+    x_E = x_E_u[end]
+    rf_E = x_E[1:3]
+    vf_E = x_E[4:6]
 
     # convert to matrix for plotting
-    x_E = mapreduce(permutedims, vcat, x_E)
+    x_E = mapreduce(permutedims, vcat, x_E_u)
 
     dv1_pro = []
     dv1_retro = []
@@ -195,9 +198,9 @@ function varyT0(kep0_P, x₀_E, t, mu)
         currentStart = tStart[j]
 
         # propagate pursuer to tStart
-        x_P = propagate_2Body(x0_P, currentStart, mu).u
-        rt_P = x_P[end][1:3]
-        vt_P = x_P[end][4:6]
+        x_P_t, x_P_u = propagate_2Body(x0_P, currentStart, mu)
+        rt_P = x_P_u[end][1:3]
+        vt_P = x_P_u[end][4:6]
         
         # get lambert solution between pursuer state at t to evader state at tStart[end]
         v1_pro, v2_pro = lambertbattin(rt_P, rf_E, mu, "pro", tStart[end])
@@ -209,19 +212,19 @@ function varyT0(kep0_P, x₀_E, t, mu)
         push!(dv2_pro, norm(vf_E - v2_pro))
         push!(dv2_retro, norm(vf_E - v2_retro))
 
-        x_P = mapreduce(permutedims, vcat, x_P)
+        x_P = mapreduce(permutedims, vcat, x_P_u)
         push!(traj_P, x_P)
 
         # generate output for prograde trajectories        
         x₀_P_lambert = [rt_P; v1_pro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tStart[end], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tStart[end], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_prograde, x_P_lambert)
 
         # generate output for retrograde trajectories
         x₀_P_lambert = [rt_P; v1_retro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tStart[end], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tStart[end], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_retrograde, x_P_lambert)
     end
 
@@ -273,9 +276,9 @@ function varyTF(kep0_P, x₀_E, t, mu)
     for j in 1:length(tEnd)
 
         # propagate evader orbit to specified time
-        x_E = propagate_2Body(x₀_E, tEnd[j], mu, 1.0).u
-        rt_E = x_E[end][1:3]
-        vt_E = x_E[end][4:6]
+        x_E_t, x_E_u = propagate_2Body(x₀_E, tEnd[j], mu, 1.0)
+        rt_E = x_E_u[end][1:3]
+        vt_E = x_E_u[end][4:6]
 
         # get lambert solution between pursuer state at t to evader state at tStart[end]
         v1_pro, v2_pro = lambertbattin(r0_P, rt_E, mu, "pro", tEnd[j])
@@ -287,19 +290,19 @@ function varyTF(kep0_P, x₀_E, t, mu)
         push!(dv2_pro, norm(vt_E - v2_pro))
         push!(dv2_retro, norm(vt_E - v2_retro))
 
-        x_E = mapreduce(permutedims, vcat, x_E)
+        x_E = mapreduce(permutedims, vcat, x_E_u)
         push!(traj_E, x_E)
         
         # generate output for prograde trajectories        
         x₀_P_lambert = [r0_P; v1_pro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tEnd[j], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tEnd[j], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_prograde, x_P_lambert)
 
         # generate output for retrograde trajectories
         x₀_P_lambert = [r0_P; v1_retro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tEnd[j], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tEnd[j], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_retrograde, x_P_lambert)
 
     end
@@ -407,10 +410,12 @@ end
 export testLambert
 function testLambert(r1_t0, r2_t0, mu, t1, t2, dm)
     # propagate orbits to t1 and t2
-    r1_t1 = propagate_2Body(r1_t0, t1, mu).u[end]
+    r1_t1_t, r1_t1_u = propagate_2Body(r1_t0, t1, mu)
+    r1_t1 = r1_t1_u[end]
     
     r2_t0_withDV = applyDV(r2_t0)
-    r2_t2 = propagate_2Body(r2_t0_withDV, t2, mu).u[end]
+    r2_t2_t, r2_t2_u = propagate_2Body(r2_t0_withDV, t2, mu)
+    r2_t2 = r2_t2_u[end]
 
     tof = t2 - t1
 

@@ -8,5 +8,4 @@ include("utils.jl")
 
 # Exports
 export lambertbattin
-export minLambert, plotDV
 

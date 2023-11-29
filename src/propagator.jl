@@ -11,7 +11,9 @@ function propagate_2Body(x0, t, mu, dt = nothing)
         sol = solve(prob, dt = dt)
     end
 
-    return sol 
+    t = sol.t
+    u = sol.u
+    return t, u
 end
 
 export eom_2Body! 
