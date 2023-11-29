@@ -113,13 +113,34 @@ x₀_P = prop_P_u[1]
 x₀_E = prop_E_u[1] 
 xf_E = prop_E_u[end] 
 
-varyT0(kep0_P, x₀_E, tspan, mu)
-varyTF(kep0_P, x₀_E, tspan, mu)
-output = lambertContour(tspan, x₀_P, x₀_E, mu)
-arg = argmin(output[1][:, 3])
-println("t0 = ", output[1][arg, 1])
-println("tf = ", output[1][arg, 2])
-println("|Δv1| + |Δv2| = ", output[1][arg, 3])
+# varyT0_out = varyT0(kep0_P, x₀_E, tspan, mu)
+# plotTrajAnimation(varyT0_out)
+varyTF_out = varyTF(kep0_P, x₀_E, tspan, mu)
+tEnd = varyTF_out[5]
+dv1_pro = varyTF_out[6]
+dv1_retro = varyTF_out[7]
+
+pro_min = argmin(dv1_pro)
+retro_min = argmin(dv1_retro)
+
+dv1_min = min(dv1_pro[pro_min], dv1_retro[retro_min])
+if dv1_min == dv1_pro[pro_min]
+    t_min = tEnd[pro_min]
+else
+    t_min = tEnd[retro_min]
+end
+
+println("t1 = ", t_min)
+println("dv1 = ", dv1_min)
+
+# min_dv1_retro = minimum(dv1_retro)
+
+
+# output = lambertContour(tspan, x₀_P, x₀_E, mu)
+# arg = argmin(output[1][:, 3])
+# println("t0 = ", output[1][arg, 1])
+# println("tf = ", output[1][arg, 2])
+# println("|Δv1| + |Δv2| = ", output[1][arg, 3])
 
 
 

@@ -115,11 +115,11 @@ function lambertContour(t, x₀_P, x₀_E, mu)
         
         fig = Figure()
         ax = Axis(fig[1, 1]; aspect=DataAspect())
-        c = contourf!(ax, vals[:,1], vals[:,2], log.(vals[:,3]), levels=100, extendlow = :auto, extendhigh = :auto)
+        c = contourf!(ax, vals[:,1], vals[:,2], log.(vals[:,3]), levels = range(0, 100, length = 100), extendlow = :cyan, extendhigh = :magenta)
         Colorbar(fig[1, 2], c, label="log(|Δv|) (km/s)")
         ax.xlabel = "Maneuver 1 time (s)"
         ax.ylabel = "Maneuver 2 time (s)"
-        if dm == "pro"
+        if dir == "pro"
             ax.title = "Prograde Lambert Solution: log(|Δv|) (km/s)"
         else
             ax.title = "Retrograde Lambert Solution: log(|Δv|) (km/s)"
@@ -128,11 +128,11 @@ function lambertContour(t, x₀_P, x₀_E, mu)
         
         fig = Figure()
         ax = Axis(fig[1, 1]; aspect=DataAspect())
-        c = contourf!(ax, vals[:,1], vals[:,2], vals[:,3], levels=100, extendlow = :auto, extendhigh = :auto)
+        c = contourf!(ax, vals[:,1], vals[:,2], vals[:,3], levels = range(0, 100, length = 100), extendlow = :cyan, extendhigh = :magenta)
         Colorbar(fig[1, 2], c, label="|Δv| (km/s)")
         ax.xlabel = "Maneuver 1 time (s)"
         ax.ylabel = "Maneuver 2 time (s)"
-        if dm == "pro"
+        if dir == "pro"
             ax.title = "Prograde Lambert Solution: |Δv| (km/s)"
         else
             ax.title = "Retrograde Lambert Solution: |Δv| (km/s)"
@@ -229,6 +229,7 @@ function varyT0(kep0_P, x₀_E, t, mu)
     end
 
     generateLambertPlots(x_E, traj_P, traj_prograde, traj_retrograde, tStart, dv1_pro, dv1_retro, dv2_pro, dv2_retro)
+    return [x_E, traj_P, traj_prograde, traj_retrograde, tStart, dv1_pro, dv1_retro, dv2_pro, dv2_retro]
 end
 
 export varyTF
@@ -308,7 +309,8 @@ function varyTF(kep0_P, x₀_E, t, mu)
     end
 
     generateLambertPlots(x0_P, traj_E, traj_prograde, traj_retrograde, tEnd, dv1_pro, dv1_retro, dv2_pro, dv2_retro, "varyTF")
-end
+    return [x0_P, traj_E, traj_prograde, traj_retrograde, tEnd, dv1_pro, dv1_retro, dv2_pro, dv2_retro, "varyTF"]
+end 
 
 
 function generateLambertPlots(fixedTraj, variableTraj, traj_prograde, traj_retrograde, tVals, dv1_pro, dv1_retro, dv2_pro, dv2_retro, source="varyT0")
@@ -406,6 +408,44 @@ function generateLambertPlots(fixedTraj, variableTraj, traj_prograde, traj_retro
     axislegend(ax, position = :rt)
     save("plots/lambert_"*source*"_rendezvous.png", fig)
 end 
+
+export plotTrajAnimation
+function plotTrajAnimation(vary_output)
+    fixed_traj = vary_output[1]
+    variable_traj  = vary_output[2]
+    traj_prograde = vary_output[3]
+    traj_retrograde = vary_output[4]
+    tVals  = vary_output[5]
+    dv1_pro = vary_output[6]
+    dv1_retro = vary_output[7]
+    dv2_pro = vary_output[8]
+    dv2_retro = vary_output[9]
+
+    fig = Figure()
+    ax = Axis3(fig[1, 1], 
+        xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)")
+    N = length(tVals)
+
+    record(fig, "plots/trajAnimation.mp4", 1:1:N) do i
+        # plot pursuer and evader trajectories 
+        lines!(ax, x_P[:,1], x_P[:,2], x_P[:,3]; linewidth = 2, color = :green)
+        lines!(ax, x_E[:,1], x_E[:,2], x_E[:,3]; linewidth = 2, color = :red)
+
+        # plot lambert trajectories
+    end
+
+
+    # record(fig, "plots/trajAnimation.mp4", 1:1:N) do i
+    #     _x = LinRange(xmin[i], xmax[i], 200)
+    #     _y = LinRange(ymin[i], ymax[i], 200)
+    #     hm[1] = _x # update x coordinates
+    #     hm[2] = _y # update y coordinates
+    #     hm[3] = mandelbrot.(_x, _y') # update data
+    #     autolimits!(ax) # update limits
+    #     # yield() -> not required with record
+    # end
+end
+
 
 export testLambert
 function testLambert(r1_t0, r2_t0, mu, t1, t2, dm)
