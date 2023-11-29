@@ -9,12 +9,12 @@ r = 6378.0
 kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
 kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 90*pi/180]
 t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
-prop_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
-prop_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
+t_P, x_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
+t_E, x_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
 
-x₀_P = prop_P.u[1] 
-x₀_E = prop_E.u[1] 
-xf_E = prop_E.u[end] 
+x₀_P = x_P[1] 
+x₀_E = x_E[1] 
+xf_E = x_E[end] 
 
 ## ============================================ ##
 # lambert solve 
@@ -29,7 +29,7 @@ Dtsec   = tof
 v1, v2  = lambertbattin(r1, r2, mu, dm, tof) 
 
 x₀_P_lambert   = [r1; v1] 
-prop_P_lambert = propagate_2Body( x₀_P_lambert, tof, mu )
+t_P_lambert, prop_P_lambert = propagate_2Body( x₀_P_lambert, tof, mu )
 
 ## ============================================ ##
 # propagate lambert orbit 
@@ -42,6 +42,11 @@ x_E = mapreduce( permutedims, vcat, x_E )
 
 x_P_lambert = prop_P_lambert.u 
 x_P_lambert = mapreduce( permutedims, vcat, x_P_lambert ) 
+
+
+## ============================================ ##
+
+fig = plot_orbit( x_P_lambert ) 
 
 ## ============================================ ##
 # plot 
