@@ -22,6 +22,48 @@ h_fn(x) = [ -x[1] + 1 ;     # x[1] >= 1   * active
 x_min = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 ) 
 
 ## ============================================ ##
+# lambert 
+
+# ----------------------- #
+# define IC and target state 
+
+mu = 398600.4415
+r = 6378.0
+kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
+kep0_E = [r+450.0, 0.0, 51.6*pi/180, 0.0, 0.0, 90*pi/180]
+t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
+t_P, x_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
+t_E, x_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
+
+x₀_P = x_P[1] 
+x₀_E = x_E[1] 
+xf_E = x_E[end] 
+
+# ----------------------- #
+# lambert solve 
+
+r1 = x₀_P[1:3] 
+r2 = xf_E[1:3] 
+
+tof     = t[end]
+dm      = "retro" 
+Dtsec   = tof 
+v1, v2  = lambertbattin(r1, r2, mu, dm, tof) 
+
+x₀_P_lambert   = [r1; v1] 
+t_P_lambert, x_P_lambert = propagate_2Body( x₀_P_lambert, tof, mu )
+
+# ----------------------- #
+# vector of vectors --> matrix 
+
+x_P = mapreduce( permutedims, vcat, x_P ) 
+x_E = mapreduce( permutedims, vcat, x_E ) 
+x_P_lambert = mapreduce( permutedims, vcat, x_P_lambert ) 
+
+# ----------------------- #
+fig = plot_orbit( x_P_lambert ) 
+
+## ============================================ ##
 # 
 # intercept problem: 
 # 
@@ -42,6 +84,8 @@ x_min = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 )
 
 tof = 1.0 
 v0  = [ 1.0, 0.0, 0.0 ] 
+
+
 
 
 

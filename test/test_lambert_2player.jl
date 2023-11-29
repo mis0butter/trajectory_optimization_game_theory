@@ -46,7 +46,10 @@ x_P_lambert = mapreduce( permutedims, vcat, x_P_lambert )
 
 ## ============================================ ##
 
-fig = plot_orbit( x_P_lambert ) 
+fig = plot_orbit( x_P ) 
+fig = plot_orbit( x_E, fig ) 
+fig = plot_orbit( x_P_lambert, fig ) 
+
 
 ## ============================================ ##
 # plot 
