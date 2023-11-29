@@ -1,0 +1,76 @@
+minimize 
+		tof 
+
+subject to: 	
+		tof = min( tof_pro, tof_retro ) 
+		v0  = min( v0_pro, v0_retro ) 
+
+		tof_pro,   v0_pro   = lambert( r_init, r_target, 'pro' )
+		tof_retro, v0_retro = lambert( r_init, r_target, 'pro' )
+
+		delta_v <= constraint 
+
+state: 		
+		tof, v0 
+
+
+
+% ----------------------- % 
+
+intercept problem: 
+
+minimize 
+		delta_v_1 
+
+subject to: 	
+		tof = min( tof_pro, tof_retro ) 
+		v0  = min( v0_pro, v0_retro ) 
+
+		tof_pro,   v0_pro   = lambert( r_init, r_target, 'pro' )
+		tof_retro, v0_retro = lambert( r_init, r_target, 'pro' )
+
+		delta_v <= constraint 
+
+state: 		
+		tof, v0 
+
+
+% ----------------------- % 
+
+rendezvous problem: 
+
+minimize 
+		delta_v_1 + delta_v_2  
+
+subject to: 	
+		tof = min( tof_pro, tof_retro ) 
+		v0  = min( v0_pro, v0_retro ) 
+
+		tof_pro,   v0_pro   = lambert( r_init, r_target, 'pro' )
+		tof_retro, v0_retro = lambert( r_init, r_target, 'pro' )
+
+		delta_v <= constraint 
+
+state: 		
+		tof, v0 
+
+
+
+% ----------------------- % 
+
+minimize tof + r_miss 
+
+subject to: delta_v <= constraint 
+
+r_miss       = x_target - x_final 
+tof, delta_v = lambert(r_init, r_target) 
+
+or!!!!!!!!! 
+
+minimize tof + r_miss 
+
+subject to: delta_v <= constraint 
+
+r_miss       = x_target - x_final 
+tof, delta_v = lambert(r_init, r_target) 
+

@@ -26,10 +26,14 @@ include("Dynamics/Dynamics.jl")
 
 include("Modeling/Modeling.jl")
 
-include("Optimization/Optimization.jl")
+include("Optimization/Optimization.jl") 
 
 ## ============================================ ##
 
 include("Lambert/Lambert.jl") 
+
+include("Opt/Opt.jl") 
+
+include("Utils/Utils.jl") 
 
 end # module UpdatedAdversarialTourDesign
