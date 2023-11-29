@@ -77,19 +77,22 @@ fig = plot_orbit( x_P_lambert, fig )
 # 
 # subject to: 	
 # 
-# 		delta_v <= constraint 
+# 		tof <= constraint 
 # 
 # state: 		
 # 		tof, v0 
 
 # first guess 
-x_0 = [ tof; v_0 ] 
+x_0 = [ tof; 
+        v_0 ] 
 
 # obj fn 
-obj_fn(x) = norm(lambertbattin( r_0, r_f, mu, dm, x[1] )[1])
+obj_fn(x) = norm( lambertbattin( r_0, r_f, mu, dm, x[1] ) )
+obj_fn(x_0) 
 
 # ineq constraints: h(x) <= 0  
-h_fn(x) = x[2:end] .- 10.0 
+h_fn(x) = x[1] - 86400 
+h_fn(x_0) 
 
 x_min = min_aug_L_ineq( obj_fn, h_fn, x_0 ) 
 

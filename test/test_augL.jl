@@ -20,7 +20,10 @@ h_fn(x) = [ -x[1] + 1 ;     # x[1] >= 1   * active
             -x[2] - 1 ]     # x[2] >= -1  * inactive 
 
 
-x_k_check = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 ) 
+
+x_min_eq      = min_aug_L_eq( obj_fn, c_fn, x_0 ) 
+x_min_ineq    = min_aug_L_ineq( obj_fn, h_fn, x_0 ) 
+x_min_eq_ineq = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 ) 
 
 
 

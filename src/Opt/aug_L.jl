@@ -105,6 +105,7 @@ function min_aug_L_eq(
     λ_0     = zeros(length(c_fn(x_0))),             # initial Lagrange multiplier  
     p_0     = 10.0 * ones(length(c_fn(x_0))),       # initial penalty parameter  
     γ       = 2.0,                                  # penalty parameter 
+    max_iter = 1000,                                 # max number of iterations 
 ) 
 
     # step 0: initialize 
@@ -112,10 +113,10 @@ function min_aug_L_eq(
     p_k = copy( p_0 ) 
     x_k = copy( x_0 ) 
 
-    k = 0 ; loop = true 
-    while loop 
+    k_iter = 0 ; loop = true 
+    while loop && ( k_iter <= max_iter )
 
-        k += 1 
+        k_iter += 1 
 
         # step 1: assign augmented Lagrangian fn 
         fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_k, p_k ) 
@@ -155,16 +156,17 @@ function min_aug_L_ineq(
     λ_0     = zeros(length(h_fn(x_0))),             # initial Lagrange multiplier  
     p_0     = 10.0 * ones(length(h_fn(x_0))),       # initial penalty parameter  
     γ       = 2.0,                                  # penalty parameter 
+    max_iter = 1000,                                 # max number of iterations 
 ) 
 
     # step 0: initialize 
     λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
     x_k = copy( x_0 ) ;     h_k = h_fn( x_k )
 
-    k = 0 ; loop = true 
-    while loop 
+    k_iter = 0 ; loop = true 
+    while loop && ( k_iter <= max_iter ) 
 
-        k += 1 
+        k_iter += 1 
 
         # step 1: assign augmented Lagrangian fn 
         fn(x_k) = aug_L_ineq_fn( obj_fn, h_fn, x_k, λ_k, p_k ) 
@@ -204,6 +206,7 @@ function min_aug_L_eq_ineq(
     λ_0     = zeros(length( [ c_fn(x_0) ; h_fn(x_0) ] )),           # initial Lagrange multiplier  
     p_0     = 10.0 * ones(length( [ c_fn(x_0) ; h_fn(x_0) ] )),     # initial penalty parameter  
     γ       = 2.0,                                                  # penalty parameter 
+    max_iter = 1000,                                 # max number of iterations 
 ) 
 
     # step 0: initialize 
@@ -215,8 +218,8 @@ function min_aug_L_eq_ineq(
     λ_c = λ_k[1:N_c] ;      p_c = p_k[1:N_c] 
     λ_h = λ_k[N_c+1:end] ;  p_h = p_k[N_c+1:end] 
 
-    k = 0 ; loop = true 
-    while loop 
+    k_iter = 0 ; loop = true 
+    while loop && ( k_iter <= max_iter ) 
 
         # step 1: assign augmented Lagrangian fn 
         fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_c, p_c ) + 
