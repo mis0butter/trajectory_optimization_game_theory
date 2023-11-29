@@ -477,3 +477,9 @@ function applyDV(r2_t0, dvMag=0/1000)
 
     return r2_t0_new
 end
+
+export computeInclinationChange
+function computeInclinationChange(v1, v2, Δi)
+    Δi_mag = sqrt(v1^2 + v2^2 - 2*v1*v2*cos(Δi))
+    return Δi_mag * (v2 - v1)
+end
