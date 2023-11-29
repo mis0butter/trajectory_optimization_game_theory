@@ -4,7 +4,7 @@ using ForwardDiff
 using GLMakie 
 
 ## ============================================ ##
-# example test 
+# example equality and inequality min test 
 
 # initial guess 
 x_0 = [ 2.0, 2.0, 2.0 ] 
@@ -13,13 +13,15 @@ x_0 = [ 2.0, 2.0, 2.0 ]
 obj_fn(x) = (x[1] + 1)^2 + x[2]^2  + x[3]^2 
 
 # eq constraints 
-c_fn(x) = x[3] - 1          # x[3] - 1 = 0  
+c_fn(x) = x[3] - 1          # x[3] = 0 --> x[3] - 1 = 0 
 
 # ineq constraints: h_fn formulated as <= 0 
-h_fn(x) = [ -x[1] + 1 ;     # x[1] >= 1   * active 
-            -x[2] - 1 ]     # x[2] >= -1  * inactive 
+h_fn(x) = [ -x[1] + 1 ;     # x[1] >= 1   --> -x[1] + 1 <= 0    * active 
+            -x[2] - 1 ]     # x[2] >= -1  --> -x[2] - 1 <= 0    * inactive 
 
+# expect min at [1, 0, 1]
 x_min = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 ) 
+
 
 ## ============================================ ##
 # lambert 
@@ -61,7 +63,10 @@ x_E = mapreduce( permutedims, vcat, x_E )
 x_P_lambert = mapreduce( permutedims, vcat, x_P_lambert ) 
 
 # ----------------------- #
-fig = plot_orbit( x_P_lambert ) 
+
+fig = plot_orbit( x_P ) 
+fig = plot_orbit( x_E, fig ) 
+fig = plot_orbit( x_P_lambert, fig ) 
 
 ## ============================================ ##
 # 
