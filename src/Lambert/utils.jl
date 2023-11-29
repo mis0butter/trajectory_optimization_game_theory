@@ -479,7 +479,10 @@ function applyDV(r2_t0, dvMag=0/1000)
 end
 
 export computeInclinationChange
-function computeInclinationChange(v1, v2, Δi)
+function computeInclinationChange(v1, Δi)
+    kep2 = cart2kep(v1, mu)
+    kep2[3] += Δi
+    v2 = kep2cart(kep2, mu)[4:6]
     Δi_mag = sqrt(v1^2 + v2^2 - 2*v1*v2*cos(Δi))
     return Δi_mag * (v2 - v1)
 end
