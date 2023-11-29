@@ -2,6 +2,7 @@
 function seebatt( v )
 
     # -------------------------  implementation   -------------------------
+    c = zeros(21) 
     c[1 ] =    0.2          ;
     c[2 ] =    9.0 /  35.0  ;
     c[3 ] =   16.0 /  63.0  ;
@@ -28,7 +29,7 @@ function seebatt( v )
     
     # ------------------- process forwards ----------------------
     delold = 1.0;
-    termold= c(1);   % * eta
+    termold= c[1];   # * eta
     sum1   = termold;
     i= 1; 
     while ((i <= 20) && (abs(termold) > 0.00000001 ))

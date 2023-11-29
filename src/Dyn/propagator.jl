@@ -29,8 +29,7 @@ function eom_2Body!(dx, x, mu, t)
     x2 = x[2]
     x3 = x[3]
 
-    # mu_div_r3 = -mu/sqrt(x1^2 + x2^2 + x3^2) ^ 3
-    mu_div_r3 = -mu / norm(x[1:3])^3
+    mu_div_r3 = -mu/sqrt(x1^2 + x2^2 + x3^2) ^ 3
 
     dx[1] = x[4]
     dx[2] = x[5]

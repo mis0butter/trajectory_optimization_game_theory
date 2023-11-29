@@ -1,4 +1,4 @@
-using trajectory_optimization_game_theory
+using trajectory_optimization_game_theory 
 using LinearAlgebra 
 
 ## ============================================ ## 
@@ -13,12 +13,27 @@ dm      = "pro"
 Dtsec   = tof 
 
 ## ============================================ ##
+# another IC 
+
+mu = 398600.4415    # km 
+r  = 6378.0          # km 
+kep0_P = [r + 400.0 , 0.0, 0*pi/180, 0.0, 0.0, 0.0]
+kep0_E = [r + 450.0 , 0.0, 51.6*pi/180, 0.0, 0.0, 20*pi/180]
+
+r1 = kep2cart(kep0_P, mu)[1:3]
+r2 = kep2cart(kep0_E, mu)[1:3]
+
+tof = orbitPeriod(kep0_E, mu)
+
+## ============================================ ##
 # solve and propagate lambert orbit 
+
 
 v1, v2 = lambertbattin( r1, r2, mu, dm, tof ) 
 
 x0 = [ r1; v1 ] 
-t_lambert, x_lambert = propagate_2Body( x0, tof, mu, 1.0 ) 
+t  = (0, tof)
+t_lambert, x_lambert = propagate_2Body( x0, t, mu, 1.0 ) 
 x_lambert = mapreduce( permutedims, vcat, x_lambert ) 
 
 fig = plot_orbit( x_lambert )

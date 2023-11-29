@@ -145,16 +145,16 @@ function lambertbattin(ro, r, mu, dm, Dtsec)
         end
     end
 
-    vo = [] ;  v = [] 
-    # vo = zeros(3)  ;  v = zeros(3) 
+    # vo = [] ;  v = [] 
+    vo = zeros(3)  ;  v = zeros(3) 
     for i= 1:3
-        push!( vo, ( r[i] - F*ro[i] )/G )
-        push!( v,  ( GDot*r[i] - ro[i] )/G ) 
-        # vo[i]= ( r[i] - F*ro[i] )/G ; 
-        # v[i] = ( GDot*r[i] - ro[i] )/G ; 
+        # push!( vo, ( r[i] - F*ro[i] )/G )
+        # push!( v,  ( GDot*r[i] - ro[i] )/G ) 
+        vo[i]= ( r[i] - F*ro[i] )/G ; 
+        v[i] = ( GDot*r[i] - ro[i] )/G ; 
     end 
 
-    # return [vo, v] 
-    return vo 
+    return vo, v 
+    # return vo 
 end 
 
