@@ -33,7 +33,8 @@ function minLambert(x0_P, x0_E, mu, timeLims)
         for j in 1:length(tStart)
             
             # propagate pursuer to start time
-            xt_P = propagate_2Body(x0_P, tStart[j], mu).u[end]
+            xt_P_t, xt_P_u = propagate_2Body(x0_P, tStart[j], mu)
+            xt_P = xt_P_u[end]
             rt_P = xt_P[1:3]
             vt_P = xt_P[4:6]
 
@@ -47,7 +48,8 @@ function minLambert(x0_P, x0_E, mu, timeLims)
                 end
 
                 # propagate evader to end time
-                xf_E = propagate_2Body(xt_E, tEnd[j], mu).u[end]
+                xf_E_t, xf_E_u = propagate_2Body(xt_E, tEnd[j], mu)
+                xf_E = xf_E_U[end]
 
                 # get final state components for evader
                 rf_E = xf_E[1:3]
@@ -113,11 +115,11 @@ function lambertContour(t, x₀_P, x₀_E, mu)
         
         fig = Figure()
         ax = Axis(fig[1, 1]; aspect=DataAspect())
-        c = contourf!(ax, vals[:,1], vals[:,2], log.(vals[:,3]), levels=100, extendlow = :auto, extendhigh = :auto)
+        c = contourf!(ax, vals[:,1], vals[:,2], log.(vals[:,3]), levels = range(0, 100, length = 100), extendlow = :cyan, extendhigh = :magenta)
         Colorbar(fig[1, 2], c, label="log(|Δv|) (km/s)")
         ax.xlabel = "Maneuver 1 time (s)"
         ax.ylabel = "Maneuver 2 time (s)"
-        if dm == "pro"
+        if dir == "pro"
             ax.title = "Prograde Lambert Solution: log(|Δv|) (km/s)"
         else
             ax.title = "Retrograde Lambert Solution: log(|Δv|) (km/s)"
@@ -126,11 +128,11 @@ function lambertContour(t, x₀_P, x₀_E, mu)
         
         fig = Figure()
         ax = Axis(fig[1, 1]; aspect=DataAspect())
-        c = contourf!(ax, vals[:,1], vals[:,2], vals[:,3], levels=100, extendlow = :auto, extendhigh = :auto)
+        c = contourf!(ax, vals[:,1], vals[:,2], vals[:,3], levels = range(0, 100, length = 100), extendlow = :cyan, extendhigh = :magenta)
         Colorbar(fig[1, 2], c, label="|Δv| (km/s)")
         ax.xlabel = "Maneuver 1 time (s)"
         ax.ylabel = "Maneuver 2 time (s)"
-        if dm == "pro"
+        if dir == "pro"
             ax.title = "Prograde Lambert Solution: |Δv| (km/s)"
         else
             ax.title = "Retrograde Lambert Solution: |Δv| (km/s)"
@@ -175,12 +177,13 @@ function varyT0(kep0_P, x₀_E, t, mu)
     x0_P = kep2cart(kep0_P, mu)
 
     # propagate final evader state
-    x_E = propagate_2Body(x₀_E, tStart[end], mu).u
-    rf_E = x_E[end][1:3]
-    vf_E = x_E[end][4:6]
+    x_E_t, x_E_u = propagate_2Body(x₀_E, tStart[end], mu)
+    x_E = x_E_u[end]
+    rf_E = x_E[1:3]
+    vf_E = x_E[4:6]
 
     # convert to matrix for plotting
-    x_E = mapreduce(permutedims, vcat, x_E)
+    x_E = mapreduce(permutedims, vcat, x_E_u)
 
     dv1_pro = []
     dv1_retro = []
@@ -195,9 +198,9 @@ function varyT0(kep0_P, x₀_E, t, mu)
         currentStart = tStart[j]
 
         # propagate pursuer to tStart
-        x_P = propagate_2Body(x0_P, currentStart, mu).u
-        rt_P = x_P[end][1:3]
-        vt_P = x_P[end][4:6]
+        x_P_t, x_P_u = propagate_2Body(x0_P, currentStart, mu)
+        rt_P = x_P_u[end][1:3]
+        vt_P = x_P_u[end][4:6]
         
         # get lambert solution between pursuer state at t to evader state at tStart[end]
         v1_pro, v2_pro = lambertbattin(rt_P, rf_E, mu, "pro", tStart[end])
@@ -209,23 +212,24 @@ function varyT0(kep0_P, x₀_E, t, mu)
         push!(dv2_pro, norm(vf_E - v2_pro))
         push!(dv2_retro, norm(vf_E - v2_retro))
 
-        x_P = mapreduce(permutedims, vcat, x_P)
+        x_P = mapreduce(permutedims, vcat, x_P_u)
         push!(traj_P, x_P)
 
         # generate output for prograde trajectories        
         x₀_P_lambert = [rt_P; v1_pro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tStart[end], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tStart[end], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_prograde, x_P_lambert)
 
         # generate output for retrograde trajectories
         x₀_P_lambert = [rt_P; v1_retro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tStart[end], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tStart[end], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_retrograde, x_P_lambert)
     end
 
     generateLambertPlots(x_E, traj_P, traj_prograde, traj_retrograde, tStart, dv1_pro, dv1_retro, dv2_pro, dv2_retro)
+    return [x_E, traj_P, traj_prograde, traj_retrograde, tStart, dv1_pro, dv1_retro, dv2_pro, dv2_retro]
 end
 
 export varyTF
@@ -249,11 +253,10 @@ Outputs:
     6. Plot of tStart vs dv1 + dv2
 
 ============================================#
-# function varyTF(kep0_P, x₀_E, t, mu)
-function varyTF(x0_P, x0_E, t, mu)
+function varyTF(kep0_P, x₀_E, t, mu)
 
     # define initial pursuer state
-    # x0_P = kep2cart(kep0_P, mu)
+    x0_P = kep2cart(kep0_P, mu)
 
     # define times between t0 and tf
     tEnd = LinRange(t[1], t[2], 100)
@@ -274,9 +277,9 @@ function varyTF(x0_P, x0_E, t, mu)
     for j in 1:length(tEnd)
 
         # propagate evader orbit to specified time
-        x_E = propagate_2Body(x0_E, tEnd[j], mu, 1.0).u
-        rt_E = x_E[end][1:3]
-        vt_E = x_E[end][4:6]
+        x_E_t, x_E_u = propagate_2Body(x₀_E, tEnd[j], mu, 1.0)
+        rt_E = x_E_u[end][1:3]
+        vt_E = x_E_u[end][4:6]
 
         # get lambert solution between pursuer state at t to evader state at tStart[end]
         v1_pro, v2_pro = lambertbattin(r0_P, rt_E, mu, "pro", tEnd[j])
@@ -288,25 +291,26 @@ function varyTF(x0_P, x0_E, t, mu)
         push!(dv2_pro, norm(vt_E - v2_pro))
         push!(dv2_retro, norm(vt_E - v2_retro))
 
-        x_E = mapreduce(permutedims, vcat, x_E)
+        x_E = mapreduce(permutedims, vcat, x_E_u)
         push!(traj_E, x_E)
         
         # generate output for prograde trajectories        
         x₀_P_lambert = [r0_P; v1_pro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tEnd[j], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tEnd[j], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_prograde, x_P_lambert)
 
         # generate output for retrograde trajectories
         x₀_P_lambert = [r0_P; v1_retro]
-        x_P_lambert = propagate_2Body(x₀_P_lambert, tEnd[j], mu).u
-        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert) 
+        x_P_lambert_t, x_P_lambert_u = propagate_2Body(x₀_P_lambert, tEnd[j], mu)
+        x_P_lambert = mapreduce(permutedims, vcat, x_P_lambert_u) 
         push!(traj_retrograde, x_P_lambert)
 
     end
 
     generateLambertPlots(x0_P, traj_E, traj_prograde, traj_retrograde, tEnd, dv1_pro, dv1_retro, dv2_pro, dv2_retro, "varyTF")
-end
+    return [x0_P, traj_E, traj_prograde, traj_retrograde, tEnd, dv1_pro, dv1_retro, dv2_pro, dv2_retro, "varyTF"]
+end 
 
 
 function generateLambertPlots(fixedTraj, variableTraj, traj_prograde, traj_retrograde, tVals, dv1_pro, dv1_retro, dv2_pro, dv2_retro, source="varyT0")
@@ -405,13 +409,53 @@ function generateLambertPlots(fixedTraj, variableTraj, traj_prograde, traj_retro
     save("plots/lambert_"*source*"_rendezvous.png", fig)
 end 
 
+export plotTrajAnimation
+function plotTrajAnimation(vary_output)
+    fixed_traj = vary_output[1]
+    variable_traj  = vary_output[2]
+    traj_prograde = vary_output[3]
+    traj_retrograde = vary_output[4]
+    tVals  = vary_output[5]
+    dv1_pro = vary_output[6]
+    dv1_retro = vary_output[7]
+    dv2_pro = vary_output[8]
+    dv2_retro = vary_output[9]
+
+    fig = Figure()
+    ax = Axis3(fig[1, 1], 
+        xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)")
+    N = length(tVals)
+
+    record(fig, "plots/trajAnimation.mp4", 1:1:N) do i
+        # plot pursuer and evader trajectories 
+        lines!(ax, x_P[:,1], x_P[:,2], x_P[:,3]; linewidth = 2, color = :green)
+        lines!(ax, x_E[:,1], x_E[:,2], x_E[:,3]; linewidth = 2, color = :red)
+
+        # plot lambert trajectories
+    end
+
+
+    # record(fig, "plots/trajAnimation.mp4", 1:1:N) do i
+    #     _x = LinRange(xmin[i], xmax[i], 200)
+    #     _y = LinRange(ymin[i], ymax[i], 200)
+    #     hm[1] = _x # update x coordinates
+    #     hm[2] = _y # update y coordinates
+    #     hm[3] = mandelbrot.(_x, _y') # update data
+    #     autolimits!(ax) # update limits
+    #     # yield() -> not required with record
+    # end
+end
+
+
 export testLambert
 function testLambert(r1_t0, r2_t0, mu, t1, t2, dm)
     # propagate orbits to t1 and t2
-    r1_t1 = propagate_2Body(r1_t0, t1, mu).u[end]
+    r1_t1_t, r1_t1_u = propagate_2Body(r1_t0, t1, mu)
+    r1_t1 = r1_t1_u[end]
     
     r2_t0_withDV = applyDV(r2_t0)
-    r2_t2 = propagate_2Body(r2_t0_withDV, t2, mu).u[end]
+    r2_t2_t, r2_t2_u = propagate_2Body(r2_t0_withDV, t2, mu)
+    r2_t2 = r2_t2_u[end]
 
     tof = t2 - t1
 
@@ -432,4 +476,18 @@ function applyDV(r2_t0, dvMag=0/1000)
     r2_t0_new[4:6] = r2_t0_new[4:6] + dv
 
     return r2_t0_new
+end
+
+export computeInclinationChange
+function computeInclinationChange(x1, Δi, mu)
+
+    v1 = x1[4:6]
+    kep2 = cart2kep(x1, mu)
+    kep2[3] += Δi
+    v2 = kep2cart(kep2, mu)[4:6]
+    Δi_mag = sqrt(norm(v1)^2 + norm(v2)^2 - 2*norm(v1)*norm(v2)*cos(Δi))
+
+    Δv = Δi_mag * (v2 - v1) 
+
+    return Δv 
 end

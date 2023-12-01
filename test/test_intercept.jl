@@ -39,7 +39,7 @@ for t_sim = dt_sim : dt_sim : 1000
 
     # t_sim = 10 
     # lambert 
-    tof     = 100     # this can change / vary with function update 
+    tof     = 500     # this can change / vary with function update 
     dm      = "retro" # replace with whatever is min 
 
     r1 = x0_P[1:3] 
@@ -49,7 +49,8 @@ for t_sim = dt_sim : dt_sim : 1000
     v1 = lambertbattin(r1, r2, mu, dm, tof) 
     x0_P_lambert   = [r1; v1] 
     t_P_dtsim, x_P_dtsim = propagate_2Body( x0_P_lambert, dt_sim, mu, 1.0 )
-    t_P_tof,   x_P_tof   = propagate_2Body( x0_P_lambert, tof, mu, 1.0 )
+    t_P_tof,   x_P_tof   = propagate_2Body( x_P_dtsim[end], tof, mu, 1.0 )
+    # t_P_tof,   x_P_tof   = propagate_2Body( x0_P_lambert, tof, mu, 1.0 )
     xf_P = x_P_dtsim[end] 
     # for i in 1 : length(x_P_dtsim)
         x_P_dtsim = mapreduce( permutedims, vcat, x_P_dtsim ) 
@@ -60,8 +61,14 @@ for t_sim = dt_sim : dt_sim : 1000
 
     # move evader 
     # x0_E += [0.0, 0.0, 0.0, 10/1000, 10/1000, 10/1000] 
+
+    Δi = 10.0*pi/180 
+    Δv_E = computeInclinationChange(x0_E, Δi, mu)
+    x0_E += [0.0, 0.0, 0.0, Δv_E[1], Δv_E[2], Δv_E[3]]
+
     t_E_dtsim, x_E_dtsim = propagate_2Body(x0_E, dt_sim, mu, 1.0) 
-    t_E_tof,   x_E_tof   = propagate_2Body(x0_E, tof, mu, 1.0) 
+    t_E_tof,   x_E_tof   = propagate_2Body(x_E_dtsim[end], tof, mu, 1.0) 
+    # t_E_tof,   x_E_tof   = propagate_2Body(x0_E, tof, mu, 1.0) 
     xf_E = x_E_dtsim[end] 
     # for i in 1 : length(x_E_dtsim) 
         x_E_dtsim = mapreduce( permutedims, vcat, x_E_dtsim ) 
@@ -88,31 +95,65 @@ end
 ## ============================================ ##
 # create animation 
 
-# using DataFrames
-# using GLMakie
 using Plots 
+using Formatting 
+
+plot_font = "Computer Modern"
+default(
+    fontfamily = plot_font,
+    linewidth  = 2, 
+    framestyle = :box, 
+    label      = nothing, 
+    grid       = false, 
+    formatter = x -> format(x, precision = 0), 
+    markerstrokewidth = 0, 
+)
+# scalefontsizes(1.3)
+
+# using DataFrames
+# using GLMakie 
 
 a = Animation() 
 
 for i = 2 : k_sim 
 
+    # get total history of x dtsim as matrix 
     x_P_dtsim = x_P_dtsim_hist[1]  
     x_E_dtsim = x_E_dtsim_hist[1] 
     for j = 2 : i 
         x_P_dtsim = [ x_P_dtsim ; x_P_dtsim_hist[j] ] 
         x_E_dtsim = [ x_E_dtsim ; x_E_dtsim_hist[j] ] 
-        # push!( x_P_dtsim, x_P_dtsim_hist[j] ) 
-        # push!( x_E_dtsim, x_E_dtsim_hist[j] ) 
     end 
-    # x_P_dtsim = mapreduce( permutedims, vcat, x_P_dtsim ) 
-    # x_E_dtsim = mapreduce( permutedims, vcat, x_E_dtsim ) 
 
-    # x_P_dtsim = x_P_dtsim_hist[i] 
-    # x_E_dtsim = x_E_dtsim_hist[i] 
+    # get current iterate of x tof as matrix 
     x_P_tof   = x_P_tof_hist[i] 
     x_E_tof   = x_E_tof_hist[i] 
 
+    # set up plot 
+    lims = 1.1 .* (-r, r)
     plt = plot3d(
+        1,
+        # xlim = lims,
+        # ylim = lims,
+        # zlim = lims,
+        title = "Pursuit Evasion Game",
+        legend = false,
+        xlabel = "x (km)", 
+        guidefontsize = 10,
+        tickfontsize = 8,
+        ylabel = "y (km)",
+        zlabel = "z (km)",
+        titlefont=font(16,"Computer Modern"), 
+        # camera = (-30,35,30), 
+    )
+    
+    # Plots.surface!( 
+    #     sphere(r, zeros(3)), 
+    #     alpha = 0.1 
+    # )
+
+    # Pursuer!!!     
+    plot3d!(
         x_P_dtsim[:,1], x_P_dtsim[:,2], x_P_dtsim[:,3], 
         legend = false,
         color  = :blue, 
@@ -122,18 +163,19 @@ for i = 2 : k_sim
         linealpha = 0.5, 
         color  = :cyan, 
     ) 
-    # scatter3d!(  
-    #     [x_P_dtsim_hist[1,1]], [x_P_dtsim_hist[1,2]], [x_P_dtsim_hist[1,3]],
-    #     # marker = 2, 
-    #     markershape = :utriangle, 
-    #     color  = :blue,
-    # )
-    # scatter3d!(  
-    #     [x_P_dtsim_hist[i,1]], [x_P_dtsim_hist[i,2]], [x_P_dtsim_hist[i,3]],
-    #     markershape = :xcross, 
-    #     color  = :blue,  
-    # )
+    scatter3d!(  
+        [x_P_dtsim[1,1]], [x_P_dtsim[1,2]], [x_P_dtsim[1,3]],
+        # marker = 2, 
+        markershape = :xcross, 
+        color  = :blue,
+    )
+    scatter3d!(  
+        [x_P_dtsim[end,1]], [x_P_dtsim[end,2]], [x_P_dtsim[end,3]],
+        markershape = :utriangle, 
+        color  = :blue,  
+    )
 
+    # Evader!!! 
     plot3d!(  
         x_E_dtsim[:,1], x_E_dtsim[:,2], x_E_dtsim[:,3], 
         color  = :red, 
@@ -143,22 +185,39 @@ for i = 2 : k_sim
         linealpha = 0.5, 
         color  = :orange, 
     )
-    # scatter3d!(  
-    #     [x_E_dtsim_hist[1,1]], [x_E_dtsim_hist[1,2]], [x_E_dtsim_hist[1,3]],
-    #     markershape = :utriangle, 
-    #     color  = :red,
-    # )
-    # scatter3d!(  
-    #     [x_E_dtsim_hist[i,1]], [x_E_dtsim_hist[i,2]], [x_E_dtsim_hist[i,3]],
-    #     markershape = :xcross, 
-    #     color  = :red,  
-    # )
+    scatter3d!(  
+        [x_E_dtsim[1,1]], [x_E_dtsim[1,2]], [x_E_dtsim[1,3]],
+        markershape = :xcross, 
+        color  = :red,
+    )
+    scatter3d!(  
+        [x_E_dtsim[end,1]], [x_E_dtsim[end,2]], [x_E_dtsim[end,3]],
+        markershape = :utriangle, 
+        color  = :red,  
+    )
 
     frame(a, plt)
+
+    filename_string = string( "test/outputs/test_intercept_", i, ".png" )
+    savefig(filename_string)
 
 end
 
 g = gif(a, fps = 2.0)
 display(g)  
 
+## ============================================ ##
+
+
+function sphere(r, C)   # r: radius; C: center [cx,cy,cz]
+    n = 100
+    u = range(-π, π; length = n)
+    v = range(0, π; length = n)
+    x = C[1] .+ r*cos.(u) * sin.(v)'
+    y = C[2] .+ r*sin.(u) * sin.(v)'
+    z = C[3] .+ r*ones(n) * cos.(v)'
+    return x, y, z
+end
+
+Plots.surface( sphere(r, zeros(3)), alpha = 0.1 )
 
