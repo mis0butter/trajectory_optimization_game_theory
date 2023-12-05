@@ -31,7 +31,7 @@ x_P_tof_hist   = [] ;     t_P_tof_hist   = []
 x_E_tof_hist   = [] ;     t_E_tof_hist   = [] 
 dt_sim = 10 
 k_sim  = 0 
-for t_sim = dt_sim : dt_sim : 1000
+for t_sim = dt_sim : dt_sim : 86400
 
     k_sim += 1 
 
@@ -83,14 +83,16 @@ for t_sim = dt_sim : dt_sim : 1000
 
 end 
 
-# x_P_dtsim_hist = mapreduce( permutedims, vcat, x_P_dtsim_hist ) 
-# x_E_dtsim_hist = mapreduce( permutedims, vcat, x_E_dtsim_hist ) 
+## ============================================ ##
 
-# # plot 
-# fig = plot_orbit( x_P_dtsim_hist )
-# fig = plot_orbit( x_E_dtsim_hist, fig ) 
-# fig = plot_scatter3d( x_P_dtsim_hist[1,1], x_P_dtsim_hist[1,2], x_P_dtsim_hist[1,3], fig ) 
-# fig = plot_scatter3d( x_E_dtsim_hist[1,1], x_E_dtsim_hist[1,2], x_E_dtsim_hist[1,3], fig ) 
+err_norm = [ ]
+for i = eachindex( x_P_dtsim_hist ) 
+    
+    xk_E = x_E_dtsim_hist[i][end,:] 
+    xk_P = x_P_dtsim_hist[i][end,:] 
+    push!( err_norm, norm( xk_E[1:3] - xk_P[1:3] ) )  
+
+end 
 
 ## ============================================ ##
 # create animation 
@@ -136,7 +138,7 @@ for i = 2 : k_sim
         # xlim = lims,
         # ylim = lims,
         # zlim = lims,
-        title = "Pursuit Evasion Game",
+        # title = "Pursuit Evasion Game",
         legend = false,
         xlabel = "x (km)", 
         guidefontsize = 10,
@@ -144,6 +146,7 @@ for i = 2 : k_sim
         ylabel = "y (km)",
         zlabel = "z (km)",
         titlefont=font(16,"Computer Modern"), 
+        size = ( 400, 400 ), 
         # camera = (-30,35,30), 
     )
     
@@ -205,19 +208,4 @@ end
 
 g = gif(a, fps = 2.0)
 display(g)  
-
-## ============================================ ##
-
-
-function sphere(r, C)   # r: radius; C: center [cx,cy,cz]
-    n = 100
-    u = range(-π, π; length = n)
-    v = range(0, π; length = n)
-    x = C[1] .+ r*cos.(u) * sin.(v)'
-    y = C[2] .+ r*sin.(u) * sin.(v)'
-    z = C[3] .+ r*ones(n) * cos.(v)'
-    return x, y, z
-end
-
-Plots.surface( sphere(r, zeros(3)), alpha = 0.1 )
 
