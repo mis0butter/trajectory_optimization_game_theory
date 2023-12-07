@@ -27,8 +27,21 @@ fig
 
 ## ============================================ ##
 
+x = y = range(-pi, pi, 100)
+z = sin.(x) .* cos.(y') 
+
 fig = plot_surface( x, y, z ) 
-fig = plot_contour3d( x2, y2, z2 ) 
+fig = plot_contour3d( x, y, z ) 
+fig = plot_scatter3d( x, y, z ) 
+
+## ============================================ ##
+
+x = collect( range(-pi, pi, 100) ) 
+y = sin.(x) 
+z = cos.(x) 
+
+fig = plot_orbit( -[x y z] )
+fig = plot_3d( x, y, z, fig ) 
 
 ## ============================================ ## 
 
@@ -92,34 +105,9 @@ fig = plot_vector3d( xyz, uvw )
 xyz = [ zeros(3) for i in 1:3 ] 
 uvw = [ [2,0,0] , [0,1,0] , [0,0,1] ] 
 
-    # adjust because stupid arrows plots the tails at the Point3f points 
-    xyz += uvw 
-
-    # convert to Points3f and Vec3f for arrows function 
-    ps  = [ Point3f(x,y,z) for (x,y,z) in xyz ] 
-    ns  = [ Vec3f(x,y,z) for (x,y,z) in uvw ] 
-
-    fignothing = false 
-    if isnothing(fig) 
-        fignothing = true 
-        fig = Figure() 
-        Axis3( fig[1,1] ) 
-    end 
-
-    arrows!(  
-        ps, ns, fxaa=true, # turn on anti-aliasing
-        linecolor = :black, arrowcolor = :black,
-        linewidth = 0.1, arrowsize = Vec3f(0.3, 0.3, 0.4),
-        align = :center, 
-    )
-
-
-## ============================================ ##
-
-
-fig = plot_vector3d( xyz , uvw ) 
-fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :red ) 
-fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green ) 
+fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red ) 
+fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :green ) 
+fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :blue ) 
 # fig
 
 
