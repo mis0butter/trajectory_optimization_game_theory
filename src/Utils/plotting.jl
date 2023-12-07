@@ -273,6 +273,7 @@ function plot_vector3d(
     uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
     fig    = nothing,       # figure handle 
     color  = :black,        # marker color 
+    width  = 0.1,           # arrow width 
     text   = nothing,       # text to add to plot 
 ) 
 
@@ -291,7 +292,7 @@ function plot_vector3d(
     arrows!(  
         ps, ns, fxaa = true, # turn on anti-aliasing
         linecolor = color, arrowcolor = color,
-        linewidth = 0.1, arrowsize = Vec3f(0.3, 0.3, 0.4),
+        linewidth = width, arrowsize = 2 * width .* Vec3f(1, 1, 1),
         align = :center, 
     )
 
