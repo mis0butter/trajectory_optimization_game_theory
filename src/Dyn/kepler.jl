@@ -115,6 +115,8 @@ function elliptic_nu(
     return nu_f     # final true anomaly 
 end 
 
+export elliptic_nu 
+
 # nu_f = elliptic_nu( e, n, nu_0, tof ) 
 
 ## ============================================ ## 
@@ -140,7 +142,9 @@ function hyperbolic_nu(
     nu_f = 2*atan( sqrt( (e+1)/(e-1) ) * tanh(H_f/2) ) 
 
     return nu_f     # final true anomaly 
-end
+end 
+
+export hyperbolic_nu 
 
 # nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
 

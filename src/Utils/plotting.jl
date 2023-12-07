@@ -20,8 +20,8 @@ function plot_orbit(
 
     # plot orbit 
     lines!( rv[:,1], rv[:,2], rv[:,3]; linewidth = 2, label = "lambert" ) 
-    scatter!( rv[1,1], rv[1,2], rv[1,3]; marker = :utriangle, markersize = 15, color = :black ) 
-    scatter!( rv[end,1], rv[end,2], rv[end,3]; marker = :xcross, markersize = 15, color = :black ) 
+    scatter!( rv[1,1], rv[1,2], rv[1,3]; marker = :circle, markersize = 15, color = :black ) 
+    scatter!( rv[end,1], rv[end,2], rv[end,3]; marker = :utriangle, markersize = 15, color = :black ) 
 
     # add labels 
     if labels 
@@ -36,7 +36,7 @@ end
     
 export plot_orbit 
 
-## ============================================ ##
+## ============================================ ## 
 
 # colormap options: 
 #   jblue 
@@ -75,11 +75,13 @@ export plot_surface
 
 "Plot scatter using GLMakie"
 function plot_scatter3d( 
-    x,              # [N,1] grid of points 
-    y,              # [N,1] grid of points 
-    z,              # [N,N] grid of points evaluated at x and y 
-    fig  = nothing, # figure handle 
-    text = nothing, # text to add to plot 
+    x,                      # [N,1] grid of points 
+    y,                      # [N,1] grid of points 
+    z,                      # [N,N] grid of points evaluated at x and y 
+    fig    = nothing,       # figure handle 
+    marker = :utriangle,    # marker type 
+    color  = :red,          # marker color 
+    text   = nothing,       # text to add to plot 
 ) 
 
     fignothing = false 
@@ -90,7 +92,7 @@ function plot_scatter3d(
     end 
 
     if isequal(length(z), 1)
-        GLMakie.scatter!( x, y, z, marker = :utriangle, markersize = 20, color = :red ) 
+        GLMakie.scatter!( x, y, z, marker = marker, markersize = 20, color = color ) 
         if !isnothing(text) 
             text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
         end
@@ -132,5 +134,69 @@ function plot_contour3d(
 end 
 
 export plot_contour3d 
+
+## ============================================ ##
+
+"""
+Plot vector using GLMakie. 
+
+Example usage: 
+
+    xyz = [ zeros(3) for i in 1:3 ] 
+    uvw = [ [2,0,0] , [0,1,0] , [0,0,1] ] 
+    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ] ) 
+    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :red ) 
+    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green ) 
+
+Inputs: 
+
+    xyz,                    # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
+    uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
+    fig    = nothing,       # figure handle 
+    color  = :black,        # marker color 
+    text   = nothing,       # text to add to plot 
+"""
+function plot_vector3d( 
+    xyz,                    # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
+    uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
+    fig    = nothing,       # figure handle 
+    color  = :black,        # marker color 
+    text   = nothing,       # text to add to plot 
+) 
+
+    # adjust because stupid arrows plots the tails at the Point3f points 
+    xyz += uvw 
+
+    # convert to Points3f and Vec3f for arrows function 
+    ps  = [ Point3f(x,y,z) for (x,y,z) in xyz ] 
+    ns  = [ Vec3f(x,y,z) for (x,y,z) in uvw ] 
+
+    fignothing = false 
+    if isnothing(fig) 
+        fignothing = true 
+        fig = Figure() 
+        Axis3( fig[1,1] ) 
+    end 
+
+    # if isequal(length(z), 1)
+        arrows!(  
+            ps, ns, fxaa=true, # turn on anti-aliasing
+            linecolor = color, arrowcolor = color,
+            linewidth = 0.1, arrowsize = Vec3f(0.3, 0.3, 0.4),
+            align = :center, 
+        )
+    
+        if !isnothing(text) 
+            text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
+        end
+    # else 
+    #     hm = GLMakie.arrows!( x, y, z, markersize = 5, color = :black, strokecolor = :black ) 
+    # end 
+
+    return fig 
+end 
+
+export plot_vector3d 
+
 
 
