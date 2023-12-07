@@ -135,68 +135,60 @@ end
 
 export plot_contour3d 
 
-## ============================================ ##
+# ## ============================================ ##
 
-"""
-Plot vector using GLMakie. 
+# """
+# Plot vector using GLMakie. 
 
-Example usage: 
+# Example usage: 
 
-    xyz = [ zeros(3) for i in 1:3 ] 
-    uvw = [ [2,0,0] , [0,1,0] , [0,0,1] ] 
-    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ] ) 
-    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :red ) 
-    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green ) 
+#     xyz = [ zeros(3) for i in 1:3 ] 
+#     uvw = [ [2,0,0] , [0,1,0] , [0,0,1] ] 
+#     fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ] ) 
+#     fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :red ) 
+#     fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green ) 
+# """
+# function plot_vector3d( 
+#     xyz,                    # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
+#     uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
+#     fig    = nothing,       # figure handle 
+#     color  = :black,        # marker color 
+#     text   = nothing,       # text to add to plot 
+# ) 
 
-Inputs: 
+#     # adjust because stupid arrows plots the tails at the Point3f points 
+#     xyz += uvw 
 
-    xyz,                    # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
-    uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
-    fig    = nothing,       # figure handle 
-    color  = :black,        # marker color 
-    text   = nothing,       # text to add to plot 
-"""
-function plot_vector3d( 
-    xyz,                    # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
-    uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
-    fig    = nothing,       # figure handle 
-    color  = :black,        # marker color 
-    text   = nothing,       # text to add to plot 
-) 
+#     # convert to Points3f and Vec3f for arrows function 
+#     ps  = [ Point3f(x,y,z) for (x,y,z) in xyz ] 
+#     ns  = [ Vec3f(x,y,z) for (x,y,z) in uvw ] 
 
-    # adjust because stupid arrows plots the tails at the Point3f points 
-    xyz += uvw 
+#     fignothing = false 
+#     if isnothing(fig) 
+#         fignothing = true 
+#         fig = Figure() 
+#         Axis3( fig[1,1] ) 
+#     end 
 
-    # convert to Points3f and Vec3f for arrows function 
-    ps  = [ Point3f(x,y,z) for (x,y,z) in xyz ] 
-    ns  = [ Vec3f(x,y,z) for (x,y,z) in uvw ] 
-
-    fignothing = false 
-    if isnothing(fig) 
-        fignothing = true 
-        fig = Figure() 
-        Axis3( fig[1,1] ) 
-    end 
-
-    # if isequal(length(z), 1)
-        arrows!(  
-            ps, ns, fxaa=true, # turn on anti-aliasing
-            linecolor = color, arrowcolor = color,
-            linewidth = 0.1, arrowsize = Vec3f(0.3, 0.3, 0.4),
-            align = :center, 
-        )
+#     # if isequal(length(z), 1)
+#         arrows!(  
+#             ps, ns, fxaa=true, # turn on anti-aliasing
+#             linecolor = color, arrowcolor = color,
+#             linewidth = 0.1, arrowsize = Vec3f(0.3, 0.3, 0.4),
+#             align = :center, 
+#         )
     
-        if !isnothing(text) 
-            text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
-        end
-    # else 
-    #     hm = GLMakie.arrows!( x, y, z, markersize = 5, color = :black, strokecolor = :black ) 
-    # end 
+#         if !isnothing(text) 
+#             text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
+#         end
+#     # else 
+#     #     hm = GLMakie.arrows!( x, y, z, markersize = 5, color = :black, strokecolor = :black ) 
+#     # end 
 
-    return fig 
-end 
+#     return fig 
+# end 
 
-export plot_vector3d 
+# export plot_vector3d 
 
 
 

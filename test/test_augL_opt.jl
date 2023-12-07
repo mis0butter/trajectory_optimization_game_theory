@@ -44,6 +44,8 @@ fig = plot_orbit( rv_prop )
 fig = plot_scatter3d( xf_E[1], xf_E[2], xf_E[3], fig ) 
 fig = plot_scatter3d( rv_f_kepler[1], rv_f_kepler[2], rv_f_kepler[3], fig, :utriangle, :green ) 
 
+
+
 ## ============================================ ##
 # what is the true change in true anomaly? 
 
@@ -52,7 +54,7 @@ oef_lambert = cart2kep( rv_prop[end,:], mu )
 e  = oe0_lambert[2] 
 
 # get true anomaly 
-Δν = ( oef_lambert[6] - oe0_lambert[6] ) 
+Δν  = ( oef_lambert[6] - oe0_lambert[6] ) 
 ν_0 = oe0_lambert[6] 
 ν_f = oef_lambert[6]  
 

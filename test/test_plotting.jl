@@ -1,3 +1,4 @@
+using trajectory_optimization_game_theory 
 using GLMakie 
 
 ## ============================================ ##
@@ -29,7 +30,7 @@ fig
 fig = plot_surface( x, y, z ) 
 fig = plot_contour3d( x2, y2, z2 ) 
 
-## ============================================ ##
+## ============================================ ## 
 
 xyz = [0 0 0] 
 uvw = [1 2 3] 
@@ -91,7 +92,32 @@ fig = plot_vector3d( xyz, uvw )
 xyz = [ zeros(3) for i in 1:3 ] 
 uvw = [ [2,0,0] , [0,1,0] , [0,0,1] ] 
 
-fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ] ) 
+    # adjust because stupid arrows plots the tails at the Point3f points 
+    xyz += uvw 
+
+    # convert to Points3f and Vec3f for arrows function 
+    ps  = [ Point3f(x,y,z) for (x,y,z) in xyz ] 
+    ns  = [ Vec3f(x,y,z) for (x,y,z) in uvw ] 
+
+    fignothing = false 
+    if isnothing(fig) 
+        fignothing = true 
+        fig = Figure() 
+        Axis3( fig[1,1] ) 
+    end 
+
+    arrows!(  
+        ps, ns, fxaa=true, # turn on anti-aliasing
+        linecolor = :black, arrowcolor = :black,
+        linewidth = 0.1, arrowsize = Vec3f(0.3, 0.3, 0.4),
+        align = :center, 
+    )
+
+
+## ============================================ ##
+
+
+fig = plot_vector3d( xyz , uvw ) 
 fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :red ) 
 fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green ) 
 # fig
