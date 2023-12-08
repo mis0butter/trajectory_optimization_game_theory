@@ -122,18 +122,19 @@ export aug_L_eq_ineq_fn
 
 "Minimize equality-constrained Augmented Lagrangian"
 function min_aug_L_eq( 
-    obj_fn,                                         # objective function 
-    c_fn,                                           # constraint function: c = 0 
-    x_0,                                            # initial guess 
+    obj_fn,         # objective function 
+    c_fn,           # constraint function: c = 0 
+    x_0,            # initial guess 
     tol     = 1e-6, 
-    λ_0     = zeros(length(c_fn(x_0))),             # initial Lagrange multiplier  
-    p_0     = 10.0 * ones(length(c_fn(x_0))),       # initial penalty parameter  
-    γ       = 2.0,                                  # penalty parameter 
 ) 
 
     # step 0: initialize 
-    λ_k = copy( λ_0 )
-    p_k = copy( p_0 ) 
+    λ_k     = zeros(length(c_fn(x_0)))          # initial Lagrange multiplier  
+    p_k     = 10.0 * ones(length(c_fn(x_0)))    # initial penalty parameter  
+    γ       = 2.0                               # penalty parameter 
+
+    # λ_k = copy( λ_0 )
+    # p_k = copy( p_0 ) 
     x_k = copy( x_0 ) 
 
     k = 0 ; loop = true 
@@ -172,17 +173,18 @@ export min_aug_L_eq
 
 "Minimize inequality-constrained Augmented Lagrangian" 
 function min_aug_L_ineq( 
-    obj_fn,                                         # objective function 
-    h_fn,                                           # inequality constraint function: h <= 0  
-    x_0,                                            # initial guess 
+    obj_fn,         # objective function 
+    h_fn,           # inequality constraint function: h <= 0  
+    x_0,            # initial guess 
     tol     = 1e-6, 
-    λ_0     = zeros(length(h_fn(x_0))),             # initial Lagrange multiplier  
-    p_0     = 10.0 * ones(length(h_fn(x_0))),       # initial penalty parameter  
-    γ       = 2.0,                                  # penalty parameter 
 ) 
 
     # step 0: initialize 
-    λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
+    λ_k     = zeros(length(h_fn(x_0)))              # initial Lagrange multiplier  
+    p_k     = 10.0 * ones(length(h_fn(x_0)))        # initial penalty parameter  
+    γ       = 2.0                                   # penalty parameter 
+
+    # λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
     x_k = copy( x_0 ) ;     h_k = h_fn( x_k )
 
     k = 0 ; loop = true 
@@ -221,18 +223,19 @@ export min_aug_L_ineq
 
 "Minimize equality and inequality-constrained Augmented Lagrangian"
 function min_aug_L_eq_ineq(  
-    obj_fn,                                                         # objective function 
-    c_fn,                                                           # constraint function: c = 0 
-    h_fn,                                                           # inequality constraint function: h <= 0  
-    x_0,                                                            # initial guess 
+    obj_fn,         # objective function 
+    c_fn,           # constraint function: c = 0 
+    h_fn,           # inequality constraint function: h <= 0  
+    x_0,            # initial guess 
     tol     = 1e-6, 
-    λ_0     = zeros(length( [ c_fn(x_0) ; h_fn(x_0) ] )),           # initial Lagrange multiplier  
-    p_0     = 10.0 * ones(length( [ c_fn(x_0) ; h_fn(x_0) ] )),     # initial penalty parameter  
-    γ       = 2.0,                                                  # penalty parameter 
 ) 
 
     # step 0: initialize 
-    λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
+    λ_k     = zeros(length( [ c_fn(x_0) ; h_fn(x_0) ] ))            # initial Lagrange multiplier  
+    p_k     = 10.0 * ones(length( [ c_fn(x_0) ; h_fn(x_0) ] ))      # initial penalty parameter  
+    γ       = 2.0                                                   # penalty parameter 
+
+    # λ_k = copy( λ_0 ) ;     p_k = copy( p_0 ) 
     x_k = copy( x_0 ) ;     h_k = h_fn( x_k )
 
     # first split λ and p into eq and ineq constraints 
@@ -247,7 +250,7 @@ function min_aug_L_eq_ineq(
         fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_c, p_c ) + 
                   aug_L_ineq_fn( obj_fn, h_fn, x_k, λ_h, p_h ) 
         # fn(x_k) = aug_L_eq_ineq_fn( obj_fn, c_fn, h_fn, x_k, λ_c, λ_h, p_c, p_h )
-        dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
+        # dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
         # step 2: minimize unconstrained problem  
         # x_min = min_bfgs( fn, dfn, x_k )  

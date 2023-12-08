@@ -43,6 +43,24 @@ x_min = min_aug_L( obj_fn, x_0, nothing, h_fn )
 # equality and inequality-constrained 
 x_min = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## ============================================ ##
 ## ============================================ ##
 # ok ... let's try equality constrained optimization 

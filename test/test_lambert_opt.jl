@@ -73,45 +73,42 @@ x[idx_min]
 
 
 ## ============================================ ##
-
-dfn     = x -> ForwardDiff.gradient( fn, x ) 
-dfn_fdm = x -> grad( central_fdm(5, 1), fn, x )[1] 
-
-dfn(Δv_vec)
-dfn_fdm(Δv_vec) 
-
-x_min_fd   = min_bfgs( fn, dfn_fdm, Δv_vec )  
-
-
-## ============================================ ##
 # can I use Optim? ... looks like no 
 
 using Optim 
 
-x0 = Δv_vec * 1.1 
+x_0 = Δv_vec * 1.1 
 
 # optimization 
 fn(x)   = miss_distance_prop_kepler( rv_0, x, rv_f, tof, mu ) 
-od      = OnceDifferentiable( fn, x0 ; autodiff = :forward ) 
-result  = optimize( od, x0, NelderMead() ) 
+od      = OnceDifferentiable( fn, x_0 ; autodiff = :forward ) 
+result  = optimize( od, x_0, NelderMead() ) 
 x_min   = result.minimizer 
 
 fn(x_min) 
 
-x_min = min_optim( fn, x0 ) 
+x_min = min_optim( fn, x_0 ) 
 
 ## ============================================ ##
 # ok now let's try minimizing a different objective function 
 
-# want inequality tof constraint - less than 1 day 
-# want equality constraint - miss distance = 0  
-
 # define state vector 
-x = [ tof ; Δv_vec ] 
+x_0 = [ tof ; Δv_vec ] 
 
 # want to minimize delta v - define objective function 
-fn(x) = x[2:4] 
+obj_fn(x) = sum( abs.( x[2:4] ) )  
+obj_fn(x_0) 
 
+# want inequality tof constraint - less than 1 day 
+h_fn(x) = x[1] - 86400 
+h_fn(x_0) 
+
+# want equality constraint - miss distance = 0  
+c_fn(x) = miss_distance_prop_kepler( rv_0, x[2:4], rv_f, x[1], mu ) 
+c_fn(x_0) 
+
+# equality and inequality-constrained 
+x_min = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 
 
 
