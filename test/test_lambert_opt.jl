@@ -98,18 +98,20 @@ x_min   = result.minimizer
 
 fn(x_min) 
 
-
-## ============================================ ##
-
 x_min = min_optim( fn, x0 ) 
 
+## ============================================ ##
+# ok now let's try minimizing a different objective function 
 
-# assign gradient fn 
-dfn = x -> ForwardDiff.gradient( fn, x ) 
+# want inequality tof constraint - less than 1 day 
+# want equality constraint - miss distance = 0  
 
-# minimize 
-result = optimize( fn, dfn, x0, NelderMead() ) 
-x_min  = result.minimizer 
+# define state vector 
+x = [ tof ; Δv_vec ] 
+
+# want to minimize delta v - define objective function 
+fn(x) = x[2:4] 
+
 
 
 

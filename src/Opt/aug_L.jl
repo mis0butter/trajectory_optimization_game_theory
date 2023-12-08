@@ -159,8 +159,9 @@ function min_aug_L_eq(
         end 
 
         # step 3: check constraint function and update parameters 
-        λ_k += p_k .* c_fn(x_k) 
-        p_k *= γ 
+        λ_k, p_k = update_λ_p_eq( λ_k, p_k, c_fn, x_k, γ )
+        # λ_k += p_k .* c_fn(x_k) 
+        # p_k *= γ 
 
     end 
 
@@ -263,10 +264,11 @@ function min_aug_L_eq_ineq(
         end 
 
         # update equality constraints first 
-        if norm( c_fn(x_k) ) > tol 
-            λ_c += p_c .* c_fn(x_k) 
-            p_c *= γ 
-        end 
+        λ_c, p_c = update_λ_p_eq( λ_c, p_c, c_fn, x_k, γ )
+        # if norm( c_fn(x_k) ) > tol 
+        #     λ_c += p_c .* c_fn(x_k) 
+        #     p_c *= γ 
+        # end 
 
         # now inequality constraints 
         h_k      = h_fn(x_k) 
@@ -313,4 +315,25 @@ end
 
 export update_λ_p_ineq 
 
+## ============================================ ##
 
+"Update Lagrange multipliers and penalty parameters for equality constraints"
+function update_λ_p_eq( 
+    λ_c,        # Lagrange multiplier(s) 
+    p_c,        # penalty parameter(s) 
+    c_fn,       # equality constraint function: c = 0 
+    x_k,        # state vector 
+    γ,          # step size, 
+    tol = 1e-6, # tolerance 
+)
+
+    # update equality constraints first 
+    if norm( c_fn(x_k) ) > tol 
+        λ_c += p_c .* c_fn(x_k) 
+        p_c *= γ 
+    end 
+
+    return λ_c, p_c 
+end 
+
+export update_λ_p_eq 
