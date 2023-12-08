@@ -135,7 +135,9 @@ function plot_surface(
     alpha = 1.0,        # transparency 
 ) 
 
+    fignothing = false 
     if isnothing(fig) 
+        fignothing = true 
         fig = Figure() 
         Axis3(fig[1, 1]) 
     end 

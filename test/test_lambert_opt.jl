@@ -96,7 +96,21 @@ od      = OnceDifferentiable( fn, x0 ; autodiff = :forward )
 result  = optimize( od, x0, NelderMead() ) 
 x_min   = result.minimizer 
 
-fn(x_min)
+fn(x_min) 
+
+
+## ============================================ ##
+
+x_min = min_optim( fn, x0 ) 
+
+
+# assign gradient fn 
+dfn = x -> ForwardDiff.gradient( fn, x ) 
+
+# minimize 
+result = optimize( fn, dfn, x0, NelderMead() ) 
+x_min  = result.minimizer 
+
 
 
 
