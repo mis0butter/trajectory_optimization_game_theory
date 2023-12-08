@@ -279,6 +279,40 @@ export min_aug_L_eq_ineq
 
 ## ============================================ ##
 
+"Minimize equality and inequality-constrained Augmented Lagrangian"
+function min_aug_L(  
+    obj_fn,                                                         # objective function 
+    x_0,                                                            # initial guess 
+    c_fn    = nothing,                                              # constraint function: c = 0 
+    h_fn    = nothing,                                              # inequality constraint function: h <= 0  
+    tol     = 1e-6, 
+) 
+
+    # unconstrained optimization 
+    if isnothing(c_fn) && isnothing(h_fn)  
+        x_min = min_optim( obj_fn, x_0 ) 
+
+    # equality-constrained optimization 
+    elseif isnothing(h_fn) 
+        x_min = min_aug_L_eq( obj_fn, c_fn, x_0 ) 
+
+    # inequality-constrained optimization 
+    elseif isnothing(c_fn) 
+        x_min = min_aug_L_ineq( obj_fn, h_fn, x_0 )    
+
+    # equality AND inequality-constrained optimization 
+    else 
+        x_min = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 ) 
+
+    end 
+
+    return x_min 
+end 
+
+export min_aug_L
+
+## ============================================ ##
+
 "Update Lagrange multipliers and penalty parameters for inequality constraints"
 function update_λ_p_ineq( 
     λ_k,        # Lagrange multiplier(s) 

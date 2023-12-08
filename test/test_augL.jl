@@ -31,7 +31,17 @@ x_min_eq      = min_aug_L_eq( obj_fn, c_fn, x_0 )
 x_min_ineq    = min_aug_L_ineq( obj_fn, h_fn, x_0 )             
 x_min_eq_ineq = min_aug_L_eq_ineq( obj_fn, c_fn, h_fn, x_0 ) 
 
+# unconstrained 
+x_min = min_aug_L( obj_fn, x_0 ) 
 
+# equality-constrained 
+x_min = min_aug_L( obj_fn, x_0, c_fn )
+
+# inequality-constrained 
+x_min = min_aug_L( obj_fn, x_0, nothing, h_fn )
+
+# equality and inequality-constrained 
+x_min = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 
 ## ============================================ ##
 ## ============================================ ##
