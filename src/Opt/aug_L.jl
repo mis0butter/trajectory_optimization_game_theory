@@ -146,8 +146,8 @@ function min_aug_L_eq(
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
         # step 2: minimize unconstrained problem  
-        x_min = min_bfgs( fn, dfn, x_k )  
-        # x_min = min_optim( fn, x_k )
+        # x_min = min_bfgs( fn, dfn, x_k )  
+        x_min = min_optim( fn, x_k )
         
         # step 3 check convergence ... 
         dx = norm( x_min - x_k ) 
@@ -160,8 +160,6 @@ function min_aug_L_eq(
 
         # step 3: check constraint function and update parameters 
         λ_k, p_k = update_λ_p_eq( λ_k, p_k, c_fn, x_k, γ )
-        # λ_k += p_k .* c_fn(x_k) 
-        # p_k *= γ 
 
     end 
 
@@ -197,7 +195,8 @@ function min_aug_L_ineq(
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
         # step 2: minimize unconstrained problem  
-        x_min = min_bfgs( fn, dfn, x_k )  
+        # x_min = min_bfgs( fn, dfn, x_k )  
+        x_min = min_optim( fn, x_k )
 
         # step 3 check convergence ... 
         dx = norm(x_min - x_k) 
@@ -251,7 +250,8 @@ function min_aug_L_eq_ineq(
         dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
 
         # step 2: minimize unconstrained problem  
-        x_min = min_bfgs( fn, dfn, x_k )  
+        # x_min = min_bfgs( fn, dfn, x_k )  
+        x_min = min_optim( fn, x_k )
 
         # step 3 check convergence ... 
         dx = norm(x_min - x_k) 
@@ -265,10 +265,6 @@ function min_aug_L_eq_ineq(
 
         # update equality constraints first 
         λ_c, p_c = update_λ_p_eq( λ_c, p_c, c_fn, x_k, γ )
-        # if norm( c_fn(x_k) ) > tol 
-        #     λ_c += p_c .* c_fn(x_k) 
-        #     p_c *= γ 
-        # end 
 
         # now inequality constraints 
         h_k      = h_fn(x_k) 
