@@ -61,14 +61,30 @@ rv_f  = copy( r2 )
 Δrv_f = miss_distance_prop_kepler( rv_0, Δv_vec, rv_f, tof, mu ) 
 
 fn(x) = miss_distance_prop_kepler( rv_0, x, rv_f, tof, mu ) 
-fn(Δv_vec) 
+fn(Δv_vec*0.99) 
 
-dfn   = x_k -> ForwardDiff.gradient( fn, x_k ) 
-dfn(Δv_vec)
+fn_Δv(x) = fn(Δv_vec * x)
+
+x   = collect( 0.99 : 0.0001 : 1.01 ) 
+out = fn_Δv.(x) 
+
+idx_min = get_index( out, minimum(out) ) 
+x[idx_min]  
 
 
 ## ============================================ ##
-# can I use Optim? 
+
+dfn     = x -> ForwardDiff.gradient( fn, x ) 
+dfn_fdm = x -> grad( central_fdm(5, 1), fn, x )[1] 
+
+dfn(Δv_vec)
+dfn_fdm(Δv_vec) 
+
+x_min_fd   = min_bfgs( fn, dfn_fdm, Δv_vec )  
+
+
+## ============================================ ##
+# can I use Optim? ... looks like no 
 
 using Optim 
 
@@ -77,8 +93,10 @@ x0 = Δv_vec * 1.1
 # optimization 
 fn(x)   = miss_distance_prop_kepler( rv_0, x, rv_f, tof, mu ) 
 od      = OnceDifferentiable( fn, x0 ; autodiff = :forward ) 
-result  = optimize( od, x0, LBFGS() ) 
+result  = optimize( od, x0, NelderMead() ) 
 x_min   = result.minimizer 
+
+fn(x_min)
 
 
 

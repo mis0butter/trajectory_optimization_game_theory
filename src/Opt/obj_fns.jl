@@ -98,7 +98,7 @@ function miss_distance_prop_kepler(
     Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
     rv_f,           # target state vector of form [r; v] 
     tof = 1.0,      # tof for each segment 
-    mu = 1.0,       # gravitational parameter 
+    mu  = 1.0,      # gravitational parameter 
 )
 
     # add delta v to initial state 

@@ -123,12 +123,12 @@ function prop_kepler_tof(
     n = sqrt( mu / (abs(a))^3 ) 
 
     # get true anomaly 
-    nu_f = nu_tof( e, n, nu_0, tof ) 
-    # if e < 1.0 
-    #     nu_f = elliptic_nu( e, n, nu_0, tof ) 
-    # else 
-    #     nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
-    # end 
+    # nu_f = nu_tof( e, n, nu_0, tof ) 
+    if e < 1.0 
+        nu_f = elliptic_nu( e, n, nu_0, tof ) 
+    else 
+        nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
+    end 
 
     # set target rv 
     oe_f    = copy(oe_0) 
@@ -274,36 +274,4 @@ end
 
 export prop_kepler_tof_Nseg 
 # t_kep, rv_kep = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
-
-## ============================================ ##
-
-"Calculate miss distance between trajectories using kepler propagation" 
-function miss_distance_prop_kepler( 
-    rv_0,           # initial state vector of form [r; v] 
-    Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
-    N,              # number of segments 
-    rv_f,           # target state vector of form [r; v] 
-    tof_N = 1.0,    # tof for each segment 
-    mu = 1.0,       # gravitational parameter 
-)
-
-    # Propagating To Final State
-    t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
-
-    # extract final state 
-    rv_f_prop = rv_hist[end,:] 
-
-    # Finding Miss Distance
-    Δrv_f = norm( rv_f_prop[1:3] - rv_f[1:3] ) 
-
-    if isnan(Δrv_f) 
-        println("Δrv_f is nan")
-    end 
-
-    return Δrv_f
-end 
-
-export miss_distance_prop_kepler 
-# miss_kepler = miss_distance_prop_kepler( 
-    # rv_0, Δv_vec, N, rv_f, tof_N, mu )
 
