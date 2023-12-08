@@ -25,8 +25,9 @@ x_E = vv2m(x_E)
 ## ============================================ ##
 # plot 
 
+r   = 6378.0
 xyz = [ zeros(3) for i in 1:3 ] 
-uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
+uvw = 0.5 * r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
 
 fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
 fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
@@ -46,7 +47,7 @@ r1 = x0_P[1:3]
 r2 = xf_E[1:3] 
 v1, v2 = lambertbattin(r1, r2, mu, dm, tof) 
 
-x0_lambert = [r1 ; v1] 
+x0_lambert  = [r1 ; v1] 
 
 Δv_vec = v2 - x0_E[4:6] 
 
@@ -65,7 +66,13 @@ fig = plot_scatter3d( rv_f_kepler[1], rv_f_kepler[2], rv_f_kepler[3], fig, :utri
 
 oe0_lambert = cart2kep( x0_lambert, mu ) 
 oef_lambert = cart2kep( rv_prop[end,:], mu ) 
+
+a  = oe0_lambert[1] 
 e  = oe0_lambert[2] 
+i  = oe0_lambert[3] 
+Ω  = oe0_lambert[4]     # angle between x-axis and line of nodes 
+ω  = oe0_lambert[5]     # argument of periapsis - angle between line of nodes and periapsis 
+ν  = oe0_lambert[6]     # true anomaly - angle between periapsis and position vector 
 
 # get true anomaly 
 Δν  = ( oef_lambert[6] - oe0_lambert[6] ) 
@@ -73,8 +80,8 @@ e  = oe0_lambert[2]
 ν_f = oef_lambert[6]  
 
 # get eccentric anomaly 
-E_0 = acos( ( e + cosd(ν_0) ) / ( 1 + e * cosd(ν_0) ) ) 
-E_f = acos( ( e + cosd(ν_f) ) / ( 1 + e * cosd(ν_f) ) ) 
+E_0 = acos( ( e + cos(ν_0) ) / ( 1 + e * cos(ν_0) ) ) 
+E_f = acos( ( e + cos(ν_f) ) / ( 1 + e * cos(ν_f) ) ) 
 ΔE  = E_f - E_0 
 
 

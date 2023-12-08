@@ -3,14 +3,7 @@ using GLMakie
 ## ============================================ ## 
 
 """ 
-Plot an orbit using GLMakie 
-
-Inputs: 
-
-    x,              # [N,1] grid of points 
-    y,              # [N,1] grid of points 
-    z,              # [N,1] grid of points  
-    fig = nothing,  # figure handle 
+Plot a 3D line using GLMakie 
 
 Example usage: 
 
@@ -21,7 +14,7 @@ Example usage:
     fig = plot_3d( x, y, z )
 """
 
-function plot_3d( 
+function plot_line3d( 
     x,              # [N,1] grid of points 
     y,              # [N,1] grid of points 
     z,              # [N,1] grid of points  
@@ -39,18 +32,12 @@ function plot_3d(
     return fig 
 end 
     
-export plot_3d  
+export plot_line3d  
 
 ## ============================================ ## 
 
 """ 
 Plot an orbit using GLMakie 
-
-Inputs: 
-
-    rv,                 # [N,3] matrix of state vectors 
-    fig    = nothing,   # figure handle 
-    labels = false      # boolean for labeling start and end points 
 
 Example usage: 
 
@@ -104,14 +91,6 @@ export plot_orbit
 """
 Plot a surface with a colorbar using GLMakie 
 
-Inputs: 
-
-    x,                  # [N,1] grid of points 
-    y,                  # [N,1] grid of points 
-    z,                  # [N,N] grid of points evaluated at x and y 
-    fig   = nothing,    # figure handle 
-    alpha = 1.0,        # transparency 
-
 Example usage: 
 
     x = y = range(-pi, pi, 100)
@@ -149,16 +128,6 @@ export plot_surface
 
 """
 Plot scatter using GLMakie
-
-Inputs: 
-
-    x,                      # [N,1] grid of points 
-    y,                      # [N,1] grid of points 
-    z,                      # [N,N] grid of points evaluated at x and y 
-    fig    = nothing,       # figure handle 
-    marker = :utriangle,    # marker type 
-    color  = :black,        # marker color 
-    text   = nothing,       # text to add to plot 
 
 Example usage: 
 
@@ -204,14 +173,6 @@ export plot_scatter3d
 """ 
 Plot a contour with a colorbar using GLMakie
 
-Inputs: 
-
-    x,              # [N,1] grid of points 
-    y,              # [N,1] grid of points 
-    z,              # [N,N] grid of points evaluated at x and y 
-    fig = nothing,  # figure handle 
-    levels = 20,    # number of contour levels 
-
 Example usage: 
 
     x = y = range(-pi, pi, 100)
@@ -250,22 +211,15 @@ export plot_contour3d
 """
 Plot vector using GLMakie. 
 
-Inputs: 
-
-    xyz,                    # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
-    uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
-    fig    = nothing,       # figure handle 
-    color  = :black,        # marker color 
-    text   = nothing,       # text to add to plot 
-
 Example usage: 
 
+    r   = 6378.0
     xyz = [ zeros(3) for i in 1:3 ] 
-    uvw = [ [2,0,0] , [0,1,0] , [0,0,1] ] 
+    uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
 
-    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ] ) 
-    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :red ) 
-    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green ) 
+    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
+    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
+    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 ) 
 """
 
 function plot_vector3d( 
