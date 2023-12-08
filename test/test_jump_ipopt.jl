@@ -55,10 +55,10 @@ rv_0 = [ r_0 ; v_0 ]
 rv_f = [ r_f ; v_f ] 
 tof_N = tof / N 
 
-miss_kepler = miss_distance_prop_kepler( 
+miss_kepler = miss_distance_prop_kepler_Nseg( 
     rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
 
-obj( Δv_vec ) = miss_distance_prop_kepler( 
+obj( Δv_vec ) = miss_distance_prop_kepler_Nseg( 
         rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
 
 # optimize using JuMP 

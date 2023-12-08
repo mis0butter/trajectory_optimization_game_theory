@@ -18,7 +18,7 @@ function miss_Δv_flat(
     rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
     
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
-    miss   = miss_distance_prop_kepler( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+    miss   = miss_distance_prop_kepler_Nseg( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
     
     return miss 
 end 
@@ -69,7 +69,7 @@ function miss_tof_Δv_flat(
     Δv_vec_flat = tof_N_Δv_vec_flat[2:end] 
     
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
-    miss   = miss_distance_prop_kepler( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+    miss   = miss_distance_prop_kepler_Nseg( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
     
     return miss 
 end 
@@ -118,7 +118,7 @@ function miss_mag_tof_Δv_flat(
     Δv_vec_flat = tof_N_Δv_vec_flat[2:end] 
     
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
-    miss   = miss_distance_prop_kepler( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
+    miss   = miss_distance_prop_kepler_Nseg( rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
 
     # state magnitude 
     state_mag = norm( tof_N_Δv_vec_flat ) 

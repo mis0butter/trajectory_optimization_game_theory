@@ -27,6 +27,7 @@ fig = plot_axes3d()
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
 
+
 ## ============================================ ##
 # lambert solution 
 
@@ -45,7 +46,7 @@ x0_lambert  = [r1 ; v1]
 # test function 
 rv_f_kepler = prop_kepler_tof( x0_lambert, tof, mu ) 
 t, rv_prop  = propagate_2Body( x0_lambert, tof, mu ) 
-rv_prop = vv2m(rv_prop) 
+rv_prop     = vv2m(rv_prop) 
 
 fig = plot_orbit( rv_prop, fig ) 
 fig = plot_scatter3d( xf_E[1], xf_E[2], xf_E[3], fig ) 

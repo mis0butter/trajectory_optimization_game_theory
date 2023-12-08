@@ -1,7 +1,8 @@
 using trajectory_optimization_game_theory 
 using ForwardDiff 
-using FiniteDifferences
+using FiniteDifferences 
 using LinearAlgebra 
+
 
 ## ============================================ ##
 # init 
@@ -21,22 +22,63 @@ xf_E = xf_E_OG = x_E[end]
 x_P = vv2m(x_P) 
 x_E = vv2m(x_E) 
 
-## ============================================ ##
 # plot 
-
-r   = 6378.0
-xyz = [ zeros(3) for i in 1:3 ] 
-uvw = 0.5 * r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
-
-fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
-fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
-fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 ) 
-
+fig = plot_axes3d()
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
 
 
+## ============================================ ##
+# lambert solution 
 
+dm = "pro" 
+
+tof = t[end] / 2 
+
+r1 = x0_P[1:3] 
+r2 = xf_E[1:3] 
+v1, v2 = lambertbattin(r1, r2, mu, dm, tof) 
+
+x0_lambert  = [r1 ; v1] 
+
+Δv_vec = v1 - x0_P[4:6] 
+
+# test function 
+rv_f_kepler = prop_kepler_tof( x0_lambert, tof, mu ) 
+t, rv_prop  = propagate_2Body( x0_lambert, tof, mu ) 
+rv_prop     = vv2m(rv_prop) 
+
+fig = plot_orbit( rv_prop, fig ) 
+fig = plot_scatter3d( xf_E[1], xf_E[2], xf_E[3], fig ) 
+fig = plot_scatter3d( rv_f_kepler[1], rv_f_kepler[2], rv_f_kepler[3], fig, :utriangle, :green ) 
+
+
+## ============================================ ##
+# test optimizing for initial delta v 
+
+rv_0  = copy(x0_P) 
+rv_f  = copy( r2 ) 
+Δrv_f = miss_distance_prop_kepler( rv_0, Δv_vec, rv_f, tof, mu ) 
+
+fn(x) = miss_distance_prop_kepler( rv_0, x, rv_f, tof, mu ) 
+fn(Δv_vec) 
+
+dfn   = x_k -> ForwardDiff.gradient( fn, x_k ) 
+dfn(Δv_vec)
+
+
+## ============================================ ##
+# can I use Optim? 
+
+using Optim 
+
+x0 = Δv_vec * 1.1 
+
+# optimization 
+fn(x)   = miss_distance_prop_kepler( rv_0, x, rv_f, tof, mu ) 
+od      = OnceDifferentiable( fn, x0 ; autodiff = :forward ) 
+result  = optimize( od, x0, LBFGS() ) 
+x_min   = result.minimizer 
 
 
 

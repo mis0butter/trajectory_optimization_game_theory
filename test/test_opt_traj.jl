@@ -17,7 +17,7 @@ function miss_Δv_flat(
     rv_0, Δv_vec_flat, N, rv_f, tof_N, mu )
     
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
-    miss   = miss_distance_prop_kepler( 
+    miss   = miss_distance_prop_kepler_Nseg( 
         rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
     
     return miss 
@@ -136,7 +136,7 @@ x_min = min_bfgs( fn, dfn, Δv_vec_flat )
 Δv_sol = reshape(x_min, N, 3) 
 # Δv_sol = reshape(x_hist[end], N, 3) 
 
-miss_kepler = miss_distance_prop_kepler( 
+miss_kepler = miss_distance_prop_kepler_Nseg( 
     rv_0, Δv_sol, N, rv_f, tof_N, mu)
 
 t_kep, rv_kep = prop_kepler_tof_Nseg( 
@@ -157,7 +157,7 @@ function miss_Δv_flat(
 )
     
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
-    miss   = miss_distance_prop_kepler( 
+    miss   = miss_distance_prop_kepler_Nseg( 
         rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
     
     return miss 
@@ -201,7 +201,7 @@ function miss_tof_Δv_flat(
     Δv_vec_flat = tof_N_Δv_vec_flat[2:end] 
     
     Δv_vec = reshape( Δv_vec_flat, N, 3 ) 
-    miss   = miss_distance_prop_kepler( 
+    miss   = miss_distance_prop_kepler_Nseg( 
         rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
     
     return miss 
@@ -273,9 +273,9 @@ x_min_fdm = min_bfgs( fn, dfn_fdm, Δv_vec_flat )
 
 # Δv_sol = reshape(x_hist[end], N, 3) 
 
-miss_kepler_fd  = miss_distance_prop_kepler( 
+miss_kepler_fd  = miss_distance_prop_kepler_Nseg( 
     rv_0, Δv_sol_fd, N, rv_f, tof_N, mu)
-miss_kepler_fdm = miss_distance_prop_kepler( 
+miss_kepler_fdm = miss_distance_prop_kepler_Nseg( 
     rv_0, Δv_sol_fdm, N, rv_f, tof_N, mu)
     
 t_kep, rv_kep_fd  = prop_kepler_tof_Nseg( 
