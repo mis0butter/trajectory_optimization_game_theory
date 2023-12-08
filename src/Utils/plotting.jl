@@ -56,9 +56,11 @@ function plot_orbit(
 
     text_offset = (0,10) 
 
+    
+
     if isnothing(fig) 
         fig = Figure() 
-        Axis3(fig[1, 1], 
+        Axis3(fig[1, 1], aspect=DataAspect(), 
             xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
             title = "Transfer Solution") 
     end 

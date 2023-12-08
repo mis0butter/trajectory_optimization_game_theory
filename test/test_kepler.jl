@@ -80,8 +80,10 @@ i  = oe0_lambert[3]
 ν_f = oef_lambert[6]  
 
 # get eccentric anomaly 
-E_0 = acos( ( e + cos(ν_0) ) / ( 1 + e * cos(ν_0) ) ) 
-E_f = acos( ( e + cos(ν_f) ) / ( 1 + e * cos(ν_f) ) ) 
+E_0 = nu2E( ν_0, e ) 
+E_f = nu2E( ν_f, e ) 
+
+
 ΔE  = E_f - E_0 
 
 

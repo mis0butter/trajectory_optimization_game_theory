@@ -1,4 +1,54 @@
-using LinearAlgebra
+using LinearAlgebra 
+
+## ============================================ ##
+
+"Convert true anomaly to eccentric anomaly"
+function nu2E( 
+    nu,             # true anomaly [rad] 
+    e,              # eccentricity 
+) 
+
+    # elliptic 
+    if e < 1.0 
+        E = 2 * atan( sqrt( (1-e)/(1+e) ) * tan(nu/2) ) 
+    # hyperbolic 
+    else 
+        E = 2 * atanh( sqrt( (e-1)/(e+1) ) * tan(nu/2) ) 
+    end 
+
+    if E < 0.0 
+        E = 2*pi + E 
+    end
+
+    return E        # eccentric anomaly [rad] 
+end 
+
+export nu2E 
+
+## ============================================ ##
+
+"Convert eccentric anomaly to true anomaly" 
+function E2nu( 
+    E,              # eccentric anomaly [rad] 
+    e,              # eccentricity 
+) 
+
+    # elliptic 
+    if e < 1.0 
+        nu = 2 * atan( sqrt( (1+e)/(1-e) ) * tan(E/2) ) 
+    # hyperbolic 
+    else 
+        nu = 2 * atanh( sqrt( (e+1)/(e-1) ) * tanh(E/2) ) 
+    end 
+
+    if nu < 0.0 
+        nu = 2*pi + nu 
+    end 
+
+    return nu       # true anomaly [rad] 
+end 
+
+export E2nu 
 
 ## ============================================ ##
 
@@ -101,7 +151,8 @@ function elliptic_nu(
 ) 
 
     # initial eccentric anomaly 
-    E_0 = acos( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
+    E_0 = nu2E( nu_0, e ) 
+    # E_0 = acos( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
 
     # mean anomaly - propagate! 
     dM  = n * tof 
@@ -110,7 +161,8 @@ function elliptic_nu(
     
     # find final eccentric anomaly 
     E_f  = kepler_E( M_f, e ) 
-    nu_f = acos( ( cos(E_f) - e ) / ( 1 - e*cos(E_f) ) ) 
+    nu_f = E2nu( E_f, e ) 
+    # nu_f = acos( ( cos(E_f) - e ) / ( 1 - e*cos(E_f) ) ) 
 
     return nu_f     # final true anomaly 
 end 
