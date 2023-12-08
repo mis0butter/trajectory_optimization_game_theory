@@ -34,7 +34,7 @@ function prop_lambert_soln(
     t, rv_prop  = propagate_2Body( rv_0_lb, tof, mu ) 
     rv_prop     = vv2m(rv_prop) 
 
-    return rv_prop 
+    return rv_prop, Δv_vec 
 end 
 
 export prop_lambert_soln 
