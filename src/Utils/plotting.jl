@@ -1,5 +1,31 @@
 using GLMakie 
 
+## ============================================ ##
+# plot Cartesian axes 
+
+"Plot x, y, and z Cartesian axes using GLMakie "
+function plot_axes3d( 
+    r   = 6378.0 / 2,   # radius of axes 
+    fig = nothing,      # figure handle 
+) 
+
+    if isnothing(fig) 
+        fig = Figure() 
+        Axis3(fig[1, 1]) 
+    end 
+
+    xyz = [ zeros(3) for i in 1:3 ] 
+    uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
+
+    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
+    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
+    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 )  
+
+    return fig 
+end
+
+export plot_axes3d 
+
 ## ============================================ ## 
 
 """ 

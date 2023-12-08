@@ -123,11 +123,12 @@ function prop_kepler_tof(
     n = sqrt( mu / (abs(a))^3 ) 
 
     # get true anomaly 
-    if e < 1.0 
-        nu_f = elliptic_nu( e, n, nu_0, tof ) 
-    else 
-        nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
-    end 
+    nu_f = nu_tof( e, n, nu_0, tof ) 
+    # if e < 1.0 
+    #     nu_f = elliptic_nu( e, n, nu_0, tof ) 
+    # else 
+    #     nu_f = hyperbolic_nu( e, n, nu_0, tof ) 
+    # end 
 
     # set target rv 
     oe_f    = copy(oe_0) 
@@ -139,6 +140,41 @@ end
 
 export prop_kepler_tof 
 # rv_f = prop_keper_tof( rv_0, tof, mu ) 
+
+
+
+## ============================================ ##
+
+"Compute true anomaly from eccentric anomaly"
+function nu_tof(  
+    e,              # eccentricity 
+    n,              # mean motion 
+    nu_0,           # initial true anomaly 
+    tof,            # time of flight 
+) 
+
+    # initial eccentric anomaly 
+    E_0 = nu2E( nu_0, e ) 
+
+    # mean anomaly - propagate! 
+    dM  = n * tof 
+    if e < 1.0 
+        M_0 = E_0 - e * sin(E_0) 
+    else 
+        M_0 = e * sinh(E_0) - E_0 
+    end 
+    M_f = M_0 .+ dM 
+    
+    # find final eccentric anomaly 
+    E_f  = kepler_E( M_f, e ) 
+    nu_f = E2nu( E_f, e ) 
+
+    return nu_f     # final true anomaly 
+end 
+
+export nu_tof 
+
+# nu_f = elliptic_nu( e, n, nu_0, tof ) 
 
 ## ============================================ ##
 
@@ -182,7 +218,8 @@ function hyperbolic_nu(
 ) 
     
     # initial hyperbolic anomaly 
-    H_0 = acosh( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
+    H_0 = nu2E( nu_0, e ) 
+    # H_0 = acosh( ( e + cos(nu_0) ) / ( 1 + e * cos(nu_0) ) ) 
     
     # mean anomaly - propagate! 
     dM  = n * tof 
@@ -191,7 +228,8 @@ function hyperbolic_nu(
 
     # find final hyperbolic anomaly 
     H_f  = kepler_H( M_f, e ) 
-    nu_f = 2*atan( sqrt( (e+1)/(e-1) ) * tanh(H_f/2) ) 
+    nu_f = E2nu( H_f, e )
+    # nu_f = 2*atan( sqrt( (e+1)/(e-1) ) * tanh(H_f/2) ) 
 
     return nu_f     # final true anomaly 
 end 

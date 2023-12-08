@@ -22,17 +22,8 @@ xf_E = xf_E_OG = x_E[end]
 x_P = vv2m(x_P) 
 x_E = vv2m(x_E) 
 
-## ============================================ ##
 # plot 
-
-r   = 6378.0
-xyz = [ zeros(3) for i in 1:3 ] 
-uvw = 0.5 * r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
-
-fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
-fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
-fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 ) 
-
+fig = plot_axes3d()
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
 
@@ -82,8 +73,6 @@ i  = oe0_lambert[3]
 # get eccentric anomaly 
 E_0 = nu2E( ν_0, e ) 
 E_f = nu2E( ν_f, e ) 
-
-
 ΔE  = E_f - E_0 
 
 
