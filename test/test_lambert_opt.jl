@@ -2,6 +2,7 @@ using trajectory_optimization_game_theory
 using ForwardDiff 
 using FiniteDifferences 
 using LinearAlgebra 
+using Optim 
 
 
 ## ============================================ ##
@@ -73,9 +74,7 @@ x[idx_min]
 
 
 ## ============================================ ##
-# can I use Optim? ... looks like no 
-
-using Optim 
+# can I use Optim? ... looks like YES 
 
 x_0 = Δv_vec * 1.1 
 
@@ -98,6 +97,28 @@ x_0 = [ tof ; Δv_vec ]
 # want to minimize delta v - define objective function 
 obj_fn(x) = sum( abs.( x[2:4] ) )  
 obj_fn(x_0) 
+
+# want equality constraint - miss distance = 0  
+c_fn(x) = miss_distance_prop_kepler( rv_0, x[2:4], rv_f, x[1], mu ) 
+c_fn(x_0) 
+
+# x_min = min_optim( obj_fn, x_0 ) 
+
+# equality-constrained 
+x_min = min_aug_L( obj_fn, x_0, c_fn )
+
+# extract 
+tof_min = x_min[1] 
+Δv_min  = x_min[2:4] 
+
+x0_min = rv_0 + [ zeros(3) ; Δv_min ] 
+
+
+rv_f_kepler = prop_kepler_tof( x0_min, tof_min, mu ) 
+
+
+## ============================================ ##
+
 
 # want inequality tof constraint - less than 1 day 
 h_fn(x) = x[1] - 86400 
