@@ -23,21 +23,21 @@ xf_E = xf_E_OG = x_E[end]
 x_P = vv2m(x_P) 
 x_E = vv2m(x_E) 
 
+## ============================================ ##
 # plot 
+
 fig = plot_axes3d()
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
 
-
-## ============================================ ##
+# ----------------------- #
 # lambert solution 
 
-dm = "pro" 
+dm  = "pro" 
 
 tof = t[end] / 2 
-
-r1 = x0_P[1:3] 
-r2 = xf_E[1:3] 
+r1  = x0_P[1:3] 
+r2  = xf_E[1:3] 
 v1, v2 = lambertbattin(r1, r2, mu, dm, tof) 
 
 x0_lambert  = [r1 ; v1] 
@@ -49,28 +49,11 @@ rv_f_kepler = prop_kepler_tof( x0_lambert, tof, mu )
 t, rv_prop  = propagate_2Body( x0_lambert, tof, mu ) 
 rv_prop     = vv2m(rv_prop) 
 
+println( "err norm = ", norm( rv_f_kepler[1:3] - r2 ) ) 
+
 fig = plot_orbit( rv_prop, fig ) 
 fig = plot_scatter3d( xf_E[1], xf_E[2], xf_E[3], fig ) 
 fig = plot_scatter3d( rv_f_kepler[1], rv_f_kepler[2], rv_f_kepler[3], fig, :utriangle, :green ) 
-
-
-## ============================================ ##
-# test optimizing for initial delta v 
-
-rv_0  = copy(x0_P) 
-rv_f  = copy( r2 ) 
-Δrv_f = miss_distance_prop_kepler( rv_0, Δv_vec, rv_f, tof, mu ) 
-
-fn(x) = miss_distance_prop_kepler( rv_0, x, rv_f, tof, mu ) 
-fn(Δv_vec*0.99) 
-
-fn_Δv(x) = fn(Δv_vec * x)
-
-x   = collect( 0.99 : 0.0001 : 1.01 ) 
-out = fn_Δv.(x) 
-
-idx_min = get_index( out, minimum(out) ) 
-x[idx_min]  
 
 
 ## ============================================ ##
@@ -111,10 +94,41 @@ x_min = min_aug_L( obj_fn, x_0, c_fn )
 tof_min = x_min[1] 
 Δv_min  = x_min[2:4] 
 
-x0_min = rv_0 + [ zeros(3) ; Δv_min ] 
+## ============================================ ##
+# propagate optimized solution to test 
+
+# plot 
+fig = plot_axes3d()
+fig = plot_orbit( x_P, fig ) 
+fig = plot_orbit( x_E, fig ) 
+
+# propagate with optimized solution 
+x0_min   = rv_0 + [ zeros(3) ; Δv_min ] 
+rv_f_min = prop_kepler_tof( x0_min, tof_min, mu ) 
+
+# print error stats 
+println( "opt err norm = ", norm( rv_f_min[1:3] - rv_f ) ) 
+println( "lambert err norm = ", norm( rv_f_kepler[1:3] - rv_f ) ) 
+
+# test function 
+t, rv_prop  = propagate_2Body( x0_min, tof_min, mu ) 
+rv_prop     = vv2m(rv_prop) 
+
+fig = plot_orbit( rv_prop, fig ) 
+fig = plot_scatter3d( xf_E[1], xf_E[2], xf_E[3], fig ) 
+fig = plot_scatter3d( rv_f_min[1], rv_f_min[2], rv_f_min[3], fig, :utriangle, :green ) 
 
 
-rv_f_kepler = prop_kepler_tof( x0_min, tof_min, mu ) 
+
+
+
+
+
+
+
+
+
+
 
 
 ## ============================================ ##
@@ -179,6 +193,22 @@ fn(rand(1)[1])
 dfn = x -> ForwardDiff.derivative( fn, x )  
 dfn( rand(1)[1] )
 
-## ============================================ ##
 
+## ============================================ ##
+# test optimizing for initial delta v 
+
+rv_0  = copy(x0_P) 
+rv_f  = copy( r2 ) 
+Δrv_f = miss_distance_prop_kepler( rv_0, Δv_vec, rv_f, tof, mu ) 
+
+fn(x) = miss_distance_prop_kepler( rv_0, x, rv_f, tof, mu ) 
+fn(Δv_vec*0.99) 
+
+fn_Δv(x) = fn(Δv_vec * x)
+
+x   = collect( 0.99 : 0.0001 : 1.01 ) 
+out = fn_Δv.(x) 
+
+idx_min = get_index( out, minimum(out) ) 
+x[idx_min]  
 
