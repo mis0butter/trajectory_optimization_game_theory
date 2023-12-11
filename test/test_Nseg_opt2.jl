@@ -9,10 +9,11 @@ using Optim
 
 mu = 398600.4415
 r  = 6378.0
-kep0_P = [r+400.0, 0.0, 0*pi/180, 0.0, 0.0, 0.0]
-kep0_E = [r+450.0, 0.0, 10.6*pi/180, 0.0, 0.0, 50.0*pi/180]
-t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
+kep0_P = [r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180]
+kep0_E = [r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180]
+t = (0.0, 1*orbitPeriod(kep0_P, mu)) 
 t_P, x_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
+t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
 t_E, x_E = propagate_2Body(kep2cart(kep0_E, mu), t, mu, 1.0)
 
 x0_P = x_P[1] ;     r_0  = x0_P[1:3] ;  v_0 = x0_P[4:6] ;   
@@ -24,7 +25,7 @@ rv_f = [ r_f ; v_f ]
 x_P = vv2m(x_P) ;   
 x_E = vv2m(x_E) ;   
 
-## ============================================ ##
+# ----------------------- #
 # test lambert soln 
 
 # lambert solution 
@@ -44,7 +45,7 @@ fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig )
 # break up into 2 segments, see what happens 
 
 # set initial guess 
-N = 10 
+N = 2 
 tof_N       = tof / N / 4 
 
 Δv_vec = [ Δv ]
@@ -81,8 +82,22 @@ t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu )
 # propagate kepler 
 t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
 
+## ============================================ ##
+
+
+
+r   = 6378.0
+xyz = [ zeros(3) for i in 1:3 ] 
+uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
+
+fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
+fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
+fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 ) 
+
+## ============================================ ##
+
 # plot 
-fig = plot_axes3d()
+fig = plot_axes3d( )
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
 fig = plot_orbit( rv_2Body, fig ) 
@@ -90,7 +105,11 @@ fig = plot_orbit( rv_2Body, fig )
 
 # set up vector plotting 
 nodes_N = rv_kepler[1:N, 1:3] 
-fig = plot_vector3d( nodes_N, 500 * Δv_sol, fig ) 
+
+xyz = copy(nodes_N) 
+uvw = copy(2000 * Δv_sol)
+
+fig = plot_vector3d( xyz, uvw, fig, 100 ) 
 
 
 

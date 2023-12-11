@@ -28,3 +28,18 @@ end
 
 export get_index 
 
+## ============================================ ##
+
+"Convert matrix into vector of vectors" 
+function m2vv( M )
+
+    N       = size(M, 1) 
+    vec_vec = [] 
+    for i = 1 : N 
+        push!( vec_vec, M[i,:] ) 
+    end 
+
+    return vec_vec 
+end 
+
+export m2vv 

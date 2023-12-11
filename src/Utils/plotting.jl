@@ -17,9 +17,9 @@ function plot_axes3d(
     xyz = [ zeros(3) for i in 1:3 ] 
     uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
 
-    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
-    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
-    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 )  
+    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, r/100, :red ) 
+    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, r/100, :blue ) 
+    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, r/100, :green  )  
 
     return fig 
 end
@@ -247,19 +247,29 @@ Example usage:
     xyz = [ zeros(3) for i in 1:3 ] 
     uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
 
-    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
-    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
-    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 ) 
+    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, r/100, :red ) 
+    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, r/100, :blue ) 
+    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, r/100, :green ) 
 """
 
 function plot_vector3d( 
     xyz,                        # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
     uvw,                        # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
     fig    = nothing,           # figure handle 
+    width  = norm(uvw[1])/100,  # arrow width 
     color  = :black,            # marker color 
-    width  = norm(uvw[1])/100, # arrow width 
     text   = nothing,           # text to add to plot 
 ) 
+
+    # check type 
+    # if isequal( typeof(xyz), Matrix{Float64} ) 
+    if xyz isa AbstractMatrix 
+        xyz = m2vv(xyz)
+    end 
+    # if isequal( typeof(uvw), Matrix{Float64} ) 
+    if uvw isa AbstractMatrix 
+        uvw = m2vv(uvw)
+    end 
 
     # adjust because stupid arrows plots the tails at the Point3f points 
     xyz += uvw 
