@@ -43,74 +43,43 @@ fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig )
 ## ============================================ ##
 # break up into 2 segments, see what happens 
 
-tof_N = tof / 2
-
-# propagate first segment 
-r_1          = r_0 
-v_1          = v_0 + Δv 
-rv_1         = [ r_1 ; v_1 ] 
-t, rv_prop_1 = propagate_2Body( rv_1, tof_N, mu ) 
-
-# propagate second segment 
-rv_2 = rv_prop_1[end] 
-rv_2 = [ rv_2[1:3] ; rv_2[4:6] + 0 * Δv ] 
-t, rv_prop_2 = propagate_2Body( rv_2, tof_N, mu ) 
-
-rv_prop_1 = vv2m( rv_prop_1 )
-rv_prop_2 = vv2m( rv_prop_2 )  
-
-## ============================================ ##
-# now vary segments 
-
-N       = 2 
-tof_N   = tof / N 
-Δv_vec  = vv2m( [ Δv, zeros(3) ] ) 
-t_kep, rv_kep = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
-
-miss_kepler = miss_distance_prop_kepler_Nseg( 
-    rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
-
-    
-## ============================================ ##
-# can I use Optim? ... looks like YES 
-
-x_0 = reshape( 1.1 * Δv_vec, N*3, 1 ) 
-
-# optimization 
-fn(x)       = miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
-x_min       = min_optim( fn, x_0 ) 
-fn(x_min) 
-
-# test 
-Δv_vec = reshape( x_min, N, 3 ) 
-t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
-
-## ============================================ ##
-# ok, now let's try minimizing the miss distance for N segments 
-
-# init stuff 
-N       = 2 
-tof_N   = tof / N 
-
 # set initial guess 
+N = 10 
+tof_N       = tof / N / 4 
+
+Δv_vec = [ Δv ]
+for i = 1 : N-1 
+    push!( Δv_vec, zeros(3) ) 
+end 
+Δv_vec      = vv2m( Δv_vec ) 
 Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
 x_0         = 1.1 * [ tof_N ; Δv_vec_flat ]  
 
-obj_fn(x) = sum( abs.( x[2:end] ) ) 
-
-x_min = min_aug_L( obj_fn, x_0  ) 
+# define objective function 
+# obj_fn(x) = sum( abs.( x[2:end] ) ) 
+obj_fn(x) = sum_norm_Δv( x, N ) 
+obj_fn(x_0) 
 
 # equality constraint 
 c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x[2:end], N, rv_f, x[1], mu ) 
 c_fn(x_0) 
 
+# inequality constraint ? 
+ 
 # equality-constrained 
-x_min = min_aug_L( obj_fn, x_0, c_fn )
+x_min  = min_aug_L( obj_fn, x_0, c_fn ) 
 
-# test 
-Δv_vec = reshape( x_min[2:end], N, 3 ) 
-tof_N  = x_min[1] 
-t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
+# get solution 
+Δv_sol    = reshape( x_min[2:end], N, 3 ) 
+tof_N_sol = x_min[1] 
+
+## ============================================ ## 
+
+# propagate 2 body 
+t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
+
+# propagate kepler 
+t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
 
 # plot 
 fig = plot_axes3d()
@@ -118,6 +87,11 @@ fig = plot_orbit( x_P, fig )
 fig = plot_orbit( x_E, fig ) 
 fig = plot_orbit( rv_2Body, fig ) 
 # fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig ) 
+
+# set up vector plotting 
+nodes_N = rv_kepler[1:N, 1:3] 
+fig = plot_vector3d( nodes_N, 500 * Δv_sol, fig ) 
+
 
 
 

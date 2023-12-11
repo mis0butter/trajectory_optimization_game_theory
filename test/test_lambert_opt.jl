@@ -94,6 +94,9 @@ x_min = min_aug_L( obj_fn, x_0, c_fn )
 tof_min = x_min[1] 
 Δv_min  = x_min[2:4] 
 
+
+
+
 ## ============================================ ##
 # propagate optimized solution to test 
 

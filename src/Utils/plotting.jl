@@ -93,8 +93,8 @@ function plot_orbit(
 
     # plot orbit 
     lines!( rv[:,1], rv[:,2], rv[:,3]; linewidth = 2 ) 
-    scatter!( rv[1,1], rv[1,2], rv[1,3]; marker = :circle, markersize = 15, color = :black ) 
-    scatter!( rv[end,1], rv[end,2], rv[end,3]; marker = :utriangle, markersize = 15, color = :black ) 
+    scatter!( rv[1,1], rv[1,2], rv[1,3]; marker = :circle, markersize = 10, color = :black ) 
+    scatter!( rv[end,1], rv[end,2], rv[end,3]; marker = :utriangle, markersize = 10, color = :black ) 
 
     # add labels 
     if labels 
@@ -253,12 +253,12 @@ Example usage:
 """
 
 function plot_vector3d( 
-    xyz,                    # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
-    uvw,                    # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
-    fig    = nothing,       # figure handle 
-    color  = :black,        # marker color 
-    width  = 0.1,           # arrow width 
-    text   = nothing,       # text to add to plot 
+    xyz,                        # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
+    uvw,                        # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
+    fig    = nothing,           # figure handle 
+    color  = :black,            # marker color 
+    width  = norm(uvw[1])/100, # arrow width 
+    text   = nothing,           # text to add to plot 
 ) 
 
     # adjust because stupid arrows plots the tails at the Point3f points 

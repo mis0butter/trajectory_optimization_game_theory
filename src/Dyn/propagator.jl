@@ -222,3 +222,46 @@ function nondim_rv(
 end
 
 export nondim_rv 
+
+
+## ============================================ ## 
+
+"Propagate an initial state through a vector of N trajectory segments using Kepler's equations" 
+function prop_2Body_tof_Nseg(
+    rv_0,           # initial state vector of form [r; v] 
+    Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
+    N,              # number of segments 
+    tof_N,          # tof for each segment 
+    mu = 1.0        # gravitational parameter 
+) 
+    
+    # set up time and state hists 
+    rv_hist = [ apply_Δv( rv_0, Δv_vec[1,:] ) ] 
+    t_hist  = [ 0.0 ] 
+
+    # propagate Through Each Segment 
+    rv_k = copy(rv_0)
+    for i = 1 : N 
+
+        # apply dv and propagate 
+        rv_k_dv = apply_Δv( rv_k, Δv_vec[i,:] ) 
+        t, rv_prop = propagate_2Body( rv_k_dv, tof_N, mu ) 
+
+        # save 
+        for j in 2:length(rv_prop) 
+            push!( rv_hist, rv_prop[j] ) 
+        end 
+        # push!( t_hist, t_hist[end] .+ t ) 
+        t_hist = [ t_hist ; t_hist[end] .+ t[2:end] ]
+
+        rv_k = rv_prop[end] 
+
+    end 
+    rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
+ 
+    return  t_hist, 
+            rv_hist 
+end
+
+export prop_2Body_tof_Nseg 
+# t_kep, rv_kep = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 

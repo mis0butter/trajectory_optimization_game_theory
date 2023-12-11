@@ -126,8 +126,13 @@ function miss_distance_prop_kepler_Nseg(
     N,              # number of segments 
     rv_f,           # target state vector of form [r; v] 
     tof_N = 1.0,    # tof for each segment 
-    mu = 1.0,       # gravitational parameter 
-)
+    mu    = 1.0,    # gravitational parameter 
+) 
+
+    # check if Δv_vec is [N,3] 
+    if size(Δv_vec) != (N,3) 
+        Δv_vec = reshape( Δv_vec, N, 3 ) 
+    end 
 
     # Propagating To Final State
     t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
@@ -148,3 +153,21 @@ end
 export miss_distance_prop_kepler_Nseg 
 # miss_kepler = miss_distance_prop_kepler_Nseg( 
     # rv_0, Δv_vec, N, rv_f, tof_N, mu )
+
+## ============================================ ##
+    
+"Calculate sum of Δv vector norms"
+function sum_norm_Δv( x, N ) 
+
+    Δv_vec = reshape( x[2:end], N, 3 ) 
+
+    sum_norm = 0 
+    for i = 1 : N 
+        sum_norm += norm( Δv_vec[i,:] ) 
+    end 
+
+end 
+
+export sum_norm_Δv 
+
+    
