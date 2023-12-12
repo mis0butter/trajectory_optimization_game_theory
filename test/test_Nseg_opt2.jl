@@ -45,8 +45,8 @@ fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig )
 # break up into 2 segments, see what happens 
 
 # set initial guess 
-N = 10 
-tof_N       = tof / N / 4 
+N       = 20 
+tof_N   = tof / N / 4 
 
 Δv_vec = [ Δv ]
 for i = 1 : N-1 
@@ -54,7 +54,7 @@ for i = 1 : N-1
 end 
 Δv_vec      = vv2m( Δv_vec ) 
 Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
-x_0         = 1.1 * [ tof_N ; Δv_vec_flat ]  
+x_0         = 0.9 * [ tof_N ; Δv_vec_flat ]  
 
 # define objective function 
 obj_fn(x) = sum_norm_Δv( x, N ) 
@@ -76,7 +76,7 @@ x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 Δv_sol    = reshape( x_min[2:end], N, 3 ) 
 tof_N_sol = x_min[1] 
 
-## ============================================ ## 
+# ----------------------- #
 
 # propagate 2 body 
 t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
