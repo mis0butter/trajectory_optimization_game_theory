@@ -253,20 +253,18 @@ Example usage:
 """
 
 function plot_vector3d( 
-    xyz,                        # [N] vector of (x,y,z) origin points (MUST be vector of tuples)
-    uvw,                        # [N] vector of (u,v,w) vector directions (MUST be vector of tuples) 
+    xyz,                        # [N] vector of (x,y,z) origin points 
+    uvw,                        # [N] vector of (u,v,w) vector directions 
     fig    = nothing,           # figure handle 
     width  = norm(uvw[1])/100,  # arrow width 
     color  = :black,            # marker color 
     text   = nothing,           # text to add to plot 
 ) 
 
-    # check type 
-    # if isequal( typeof(xyz), Matrix{Float64} ) 
+    # check type --> must be vectors of vectors 
     if xyz isa AbstractMatrix 
         xyz = m2vv(xyz)
     end 
-    # if isequal( typeof(uvw), Matrix{Float64} ) 
     if uvw isa AbstractMatrix 
         uvw = m2vv(uvw)
     end 

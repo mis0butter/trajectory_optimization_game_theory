@@ -166,8 +166,31 @@ function sum_norm_Δv( x, N )
         sum_norm += norm( Δv_vec[i,:] ) 
     end 
 
+    return sum_norm 
 end 
 
 export sum_norm_Δv 
+
+## ============================================ ##
+
+"Inequality constraint: Δv vector norm <= Δv_max "
+function constrain_Δv( 
+    x,      # decision variable 
+    N,      # number of segments 
+    Δv_max  # maximum Δv magnitude 
+) 
+
+    Δv_vec = reshape( x[2:end], N, 3 ) 
+
+    norm_Δv = [ ]
+    for i = 1 : N 
+        # sum_norm += norm( Δv_vec[i,:] ) 
+        push!( norm_Δv, norm( Δv_vec[i,:] ) - Δv_max )
+    end 
+
+    return norm_Δv 
+end 
+
+export constrain_Δv 
 
     

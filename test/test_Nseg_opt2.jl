@@ -45,7 +45,7 @@ fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig )
 # break up into 2 segments, see what happens 
 
 # set initial guess 
-N = 2 
+N = 10 
 tof_N       = tof / N / 4 
 
 Δv_vec = [ Δv ]
@@ -66,7 +66,10 @@ c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x[2:end], N, rv_f, x[1], mu )
 c_fn(x_0) 
 
 # inequality constraint ? 
- 
+Δv_max = 2.0 
+h_fn(x) = constrain_Δv( x, N, Δv_max )
+h_fn(x_0) 
+
 # equality-constrained 
 x_min  = min_aug_L( obj_fn, x_0, c_fn ) 
 
@@ -81,20 +84,6 @@ t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu )
 
 # propagate kepler 
 t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
-
-## ============================================ ##
-
-
-
-r   = 6378.0
-xyz = [ zeros(3) for i in 1:3 ] 
-uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
-
-fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, :red, r/100 ) 
-fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, :blue, r/100 ) 
-fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, :green, r/100 ) 
-
-## ============================================ ##
 
 # plot 
 fig = plot_axes3d( )

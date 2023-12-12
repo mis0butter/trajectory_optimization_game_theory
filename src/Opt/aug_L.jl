@@ -152,8 +152,8 @@ function min_aug_L_eq(
         
         # step 3 check convergence ... 
         dx = norm( x_min - x_k ) 
-        if  ( dx < tol ) && 
-            ( norm( c_fn(x_min) ) < tol ) 
+        if  ( dx < tol ) 
+            # && ( norm( c_fn(x_min) ) < tol ) 
                 loop = false 
         else 
             x_k = x_min 
@@ -258,8 +258,8 @@ function min_aug_L_eq_ineq(
 
         # step 3 check convergence ... 
         dx = norm(x_min - x_k) 
-        if  ( dx < tol ) && 
-            ( norm(c_fn(x_min)) < tol )  
+        if  ( dx < tol ) 
+            # && ( norm(c_fn(x_min)) < tol )  
         #    ( norm(h_fn(x_min)) < tol ) 
                 loop = false 
         else 
