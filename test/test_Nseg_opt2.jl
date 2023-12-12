@@ -57,7 +57,6 @@ end
 x_0         = 1.1 * [ tof_N ; Δv_vec_flat ]  
 
 # define objective function 
-# obj_fn(x) = sum( abs.( x[2:end] ) ) 
 obj_fn(x) = sum_norm_Δv( x, N ) 
 obj_fn(x_0) 
 
@@ -70,8 +69,8 @@ c_fn(x_0)
 h_fn(x) = constrain_Δv( x, N, Δv_max )
 h_fn(x_0) 
 
-# equality-constrained 
-x_min  = min_aug_L( obj_fn, x_0, c_fn ) 
+# minimize constrained 
+x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn ) 
 
 # get solution 
 Δv_sol    = reshape( x_min[2:end], N, 3 ) 
