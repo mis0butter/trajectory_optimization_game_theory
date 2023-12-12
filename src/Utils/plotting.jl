@@ -297,5 +297,43 @@ end
 
 export plot_vector3d 
 
+## ============================================ ##
+
+" Plot propagated orbit with delta v using GLMakie "
+function plot_prop_Δv(  
+    rv_0,           # initial state vector 
+    Δv_sol,         # [N,3] Δv vector 
+    N,              # number of segments 
+    tof_N_sol,      # time of flight for each segment 
+    mu  = 1.0,      # gravitational parameter 
+    fig = nothing,  # figure handle 
+)
+
+    if isnothing(fig) 
+        fig = Figure() 
+        Axis3(fig[1, 1]) 
+    end 
+
+    # propagate 2 body 
+    t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
+
+    # propagate kepler 
+    t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
+
+    # plot 
+    fig = plot_orbit( rv_2Body, fig ) 
+    # fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig ) 
+
+    # set up vector plotting 
+    nodes_N = rv_kepler[1:N, 1:3] 
+    xyz     = copy(nodes_N) 
+    uvw     = copy(2000 * Δv_sol)
+
+    fig = plot_vector3d( xyz, uvw, fig, 100 ) 
+
+    return fig 
+end 
+
+export plot_prop_Δv 
 
 

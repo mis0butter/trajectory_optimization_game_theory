@@ -96,7 +96,7 @@ function aug_L_eq_ineq_fn(
 ) 
 
     augL = obj_fn(x) 
-    h    = h_fn(x)
+    h    = h_fn(x) 
     c    = c_fn(x) 
 
     # equality constraints 
@@ -201,9 +201,12 @@ function min_aug_L_ineq(
         x_min = min_optim( fn, x_k )
 
         # step 3 check convergence ... 
-        dx = norm(x_min - x_k) 
-        if dx < tol 
-            loop = false 
+        dx     = norm(x_min - x_k) 
+        h_prod = prod( [ h < 0 for h in h_fn(x_min) ] ) 
+        if ( dx < tol ) && 
+            # && ( norm(c_fn(x_min)) < tol )  
+           ( h_prod ) 
+                loop = false 
         else 
             x_k = x_min 
         end 
@@ -257,7 +260,7 @@ function min_aug_L_eq_ineq(
         x_min = min_optim( fn, x_k )
 
         # step 3 check convergence ... 
-        dx = norm(x_min - x_k) 
+        dx     = norm(x_min - x_k) 
         h_prod = prod( [ h < 0 for h in h_fn(x_min) ] ) 
         if ( dx < tol ) && 
             # && ( norm(c_fn(x_min)) < tol )  

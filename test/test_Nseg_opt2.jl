@@ -76,28 +76,14 @@ x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 Δv_sol    = reshape( x_min[2:end], N, 3 ) 
 tof_N_sol = x_min[1] 
 
-# ----------------------- #
+## ============================================ ##
 
-# propagate 2 body 
-t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
-
-# propagate kepler 
-t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
-
-# plot 
+# create fig 
 fig = plot_axes3d( )
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
-fig = plot_orbit( rv_2Body, fig ) 
-# fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig ) 
+fig = plot_prop_Δv( rv_0, Δv_sol, N, tof_N_sol, mu, fig ) 
 
-# set up vector plotting 
-nodes_N = rv_kepler[1:N, 1:3] 
-
-xyz = copy(nodes_N) 
-uvw = copy(2000 * Δv_sol)
-
-fig = plot_vector3d( xyz, uvw, fig, 100 ) 
 
 
 
