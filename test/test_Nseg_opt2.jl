@@ -31,18 +31,26 @@ x_E = vv2m(x_E) ;
 # lambert solution 
 dm      = "pro" 
 tof     = t[end] / 2 
-rv_prop_lb, Δv  = prop_lambert_soln( x0_P, xf_E, tof, dm, mu )
+rv_prop_lb, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
 
 # plot 
 fig = plot_axes3d()
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
 fig = plot_orbit( rv_prop_lb, fig ) 
-fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig ) 
+fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig ) 
+
+## ============================================ ##
+# vary TOF, find min 
+
+fn(x) = prop_lambert_soln( rv_0, rv_f, x, dm, mu )[2] 
 
 
 ## ============================================ ##
 # break up into 2 segments, see what happens 
+
+# first compute lambert 
+_, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
 
 # set initial guess 
 N       = 20 

@@ -299,7 +299,7 @@ export plot_vector3d
 
 ## ============================================ ##
 
-" Plot propagated orbit with delta v using GLMakie "
+"Plot propagated orbit with delta v using GLMakie "
 function plot_prop_Δv(  
     rv_0,           # initial state vector 
     Δv_sol,         # [N,3] Δv vector 

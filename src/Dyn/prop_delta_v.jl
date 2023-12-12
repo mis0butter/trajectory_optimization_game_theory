@@ -1,3 +1,49 @@
+function prop_opt_Nseg( 
+    rv_0, 
+    rv_f, 
+    tof, 
+    dm, 
+    N  = 10, 
+    mu = 1.0 
+) 
+
+    # first compute lambert 
+    _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
+
+    # set initial guess 
+    tof_N   = tof / N / 4 
+
+    Δv_vec = [ Δv ]
+    for i = 1 : N-1 
+        push!( Δv_vec, zeros(3) ) 
+    end 
+    Δv_vec      = vv2m( Δv_vec ) 
+    Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
+    x_0         = 0.9 * [ tof_N ; Δv_vec_flat ]  
+
+    # define objective function 
+    obj_fn(x) = sum_norm_Δv( x, N ) 
+    obj_fn(x_0) 
+
+    # equality constraint 
+    c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x[2:end], N, rv_f, x[1], mu ) 
+    c_fn(x_0) 
+
+    # inequality constraint ? 
+    Δv_max = 2.0 
+    h_fn(x) = constrain_Δv( x, N, Δv_max )
+    h_fn(x_0) 
+
+    # minimize constrained 
+    x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn ) 
+
+    # get solution 
+    Δv_sol    = reshape( x_min[2:end], N, 3 ) 
+    tof_N_sol = x_min[1] 
+
+    return tof_N_sol, Δv_sol 
+end 
+
 ## ============================================ ##
 
 "Propagates an initial state through a vector of N trajectory segments using dynamics integration" 
