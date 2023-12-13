@@ -25,7 +25,7 @@ rv_f = [ r_f ; v_f ]
 x_P = vv2m(x_P) ;   
 x_E = vv2m(x_E) ;   
 
-# ----------------------- #
+# ----------------------- # 
 # test lambert soln 
 
 # lambert solution 
@@ -56,7 +56,7 @@ end
 
 
 dfn = x -> ForwardDiff.derivative( fn, x ) 
-# dfn(x_0) 
+dfn(x_0) 
 
 # x_min = min_optim( fn, x_0 ) 
 
@@ -73,9 +73,13 @@ _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
 N       = 20 
 tof_N   = tof / N / 4 
 
-Δv_vec = [ Δv ]
-for i = 1 : N-1 
-    push!( Δv_vec, zeros(3) ) 
+# Δv_vec = [ Δv ]
+# for i = 1 : N-1 
+#     push!( Δv_vec, zeros(3) ) 
+# end 
+Δv_vec = [ ]
+for i = 1 : N 
+    push!( Δv_vec, Δv / N ) 
 end 
 Δv_vec      = vv2m( Δv_vec ) 
 Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
