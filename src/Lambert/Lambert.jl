@@ -30,7 +30,7 @@ function prop_lambert_soln(
     Δv_vec = v_0_lb - v_0 
 
     # propagate 
-    rv_f_kepler = prop_kepler_tof( rv_0_lb, tof, mu ) 
+    # rv_f_kepler = prop_kepler_tof( rv_0_lb, tof, mu ) 
     t, rv_prop  = propagate_2Body( rv_0_lb, tof, mu ) 
     rv_prop     = vv2m(rv_prop) 
 

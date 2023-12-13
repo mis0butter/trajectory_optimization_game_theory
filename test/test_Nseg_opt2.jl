@@ -43,7 +43,24 @@ fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig )
 ## ============================================ ##
 # vary TOF, find min 
 
-fn(x) = prop_lambert_soln( rv_0, rv_f, x, dm, mu )[2] 
+x_0   = copy(tof) 
+
+fn(x) = norm( prop_lambert_soln( rv_0, rv_f, x, dm, mu )[2] ) 
+fn(x_0) 
+
+x = collect( tof/10 : 100 : tof ) 
+y = []  
+for i = 1 : length(x) 
+    push!( y, fn(x[i]) )  
+end 
+
+
+dfn = x -> ForwardDiff.derivative( fn, x ) 
+# dfn(x_0) 
+
+# x_min = min_optim( fn, x_0 ) 
+
+
 
 
 ## ============================================ ##
