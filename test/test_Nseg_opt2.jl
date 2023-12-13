@@ -65,10 +65,6 @@ _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
 N       = 20 
 tof_N   = tof / N 
 
-# Δv_vec = [ Δv ]
-# for i = 1 : N-1 
-#     push!( Δv_vec, zeros(3) ) 
-# end 
 Δv_vec = [ ]
 for i = 1 : N 
     push!( Δv_vec, Δv / N ) 
@@ -87,7 +83,7 @@ c_fn(x_0)
 
 # inequality constraint ? 
 Δv_max = 2.0 
-h_fn(x) = constrain_Δv( x, N, Δv_max )
+h_fn(x) = constrain_Δv( x[2:end], N, Δv_max )
 h_fn(x_0) 
 
 # minimize constrained 

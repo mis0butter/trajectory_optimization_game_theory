@@ -65,10 +65,6 @@ _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
 N       = 20 
 tof_N   = tof / N 
 
-# Δv_vec = [ Δv ]
-# for i = 1 : N-1 
-#     push!( Δv_vec, zeros(3) ) 
-# end 
 Δv_vec = [ ]
 for i = 1 : N 
     push!( Δv_vec, Δv / N ) 
@@ -94,8 +90,8 @@ h_fn(x_0)
 x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn ) 
 
 # get solution 
-Δv_sol    = reshape( x_min[2:end], N, 3 ) 
-tof_N_sol = x_min[1] 
+Δv_sol    = reshape( x_min, N, 3 ) 
+# tof_N_sol = x_min[1] 
 
 # ----------------------- #
 
@@ -103,7 +99,7 @@ tof_N_sol = x_min[1]
 fig = plot_axes3d( )
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
-fig = plot_prop_Δv( rv_0, Δv_sol, N, tof_N_sol, mu, fig ) 
+fig = plot_prop_Δv( rv_0, Δv_sol, N, tof_N, mu, fig ) 
 
 
 

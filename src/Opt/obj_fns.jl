@@ -180,7 +180,7 @@ function constrain_Δv(
     Δv_max  # maximum Δv magnitude 
 ) 
 
-    Δv_vec = reshape( x[2:end], N, 3 ) 
+    Δv_vec = reshape( x, N, 3 ) 
 
     norm_Δv = [ ]
     for i = 1 : N 

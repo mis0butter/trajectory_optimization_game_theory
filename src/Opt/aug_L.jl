@@ -26,8 +26,11 @@ export min_optim
 
 ## ============================================ ##
 
-"Construct Augmented Lagrangian function 
-= obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 "
+"""
+Construct Augmented Lagrangian function 
+
+    = obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 
+"""
 function aug_L_fn( 
     obj_fn,     # objective function 
     ψ_fn,       # constraint function(s) 
@@ -50,9 +53,12 @@ export aug_L_fn
 
 ## ============================================ ##
 
-"Construct inequality-constrained Augmented Lagrangian function 
-= obj_fn(x) - λ^2 / 2p OR 
-= obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 "
+"""
+Construct inequality-constrained Augmented Lagrangian function 
+
+    = obj_fn(x) - λ^2 / 2p OR 
+    = obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 
+"""
 function aug_L_ineq_fn( 
     obj_fn,     # objective function 
     h_fn,       # inequality constraint function(s) 
@@ -81,9 +87,12 @@ export aug_L_ineq_fn
 
 ## ============================================ ##
 
-"Construct equality and inequality-constrained Augmented Lagrangian function 
-= obj_fn(x) - λ^2 / 2p OR 
-= obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 "
+"""
+Construct equality and inequality-constrained Augmented Lagrangian function 
+
+    = obj_fn(x) - λ^2 / 2p OR 
+    = obj_fn(x) + λ' * ψ_fn(x) + (p./2)' * ψ_fn(x).^2 
+"""
 function aug_L_eq_ineq_fn( 
     obj_fn,     # objective function 
     c_fn,       # equality constraint function(s) 
