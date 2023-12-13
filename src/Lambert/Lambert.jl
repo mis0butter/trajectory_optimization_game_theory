@@ -75,12 +75,13 @@ export crappy_min_lambert
 function lambert_init_guess( 
     rv_0,           # initial position vector 
     rv_f,           # final position vector 
+    tof,            # time of flight 
     N   = 20,       # number of segments 
     mu  = 1.0,      # gravitational parameter 
     dm  = "pro",    # direction of motion 
 )
 
-    tof = crappy_min_lambert( rv_0, rv_f, mu ) 
+    # tof = crappy_min_lambert( rv_0, rv_f, mu ) 
 
     # first compute lambert 
     _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )

@@ -5,7 +5,7 @@ using GLMakie
 
 "Plot x, y, and z Cartesian axes using GLMakie "
 function plot_axes3d( 
-    r   = 6378.0 / 2,   # radius of axes 
+    r   = 6378.0 / 3,   # radius of axes 
     fig = nothing,      # figure handle 
 ) 
 
@@ -17,9 +17,10 @@ function plot_axes3d(
     xyz = [ zeros(3) for i in 1:3 ] 
     uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
 
-    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, r/100, :red ) 
-    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, r/100, :blue ) 
-    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, r/100, :green  )  
+    width = r/50 
+    fig = plot_vector3d( [ xyz[1] ] , [ uvw[1] ], nothing, width, :red ) 
+    fig = plot_vector3d( [ xyz[2] ] , [ uvw[2] ], fig, width, :blue ) 
+    fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, width, :green  )  
 
     return fig 
 end

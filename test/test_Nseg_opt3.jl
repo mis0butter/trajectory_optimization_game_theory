@@ -9,8 +9,8 @@ using Optim
 
 mu = 398600.4415
 r  = 6378.0
-kep0_P = [r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180]
-kep0_E = [r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180]
+kep0_P = [ r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180 ]
+kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 40.0*pi/180 ]
 t = (0.0, 1*orbitPeriod(kep0_P, mu)) 
 t_P, x_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
 t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
@@ -42,42 +42,46 @@ fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig )
 
 
 ## ============================================ ##
-# break up into 2 segments, see what happens 
+
+# init params 
+mu = 398600.4415
+r  = 6378.0
+kep0_P = [ r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180 ]
+rv_0_P = kep2cart(kep0_P, mu) 
+kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 40.0*pi/180 ]
+rv_0_E = kep2cart(kep0_E, mu) 
+
+# tof for pursuer to catch up to evader 
+tof = 2000 
+
+t_E, rv_E = propagate_2Body(rv_0_E, tof, mu, 1.0) 
+t_P, rv_P = propagate_2Body(rv_0_P, tof, mu, 1.0) 
+rv_P = vv2m(rv_P) 
+rv_E = vv2m(rv_E) 
+
+# plot 
+fig = plot_axes3d( )
+fig = plot_orbit( rv_P, fig ) 
+fig = plot_orbit( rv_E, fig ) 
+
+
+## ============================================ ##
+# break up into N segments, see what happens 
+
+# define init and target vectors for pursuer 
+rv_f = rv_E[end,:] 
+rv_0 = rv_0_P 
 
 N = 20 
-
-tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, N, mu ) 
-x_0 = reshape( Δv_vec, N*3, 1 ) 
-
-# define objective function 
-obj_fn(x) = sum_norm_Δv( x, N ) 
-obj_fn(x_0) 
-
-# equality constraint 
-c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
-c_fn(x_0) 
-
-# inequality constraint ? 
-Δv_max = 2.0 
-h_fn(x) = constrain_Δv( x, N, Δv_max )
-h_fn(x_0) 
-
-# minimize constrained 
-x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn ) 
-
-# get solution 
-Δv_sol    = reshape( x_min, N, 3 ) 
-# tof_N_sol = x_min[1] 
-
-Δv_test = min_Δv( rv_0, rv_f, N, mu ) 
+Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
 
 # ----------------------- #
 
 # create fig 
 fig = plot_axes3d( )
-fig = plot_orbit( x_P, fig ) 
-fig = plot_orbit( x_E, fig ) 
-fig = plot_prop_Δv( rv_0, Δv_sol, N, tof_N, mu, fig ) 
+fig = plot_orbit( rv_P, fig ) 
+fig = plot_orbit( rv_E, fig ) 
+fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig ) 
 
 
 
