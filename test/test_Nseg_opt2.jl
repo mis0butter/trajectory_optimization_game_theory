@@ -71,7 +71,7 @@ _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
 
 # set initial guess 
 N       = 20 
-tof_N   = tof / N / 4 
+tof_N   = tof / N 
 
 # Δv_vec = [ Δv ]
 # for i = 1 : N-1 
@@ -105,7 +105,7 @@ x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 Δv_sol    = reshape( x_min[2:end], N, 3 ) 
 tof_N_sol = x_min[1] 
 
-## ============================================ ##
+# ----------------------- #
 
 # create fig 
 fig = plot_axes3d( )
