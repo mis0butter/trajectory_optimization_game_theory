@@ -42,24 +42,10 @@ fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig )
 
 
 ## ============================================ ##
-# vary tof for lambert, get min Δv (crude grid search) 
-
-T_P = orbitPeriod(kep0_P, mu) 
-T_P_vec = collect( T_P / 10 : 100 : T_P ) 
-
-Δv_norm = [] 
-for tof_i = T_P_vec  
-    _, Δv  = prop_lambert_soln( rv_0, rv_f, tof_i, dm, mu )
-    push!( Δv_norm, norm(Δv) ) 
-end 
-
-i_min = get_index( Δv_norm, minimum(Δv_norm) ) 
-tof   = T_P_vec[i_min]
+# break up into 2 segments, see what happens 
 
 tof = crappy_min_lambert( rv_0, rv_f, mu ) 
 
-## ============================================ ##
-# break up into 2 segments, see what happens 
 
 # first compute lambert 
 _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
@@ -81,7 +67,7 @@ obj_fn(x) = sum_norm_Δv( x, N )
 obj_fn(x_0) 
 
 # equality constraint 
-c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof, mu ) 
+c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
 c_fn(x_0) 
 
 # inequality constraint ? 
