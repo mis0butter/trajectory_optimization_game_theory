@@ -41,27 +41,19 @@ fig = plot_orbit( rv_prop_lb, fig )
 fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig ) 
 
 ## ============================================ ##
-# vary TOF, find min 
+# vary tof for lambert, get min Δv 
 
-x_0   = copy(tof) 
+T_P = orbitPeriod(kep0_P, mu) 
+T_P_vec = collect( T_P / 10 : 100 : T_P ) 
 
-fn(x) = norm( prop_lambert_soln( rv_0, rv_f, x, dm, mu )[2] ) 
-fn(x_0) 
-
-x = collect( tof/10 : 100 : tof ) 
-y = []  
-for i = 1 : length(x) 
-    push!( y, fn(x[i]) )  
+Δv_norm = [] 
+for tof_i = T_P_vec  
+    _, Δv  = prop_lambert_soln( rv_0, rv_f, tof_i, dm, mu )
+    push!( Δv_norm, norm(Δv) ) 
 end 
 
-
-dfn = x -> ForwardDiff.derivative( fn, x ) 
-dfn(x_0) 
-
-# x_min = min_optim( fn, x_0 ) 
-
-
-
+i_min = get_index( Δv_norm, minimum(Δv_norm) ) 
+tof   = T_P_vec[i_min]
 
 ## ============================================ ##
 # break up into 2 segments, see what happens 
