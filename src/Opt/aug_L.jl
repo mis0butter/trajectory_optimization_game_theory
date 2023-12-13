@@ -4,28 +4,6 @@ using ForwardDiff
 
 ## ============================================ ##
 
-"Minimize function using Optim"
-function min_optim(  
-    fn,                     # objective function 
-    x_0,                    # initial guess 
-    method = NelderMead(), 
-    tol = 1e-6, 
-) 
-
-    # assign gradient fn 
-    dfn = x -> ForwardDiff.gradient( fn, x ) 
-
-    # minimize 
-    result = optimize( fn, dfn, x_0, method ) 
-    x_min  = result.minimizer 
-
-    return x_min 
-end
-
-export min_optim 
-
-## ============================================ ##
-
 """
 Construct Augmented Lagrangian function 
 
