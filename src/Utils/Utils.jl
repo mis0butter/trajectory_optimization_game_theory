@@ -21,7 +21,7 @@ function get_index(
     val,    # value to find 
 ) 
 
-    ind = findall( x -> x == val, A )
+    ind = findall( x -> x == val, A )[1] 
 
     return ind 
 end 
