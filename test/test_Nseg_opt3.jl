@@ -44,25 +44,10 @@ fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig )
 ## ============================================ ##
 # break up into 2 segments, see what happens 
 
-# tof = crappy_min_lambert( rv_0, rv_f, mu ) 
+N = 20 
 
-# # first compute lambert 
-# _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
-
-# # set initial guess 
-# N       = 20 
-# tof_N   = tof / N 
-
-# Δv_vec = [ ]
-# for i = 1 : N 
-#     push!( Δv_vec, Δv / N ) 
-# end 
-# Δv_vec      = vv2m( Δv_vec ) 
-# Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
-# x_0         = Δv_vec_flat 
-
-tof_N, Δv_vec_flat = lambert_init_guess( rv_0, rv_f, N, mu ) 
-x_0 = Δv_vec_flat 
+tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, N, mu ) 
+x_0 = reshape( Δv_vec, N*3, 1 ) 
 
 # define objective function 
 obj_fn(x) = sum_norm_Δv( x, N ) 
@@ -84,6 +69,7 @@ x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 Δv_sol    = reshape( x_min, N, 3 ) 
 # tof_N_sol = x_min[1] 
 
+Δv_test = min_Δv( rv_0, rv_f, N, mu ) 
 
 # ----------------------- #
 
