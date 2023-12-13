@@ -41,7 +41,7 @@ fig = plot_orbit( rv_prop_lb, fig )
 fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig ) 
 
 ## ============================================ ##
-# vary tof for lambert, get min Δv 
+# vary tof for lambert, get min Δv (crude grid search) 
 
 T_P = orbitPeriod(kep0_P, mu) 
 T_P_vec = collect( T_P / 10 : 100 : T_P ) 
@@ -75,14 +75,14 @@ for i = 1 : N
 end 
 Δv_vec      = vv2m( Δv_vec ) 
 Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
-x_0         = 0.9 * [ tof_N ; Δv_vec_flat ]  
+x_0         = 0.9 * Δv_vec_flat 
 
 # define objective function 
-obj_fn(x) = sum_norm_Δv( x[2:end], N ) 
+obj_fn(x) = sum_norm_Δv( x, N ) 
 obj_fn(x_0) 
 
 # equality constraint 
-c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x[2:end], N, rv_f, x[1], mu ) 
+c_fn(x) = miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof, mu ) 
 c_fn(x_0) 
 
 # inequality constraint ? 

@@ -159,7 +159,7 @@ export miss_distance_prop_kepler_Nseg
 "Calculate sum of Δv vector norms"
 function sum_norm_Δv( x, N ) 
 
-    Δv_vec = reshape( x[2:end], N, 3 ) 
+    Δv_vec = reshape( x, N, 3 ) 
 
     sum_norm = 0 
     for i = 1 : N 
