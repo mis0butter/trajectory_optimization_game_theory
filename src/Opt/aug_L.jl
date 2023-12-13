@@ -239,7 +239,8 @@ function min_aug_L_eq_ineq(
     c_fn,           # constraint function: c = 0 
     h_fn,           # inequality constraint function: h <= 0  
     x_0,            # initial guess 
-    tol     = 1e-6, 
+    dx_tol = 1e-6, 
+    c_tol  = 1.0  
 ) 
 
     # step 0: initialize 
@@ -271,8 +272,8 @@ function min_aug_L_eq_ineq(
         # step 3 check convergence ... 
         dx     = norm(x_min - x_k) 
         h_prod = prod( [ h < 0 for h in h_fn(x_min) ] ) 
-        if ( dx < tol ) && 
-            # && ( norm(c_fn(x_min)) < tol )  
+        if ( dx < dx_tol ) && 
+           ( norm(c_fn(x_min)) < c_tol ) && 
            ( h_prod ) 
                 loop = false 
         else 

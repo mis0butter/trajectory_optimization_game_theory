@@ -39,5 +39,34 @@ end
 
 export prop_lambert_soln 
 
+## ============================================ ##
 
+"Minimizing Δv for Lambert solution using crappy grid search"
+function crappy_min_lambert( 
+    rv_0,           # initial position vector 
+    rv_f,           # final position vector 
+    mu  = 1.0,      # gravitational parameter 
+    dm  = "pro",    # direction of motion 
+)
+
+    # get max period  
+    T_0   = orbitPeriod( cart2kep(rv_0, mu), mu)  
+    T_f   = orbitPeriod( cart2kep(rv_f, mu), mu) 
+    T_max = maximum( [ T_0, T_f ] ) 
+
+    # vary tof for lambert, get min Δv 
+    Δv_norm = [] 
+    T_vec   = collect( T_max / 10 : 100 : T_max ) 
+    for tof_i = T_vec  
+        _, Δv  = prop_lambert_soln( rv_0, rv_f, tof_i, dm, mu )
+        push!( Δv_norm, norm(Δv) ) 
+    end 
+
+    i_min = get_index( Δv_norm, minimum(Δv_norm) ) 
+    tof   = T_vec[i_min]
+
+    return tof 
+end 
+
+export crappy_min_lambert 
 

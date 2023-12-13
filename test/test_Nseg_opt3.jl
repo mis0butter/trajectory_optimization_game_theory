@@ -40,6 +40,7 @@ fig = plot_orbit( x_E, fig )
 fig = plot_orbit( rv_prop_lb, fig ) 
 fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig ) 
 
+
 ## ============================================ ##
 # vary tof for lambert, get min Δv (crude grid search) 
 
@@ -54,6 +55,8 @@ end
 
 i_min = get_index( Δv_norm, minimum(Δv_norm) ) 
 tof   = T_P_vec[i_min]
+
+tof = crappy_min_lambert( rv_0, rv_f, mu ) 
 
 ## ============================================ ##
 # break up into 2 segments, see what happens 
@@ -92,6 +95,17 @@ x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 # get solution 
 Δv_sol    = reshape( x_min, N, 3 ) 
 # tof_N_sol = x_min[1] 
+
+## ============================================ ##
+
+    # propagate 2 body 
+    t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N, mu ) 
+
+    # propagate kepler 
+    t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof_N, mu ) 
+
+## ============================================ ##
+
 
 # ----------------------- #
 

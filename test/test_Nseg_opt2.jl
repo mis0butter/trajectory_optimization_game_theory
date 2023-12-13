@@ -9,8 +9,8 @@ using Optim
 
 mu = 398600.4415
 r  = 6378.0
-kep0_P = [r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180]
-kep0_E = [r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180]
+kep0_P = [ r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180 ]
+kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180 ]
 t = (0.0, 1*orbitPeriod(kep0_P, mu)) 
 t_P, x_P = propagate_2Body(kep2cart(kep0_P, mu), t, mu, 1.0)
 t = (0.0, 1*orbitPeriod(kep0_E, mu)) 
