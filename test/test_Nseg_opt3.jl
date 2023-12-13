@@ -44,23 +44,25 @@ fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig )
 ## ============================================ ##
 # break up into 2 segments, see what happens 
 
-tof = crappy_min_lambert( rv_0, rv_f, mu ) 
+# tof = crappy_min_lambert( rv_0, rv_f, mu ) 
 
+# # first compute lambert 
+# _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
 
-# first compute lambert 
-_, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
+# # set initial guess 
+# N       = 20 
+# tof_N   = tof / N 
 
-# set initial guess 
-N       = 20 
-tof_N   = tof / N 
+# Δv_vec = [ ]
+# for i = 1 : N 
+#     push!( Δv_vec, Δv / N ) 
+# end 
+# Δv_vec      = vv2m( Δv_vec ) 
+# Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
+# x_0         = Δv_vec_flat 
 
-Δv_vec = [ ]
-for i = 1 : N 
-    push!( Δv_vec, Δv / N ) 
-end 
-Δv_vec      = vv2m( Δv_vec ) 
-Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
-x_0         = 0.9 * Δv_vec_flat 
+tof_N, Δv_vec_flat = lambert_init_guess( rv_0, rv_f, N, mu ) 
+x_0 = Δv_vec_flat 
 
 # define objective function 
 obj_fn(x) = sum_norm_Δv( x, N ) 
@@ -81,16 +83,6 @@ x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 # get solution 
 Δv_sol    = reshape( x_min, N, 3 ) 
 # tof_N_sol = x_min[1] 
-
-## ============================================ ##
-
-    # propagate 2 body 
-    t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N, mu ) 
-
-    # propagate kepler 
-    t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof_N, mu ) 
-
-## ============================================ ##
 
 
 # ----------------------- #

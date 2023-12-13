@@ -1,5 +1,4 @@
-# =====================================================================
-# === Lambert
+# Lambert
   
 include("lambertbattin.jl")
 include("seebatt.jl")
@@ -69,4 +68,35 @@ function crappy_min_lambert(
 end 
 
 export crappy_min_lambert 
+
+## ============================================ ##
+
+"Set initial guess for optimization using lambert solution"
+function lambert_init_guess( 
+    rv_0,           # initial position vector 
+    rv_f,           # final position vector 
+    N   = 20,       # number of segments 
+    mu  = 1.0,      # gravitational parameter 
+    dm  = "pro",    # direction of motion 
+)
+
+    tof = crappy_min_lambert( rv_0, rv_f, mu ) 
+
+    # first compute lambert 
+    _, Δv  = prop_lambert_soln( rv_0, rv_f, tof, dm, mu )
+
+    # set initial guess 
+    tof_N   = tof / N 
+
+    Δv_vec = [ ]
+    for i = 1 : N 
+        push!( Δv_vec, Δv / N ) 
+    end 
+    Δv_vec      = vv2m( Δv_vec ) 
+    Δv_vec_flat = reshape( Δv_vec, N*3, 1 ) 
+
+    return tof_N, Δv_vec_flat 
+end 
+
+export lambert_init_guess 
 
