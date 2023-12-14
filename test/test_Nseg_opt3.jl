@@ -37,6 +37,7 @@ rv_0 = rv_0_P
 
 N = 20 
 Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 
 # ----------------------- #
 
