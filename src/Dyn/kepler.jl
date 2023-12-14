@@ -8,12 +8,17 @@ function nu2E(
     e,              # eccentricity 
 ) 
 
+
     # elliptic 
     if e < 1.0 
         E = 2 * atan( sqrt( (1-e)/(1+e) ) * tan(nu/2) ) 
     # hyperbolic 
     else 
-        E = 2 * atanh( sqrt( (e-1)/(e+1) ) * tan(nu/2) ) 
+        temp = sqrt( (e-1)/(e+1) ) * tan(nu/2) 
+        println( "e = ", e) 
+        println( "nu = ", nu )     
+        println( "temp = ", temp )
+        E = 2 * atanh( temp ) 
     end 
 
     if E < 0.0 

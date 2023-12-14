@@ -43,3 +43,28 @@ function m2vv( M )
 end 
 
 export m2vv 
+
+## ============================================ ##
+
+"Compute Δv from desired inclination change" 
+function computeInclinationChange(
+    rv,     # initial state vector 
+    Δi,     # desired inclination change 
+    mu,     # gravitational parameter 
+)
+
+    v    = rv[4:6]
+    kep2 = cart2kep(rv, mu)
+
+    kep2[3] += Δi
+    v_des    = kep2cart(kep2, mu)[4:6]
+
+    # compute Δv from geometry 
+    Δi_mag = sqrt(norm(v)^2 + norm(v_des)^2 - 2*norm(v)*norm(v_des)*cos(Δi))
+    Δv = Δi_mag * (v_des - v) 
+
+    return Δv 
+end
+
+export computeInclinationChange
+

@@ -54,7 +54,7 @@ function min_Δv_dist(
     x_0 = reshape( Δv_vec, N*3, 1 ) 
     
     # define objective function 
-    obj_fn(x) = -sum_norm_Δv( x, N ) - 
+    obj_fn(x) = - sum_norm_Δv( x, N ) - 
                 miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
     
     # inequality constraint ? 
