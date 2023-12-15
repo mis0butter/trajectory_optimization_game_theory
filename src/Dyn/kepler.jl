@@ -15,9 +15,9 @@ function nu2E(
     # hyperbolic 
     else 
         temp = sqrt( (e-1)/(e+1) ) * tan(nu/2) 
-        println( "e = ", e) 
-        println( "nu = ", nu )     
-        println( "temp = ", temp )
+        # println( "e = ", e) 
+        # println( "nu = ", nu )     
+        # println( "temp = ", temp ) 
         E = 2 * atanh( temp ) 
     end 
 
