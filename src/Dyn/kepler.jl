@@ -12,13 +12,20 @@ function nu2E(
     # elliptic 
     if e < 1.0 
         E = 2 * atan( sqrt( (1-e)/(1+e) ) * tan(nu/2) ) 
+
     # hyperbolic 
     else 
-        temp = sqrt( (e-1)/(e+1) ) * tan(nu/2) 
+        # temp = sqrt( (e-1)/(e+1) ) * tan(nu/2) 
         # println( "e = ", e) 
         # println( "nu = ", nu )     
         # println( "temp = ", temp ) 
-        E = 2 * atanh( temp ) 
+        # E = 2 * atanh( temp ) 
+
+        E = acosh( (e+cos(nu)) / (1+e*cos(nu)) ) 
+        if nu < 0.0 
+            E = -E 
+        end 
+
     end 
 
     if E < 0.0 
@@ -43,7 +50,14 @@ function E2nu(
         nu = 2 * atan( sqrt( (1+e)/(1-e) ) * tan(E/2) ) 
     # hyperbolic 
     else 
-        nu = 2 * atanh( sqrt( (e+1)/(e-1) ) * tanh(E/2) ) 
+        # nu = 2 * atanh( sqrt( (e+1)/(e-1) ) * tanh(E/2) ) 
+
+        nu = acos( ( cosh(E) - e ) / ( 1 - e*cosh(E) ) ) 
+
+        if E < 0.0 
+            nu = -nu 
+        end 
+
     end 
 
     if nu < 0.0 
