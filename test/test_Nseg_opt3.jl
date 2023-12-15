@@ -11,7 +11,7 @@ mu = 398600.4415
 r  = 6378.0
 kep0_P = [ r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180 ]
 rv_0_P = kep2cart(kep0_P, mu) 
-kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 40.0*pi/180 ]
+kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
 # tof for pursuer to catch up to evader 
@@ -39,7 +39,7 @@ N = 20
 Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
 Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 
-# ----------------------- #
+# ----------------------- # 
 
 # create fig 
 fig = plot_axes3d( )

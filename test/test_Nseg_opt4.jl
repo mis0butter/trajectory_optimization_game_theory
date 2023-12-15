@@ -63,7 +63,11 @@ for t_sim = dt_sim : dt_sim : dt_sim * 5
 
     # propagate evader based on current information for tof 
     t_E_tof, rv_E_tof = propagate_2Body( rv_0_E, tof, mu, 1.0 ) 
-    rv_f_E = rv_E_tof[end] 
+    push!( rv_E_tof_hist, rv_E_tof )  
+    push!( t_E_tof_hist, t_E_tof ) 
+
+    rv_f_E   = rv_E_tof[end] 
+    rv_E_tof = vv2m( rv_E_tof ) 
 
     # solve for pursuer Δv for tof 
     Δv_P = min_Δv( rv_0_P, rv_f_E, tof, N, mu ) 
@@ -84,12 +88,9 @@ for t_sim = dt_sim : dt_sim : dt_sim * 5
     rv_0_P = rv_P_dtsim[end,:] 
 
     # apply maneuver to evader 
-
-    # propagate evader for tof 
-    t_E_tof, rv_E_tof = propagate_2Body( rv_0_E, tof, mu, 1.0 ) 
-    rv_E_tof = vv2m( rv_E_tof ) 
-    push!( rv_E_tof_hist, rv_E_tof )  
-    push!( t_E_tof_hist, t_E_tof ) 
+    Δi = 10.0*pi/180 
+    Δv_E = computeInclinationChange(rv_0_E, Δi, mu)
+    rv_0_E += [0.0, 0.0, 0.0, Δv_E[1], Δv_E[2], Δv_E[3]]
 
     # propagate evader for dt_sim 
     t_E_dtsim, rv_E_dtsim = propagate_2Body( rv_0_E, t_sim, mu, 1.0 ) 
