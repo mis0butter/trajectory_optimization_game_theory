@@ -73,6 +73,40 @@ export min_Δv_dist
 
 ## ============================================ ##
 
+"Maximize Δv for trajectory with N segments "
+function max_Δv_dist(  
+    rv_0,               # initial position vector 
+    rv_f,               # final position vector 
+    tof,                # time of flight 
+    N      = 20,        # number of segments 
+    mu     = 1.0,       # gravitational parameter 
+    dm     = "pro",     # direction of motion
+    Δv_max = 2.0,       # maximum Δv 
+) 
+
+    tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm ) 
+    x_0 = reshape( Δv_vec, N*3, 1 ) 
+    
+    # define objective function 
+    obj_fn(x) = - sum_norm_Δv( x, N ) - 
+                miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
+    
+    # inequality constraint ? 
+    h_fn(x) = constrain_Δv( x, N, Δv_max ) 
+    
+    # minimize constrained 
+    x_min  = min_aug_L( obj_fn, x_0, nothing, h_fn ) 
+    
+    # get solution 
+    Δv_sol = reshape( x_min, N, 3 ) 
+
+    return Δv_sol 
+end 
+
+export max_Δv_dist 
+
+## ============================================ ##
+
 "Minimize function using Optim"
 function min_optim(  
     fn,                     # objective function 
