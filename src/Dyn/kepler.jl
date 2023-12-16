@@ -16,7 +16,7 @@ function nu2E(
     # hyperbolic 
     else 
         E = acosh( (e+cos(nu)) / (1+e*cos(nu)) ) 
-        if nu < 0.0 
+        if nu < 0.0 || nu > pi 
             E = -E 
         end 
     end 
@@ -44,7 +44,7 @@ function E2nu(
     # hyperbolic 
     else 
         nu = acos( ( cosh(E) - e ) / ( 1 - e*cosh(E) ) ) 
-        if E < 0.0 
+        if E < 0.0 || E > pi 
             nu = -nu 
         end 
     end 

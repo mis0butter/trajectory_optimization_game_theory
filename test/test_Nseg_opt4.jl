@@ -36,7 +36,7 @@ rv_0 = rv_0_P
 
 N = 20 
 tof_N = tof / N 
-Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+Δv_sol  = min_Δv( rv_0, rv_f, tof, N, mu ) 
 Δv_sol2 = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 
 t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
@@ -53,24 +53,25 @@ rv_E_dtsim_hist = [] ;  t_E_dtsim_hist = []
 rv_P_tof_hist = [] ;    t_P_tof_hist = [] 
 rv_E_tof_hist = [] ;    t_E_tof_hist = [] 
 
-N_prop = 2 
+N_prop = 4 
 dt_sim = tof_N * N_prop 
 k_sim  = 0 
-for t_sim = dt_sim : dt_sim : dt_sim * 5 
+for t_sim = dt_sim : dt_sim : dt_sim * 4 
 
     k_sim += 1 
     println( "k_sim = ", k_sim ) 
 
     # propagate evader based on current information for tof 
     t_E_tof, rv_E_tof = propagate_2Body( rv_0_E, tof, mu, 1.0 ) 
+    rv_E_tof = vv2m( rv_E_tof ) 
     push!( rv_E_tof_hist, rv_E_tof )  
     push!( t_E_tof_hist, t_E_tof ) 
 
-    rv_f_E   = rv_E_tof[end] 
-    rv_E_tof = vv2m( rv_E_tof ) 
+    rv_f_E   = rv_E_tof[end,:] 
 
     # solve for pursuer Δv for tof 
     Δv_P = min_Δv( rv_0_P, rv_f_E, tof, N, mu ) 
+    # Δv_P = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 
     # compute entire predicted trajectory for pursuer  
     # t_P_tof, rv_P_tof = prop_kepler_tof_Nseg( rv_0_P, Δv_P, N, tof_N, mu ) 
@@ -88,7 +89,7 @@ for t_sim = dt_sim : dt_sim : dt_sim * 5
     rv_0_P = rv_P_dtsim[end,:] 
 
     # apply maneuver to evader 
-    Δi = 10.0*pi/180 
+    Δi = 5.0*pi/180 
     Δv_E = computeInclinationChange(rv_0_E, Δi, mu)
     rv_0_E += [0.0, 0.0, 0.0, Δv_E[1], Δv_E[2], Δv_E[3]]
 
@@ -120,10 +121,6 @@ default(
     grid       = false, 
     markerstrokewidth = 0, 
 )
-# scalefontsizes(1.3)
-
-# using DataFrames
-# using GLMakie 
 
 a = Animation() 
 

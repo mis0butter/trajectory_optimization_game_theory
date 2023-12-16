@@ -73,7 +73,7 @@ export min_Δv_dist
 
 ## ============================================ ##
 
-"Maximize Δv for trajectory with N segments "
+"Maximize Δv for trajectory with N segments (seems to be not working)"
 function max_Δv_dist(  
     rv_0,               # initial position vector 
     rv_f,               # final position vector 
