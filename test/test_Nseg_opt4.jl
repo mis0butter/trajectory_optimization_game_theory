@@ -89,9 +89,9 @@ for t_sim = dt_sim : dt_sim : dt_sim * 4
     rv_0_P = rv_P_dtsim[end,:] 
 
     # apply maneuver to evader 
-    Δi = 5.0*pi/180 
-    Δv_E = computeInclinationChange(rv_0_E, Δi, mu)
-    rv_0_E += [0.0, 0.0, 0.0, Δv_E[1], Δv_E[2], Δv_E[3]]
+    # Δi = 5.0*pi/180 
+    # Δv_E = computeInclinationChange(rv_0_E, Δi, mu)
+    # rv_0_E += [0.0, 0.0, 0.0, Δv_E[1], Δv_E[2], Δv_E[3]]
 
     # propagate evader for dt_sim 
     t_E_dtsim, rv_E_dtsim = propagate_2Body( rv_0_E, t_sim, mu, 1.0 ) 

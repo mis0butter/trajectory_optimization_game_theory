@@ -3,6 +3,7 @@ using Ipopt
 import Random
 import Statistics
 import Test 
+using GLMakie 
 
 using trajectory_optimization_game_theory
 
@@ -14,66 +15,32 @@ function rosenbrock(x, y)
   return out
 end
 
-# ----------------------- #
-function example_rosenbrock()
-    model = Model(Ipopt.Optimizer)
-    set_silent(model)
-    @variable(model, x)
-    @variable(model, y)
-    # @objective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
-    @objective(model, Min, rosenbrock(x,y)) 
-    optimize!(model)
-    Test.@test termination_status(model) == LOCALLY_SOLVED
-    Test.@test primal_status(model) == FEASIBLE_POINT
-    Test.@test objective_value(model) ≈ 0.0 atol = 1e-10
-    Test.@test value(x) ≈ 1.0
-    Test.@test value(y) ≈ 1.0
-    return  value.(x),  
-            value.(y) 
-end
-# ----------------------- #
+# given rosenbrock another method 
+rosenbrock(x) = rosenbrock(x[1], x[2]) 
+
+# define another example obj fn 
+obj_fn(x) = (x[1] + 1)^2 + x[2]^2  + x[3]^2 
+
+# minimize 
+x_min = min_ipopt( obj_fn, 3 ) 
+x_min = min_ipopt( rosenbrock, 2 ) 
+
+## ============================================ ##
 
 # test solution 
-x_min, y_min = example_rosenbrock() 
+x_min, y_min = min_rosenbrock() 
 z_min = rosenbrock( x_min, y_min ) 
 
-# plot  
 x, y = collect(-1.5:0.1:1.5), collect(-1.5:0.1:1.5) 
 z    = rosenbrock.(x,y') 
+
+# plot 
 fig  = plot_surface(x, y, z) 
-fig  = plot_scatter3d(x_min, y_min, z_min, fig, "min") 
+fig  = plot_scatter3d(x_min, y_min, z_min, fig ) 
 ax = fig.content[1] 
 ax.title = "Rosenbrock function" 
 
 display(fig)  
-
-## ============================================ ##
-# test on minimizing miss distance 
-
-r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
-rv_0 = [ r_0 ; v_0 ] 
-rv_f = [ r_f ; v_f ] 
-tof_N = tof / N 
-
-miss_kepler = miss_distance_prop_kepler_Nseg( 
-    rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
-
-obj( Δv_vec ) = miss_distance_prop_kepler_Nseg( 
-        rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
-
-# optimize using JuMP 
-
-model = Model(Ipopt.Optimizer)
-set_silent(model)
-@variable(model, Δv_vec )
-# @objective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
-@objective(model, Min, obj( Δv_vec ) ) 
-optimize!(model)
-
-
-
-
-
 
 
 ## ============================================ ##

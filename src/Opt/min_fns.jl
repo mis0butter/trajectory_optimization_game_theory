@@ -62,6 +62,7 @@ function min_Δv_dist(
     
     # minimize constrained 
     x_min  = min_aug_L( obj_fn, x_0, nothing, h_fn ) 
+    # x_min  = min_aug_L( obj_fn, x_0 ) 
     
     # get solution 
     Δv_sol = reshape( x_min, N, 3 ) 
