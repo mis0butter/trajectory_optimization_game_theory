@@ -28,15 +28,15 @@ x_min = min_ipopt( rosenbrock, 2 )
 ## ============================================ ##
 
 # test solution 
-x_min, y_min = min_rosenbrock() 
-z_min = rosenbrock( x_min, y_min ) 
+# x_min, y_min = min_rosenbrock() 
+z_min = rosenbrock( x_min[1], x_min[2] ) 
 
 x, y = collect(-1.5:0.1:1.5), collect(-1.5:0.1:1.5) 
 z    = rosenbrock.(x,y') 
 
 # plot 
 fig  = plot_surface(x, y, z) 
-fig  = plot_scatter3d(x_min, y_min, z_min, fig ) 
+fig  = plot_scatter3d(x_min[1], x_min[2], z_min, fig ) 
 ax = fig.content[1] 
 ax.title = "Rosenbrock function" 
 
@@ -86,25 +86,28 @@ alpha = 350
 model = Model(Ipopt.Optimizer)
 
 # def vars constraints 
-@variables(model, begin
+@variables(
+    model, 
+    begin
     -1    <= t[1:(N+1)] <= 1
     -0.05 <= x[1:(N+1)] <= 0.05
     u[1:(N+1)]
-end)
+    end
+) 
 
 # def obj 
 @objective(
     model,
     Min,
     obj( u, h, t, alpha ), 
-)
+) 
 
 # def constraints 
 @constraint(
     model,
     [i = 1:N],
     eq_constraint_1( i, x, h, t ) == 0 
-)
+) 
 @constraint(
     model,
     [i = 1:N],

@@ -55,8 +55,8 @@ for t_sim = dt_sim : dt_sim : 1000
     # for i in 1 : length(x_P_dtsim)
         x_P_dtsim = mapreduce( permutedims, vcat, x_P_dtsim ) 
         x_P_tof   = mapreduce( permutedims, vcat, x_P_tof ) 
-        push!(x_P_dtsim_hist, x_P_dtsim)
-        push!(x_P_tof_hist, x_P_tof)
+        push!(x_P_dtsim_hist, x_P_dtsim) 
+        push!(x_P_tof_hist, x_P_tof) 
     # end 
 
     # move evader 
@@ -219,5 +219,5 @@ function sphere(r, C)   # r: radius; C: center [cx,cy,cz]
     return x, y, z
 end
 
-Plots.surface( sphere(r, zeros(3)), alpha = 0.1 )
+Plots.surface( sphere(r, zeros(3)), alpha = 0.1 ) 
 
