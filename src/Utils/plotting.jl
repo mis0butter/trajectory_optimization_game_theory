@@ -290,6 +290,10 @@ function plot_vector3d(
     )
 
     if !isnothing(text) 
+        if size(xyz, 1) > 1 
+            error("Can only label one vector at time.")
+        end 
+        x = xyz[1][1] ; y = xyz[1][2] ; z = xyz[1][3] 
         text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
     end
 

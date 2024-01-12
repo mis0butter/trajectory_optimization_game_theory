@@ -34,15 +34,15 @@ fig = plot_orbit( rv_E, fig )
 rv_f_E = rv_E[end,:] 
 
 # center of polygon 
-r_f = rv_f_E[1:3]  ; r̄_f = r_f / norm(r_f)  
-v_f = rv_f_E[4:6]  ; v̄_f = v_f / norm(v_f) 
+r_f = rv_f_E[1:3]  ; axis_1 = -r_f / norm(r_f)  
+v_f = rv_f_E[4:6]  ; axis_2 = v_f / norm(v_f) 
 
 # define vector normal to orbit plane 
-n̄_f = cross( r̄_f, v̄_f )  ; n̄_f = n̄_f / norm(n̄_f) 
+axis_3 = cross( axis_1, axis_2 )  ; axis_3 = axis_3 / norm(axis_3) 
 
 # ok, let's plot this so that it all looks right 
-fig = plot_vector3d( [ r_f ] , [ r̄_f * r ] , fig ) 
-fig = plot_vector3d( [ r_f ] , [ n̄_f * r ] , fig ) 
-fig = plot_vector3d( [ r_f ] , [ v̄_f * r ] , fig ) 
+fig = plot_vector3d( [ r_f ] , [ axis_1 * r ] , fig, r/100, :black, "1" ) 
+fig = plot_vector3d( [ r_f ] , [ axis_2 * r ] , fig, r/100, :black, "2" ) 
+fig = plot_vector3d( [ r_f ] , [ axis_3 * r ] , fig, r/100, :black, "3" ) 
 
 

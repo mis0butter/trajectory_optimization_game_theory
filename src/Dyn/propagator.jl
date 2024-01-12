@@ -1,5 +1,6 @@
 using DifferentialEquations 
 using LinearAlgebra 
+using Debugger 
 
 ## ============================================ ##
 
