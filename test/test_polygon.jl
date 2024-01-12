@@ -52,32 +52,47 @@ r_top = r_f + axis_3 * r/10
 # fig   = plot_scatter3d( r_top[1], r_top[2], r_top[3], fig, :circle ) 
 l_topin = [ r_top[1], r_top[2], r_top[3] ] 
 
-x = [ r_top[1], r_topin[1] ] 
-
-
 # top-inner vertex: move up from r_f along axis 3 and left along axis 2, 60 degrees 
-vec      = sind(60) * axis_3 * r/10 + cosd(60) * axis_2 * r/10 
+vec      = cosd(60) * axis_3 * r/10 + sind(60) * axis_2 * r/10 
 r_topin  = r_f + vec
 # fig      = plot_scatter3d( r_topin[1], r_topin[2], r_topin[3], fig, :circle )  
 
+mat = [ r_top' ; r_topin' ] 
+fig = plot_line3d( mat, fig ) 
+
 # bottom-inner vertex: move down from r_f along axis 3 and left along axis 2, 60 degrees 
-vec      = - sind(60) * axis_3 * r/10 + cosd(60) * axis_2 * r/10 
+vec      = - cosd(60) * axis_3 * r/10 + sind(60) * axis_2 * r/10 
 r_botin  = r_f + vec 
 # fig      = plot_scatter3d( r_botin[1], r_botin[2], r_botin[3], fig, :circle ) 
+
+mat = [ r_topin' ; r_botin' ] 
+fig = plot_line3d( mat, fig ) 
 
 # bottom vertex: move down from r_f along axis 3 
 r_bot = r_f - axis_3 * r/10 
 # fig   = plot_scatter3d( r_bot[1], r_bot[2], r_bot[3], fig, :circle ) 
 
+mat = [ r_botin' ; r_bot' ] 
+fig = plot_line3d( mat, fig ) 
+
 # bottom-outer vertex: move down from r_f along axis 3 and right along axis 2, 60 degrees 
-vec      = - sind(60) * axis_3 * r/10 - cosd(60) * axis_2 * r/10 
+vec      = - cosd(60) * axis_3 * r/10 - sind(60) * axis_2 * r/10 
 r_botout = r_f + vec 
 # fig      = plot_scatter3d( r_botout[1], r_botout[2], r_botout[3], fig, :circle ) 
 
+mat = [ r_bot' ; r_botout' ] 
+fig = plot_line3d( mat, fig ) 
+
 # top-outer vertex: move up from r_f along axis 3 and right along axis 2, 60 degrees 
-vec       = sind(60) * axis_3 * r/10 - cosd(60) * axis_2 * r/10 
+vec       = cosd(60) * axis_3 * r/10 - sind(60) * axis_2 * r/10 
 r_topout  = r_f + vec 
 # fig       = plot_scatter3d( r_topout[1], r_topout[2], r_topout[3], fig, :circle ) 
+
+mat = [ r_botout' ; r_topout' ] 
+fig = plot_line3d( mat, fig ) 
+
+mat = [ r_topout' ; r_top' ] 
+fig = plot_line3d( mat, fig ) 
 
 
 
