@@ -163,7 +163,8 @@ function sum_norm_Δv( x, N )
 
     sum_norm = 0 
     for i = 1 : N 
-        sum_norm += norm( Δv_vec[i,:] ) 
+        # sum_norm += norm( Δv_vec[i,:] ) 
+        sum_norm += sum( Δv_vec[i,:].^2 ) 
     end 
 
     return sum_norm 

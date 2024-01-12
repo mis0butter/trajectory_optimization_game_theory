@@ -1,4 +1,5 @@
-using DifferentialEquations
+using DifferentialEquations 
+using LinearAlgebra 
 
 ## ============================================ ##
 
@@ -97,8 +98,10 @@ function cart2kep(cart, mu, tol=1e-20)
 
     # orbit energy calc
     h = cross(r, v) # specific angular momentum
-    magR = norm(r)
-    magV = norm(v)
+    # magR = norm(r)
+    magR = sqrt(r[1]^2 + r[2]^2 + r[3]^2) 
+    # magV = norm(v)
+    magV = sqrt(v[1]^2 + v[2]^2 + v[3]^2) 
     energy = 0.5 * (magV ^ 2) - (mu / magR) # vis viva equation
 
     # eccentricity vector
@@ -106,7 +109,8 @@ function cart2kep(cart, mu, tol=1e-20)
     magEcc = norm(ecc) 
 
     # semi-latus rectum 
-    p = (norm(h) ^ 2) / mu 
+    h_norm2 = h[1]^2 + h[2]^2 + h[3]^2 
+    p = h_norm2 / mu 
 
     # semi-major axis 
     sma = p / (1 - magEcc^2) 
