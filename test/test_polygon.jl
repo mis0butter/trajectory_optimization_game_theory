@@ -22,12 +22,12 @@ t_P, rv_P = propagate_2Body(rv_0_P, tof, mu, 1.0)
 rv_P = vv2m(rv_P) 
 rv_E = vv2m(rv_E) 
 
+## ============================================ ##
+# ... it's just vector addition to find the vertices of the polygon 
+
 # plot 
 fig = plot_axes3d( )
 fig = plot_orbit( rv_E, fig ) 
-
-## ============================================ ##
-# ... it's just vector addition to find the vertices of the polygon 
 
 # let's propagate the evader SC 
 rv_f_E = rv_E[end,:] 
@@ -44,8 +44,40 @@ fig = plot_vector3d( [ r_f ] , [ axis_1 * r ] , fig, r/100, :black, "1" )
 fig = plot_vector3d( [ r_f ] , [ axis_2 * r ] , fig, r/100, :black, "2" ) 
 fig = plot_vector3d( [ r_f ] , [ axis_3 * r ] , fig, r/100, :black, "3" ) 
 
-# vertices of polygon along axis 1-3 plane 
+# vertices of polygon along axis 2-3 plane 
 # ok, let's define the distance of vertices of polygon from center: how about r / 100 ? 
 
-# top vertex: 
+# top vertex: move up from r_f along axis 3 
+r_top = r_f + axis_3 * r/10 
+# fig   = plot_scatter3d( r_top[1], r_top[2], r_top[3], fig, :circle ) 
+l_topin = [ r_top[1], r_top[2], r_top[3] ] 
+
+x = [ r_top[1], r_topin[1] ] 
+
+
+# top-inner vertex: move up from r_f along axis 3 and left along axis 2, 60 degrees 
+vec      = sind(60) * axis_3 * r/10 + cosd(60) * axis_2 * r/10 
+r_topin  = r_f + vec
+# fig      = plot_scatter3d( r_topin[1], r_topin[2], r_topin[3], fig, :circle )  
+
+# bottom-inner vertex: move down from r_f along axis 3 and left along axis 2, 60 degrees 
+vec      = - sind(60) * axis_3 * r/10 + cosd(60) * axis_2 * r/10 
+r_botin  = r_f + vec 
+# fig      = plot_scatter3d( r_botin[1], r_botin[2], r_botin[3], fig, :circle ) 
+
+# bottom vertex: move down from r_f along axis 3 
+r_bot = r_f - axis_3 * r/10 
+# fig   = plot_scatter3d( r_bot[1], r_bot[2], r_bot[3], fig, :circle ) 
+
+# bottom-outer vertex: move down from r_f along axis 3 and right along axis 2, 60 degrees 
+vec      = - sind(60) * axis_3 * r/10 - cosd(60) * axis_2 * r/10 
+r_botout = r_f + vec 
+# fig      = plot_scatter3d( r_botout[1], r_botout[2], r_botout[3], fig, :circle ) 
+
+# top-outer vertex: move up from r_f along axis 3 and right along axis 2, 60 degrees 
+vec       = sind(60) * axis_3 * r/10 - cosd(60) * axis_2 * r/10 
+r_topout  = r_f + vec 
+# fig       = plot_scatter3d( r_topout[1], r_topout[2], r_topout[3], fig, :circle ) 
+
+
 
