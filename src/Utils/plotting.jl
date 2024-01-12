@@ -40,6 +40,7 @@ Example usage:
 
     fig = plot_3d( x, y, z )
 """
+
 function plot_line3d( xyz, fig = nothing ) 
     plot_line3d( xyz[:,1], xyz[:,2], xyz[:,3], fig ) 
 end 
@@ -172,6 +173,10 @@ Example usage:
     fig = plot_contour3d( x, y, z ) 
     fig = plot_scatter3d( x, y, z ) 
 """
+
+function plot_scatter3d( xyz, fig = nothing ) 
+    plot_scatter3d( xyz[:,1], xyz[:,2], xyz[:,3], fig ) 
+end
 
 function plot_scatter3d( 
     x,                      # [N,1] grid of points 
