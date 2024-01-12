@@ -14,7 +14,6 @@ rv_0_P = kep2cart(kep0_P, mu)
 kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
-
 # tof for pursuer to catch up to evader 
 tof = 2000 
 
@@ -34,8 +33,8 @@ fig = plot_orbit( rv_E, fig )
 rv_f_E = rv_E[end,:] 
 
 # center of polygon 
-r_f = rv_f_E[1:3]  ; axis_1 = -r_f / norm(r_f)  
-v_f = rv_f_E[4:6]  ; axis_2 = v_f / norm(v_f) 
+r_f = rv_f_E[1:3]  ; axis_1 = v_f / norm(v_f)   
+v_f = rv_f_E[4:6]  ; axis_2 = -r_f / norm(r_f)
 
 # define vector normal to orbit plane 
 axis_3 = cross( axis_1, axis_2 )  ; axis_3 = axis_3 / norm(axis_3) 
@@ -45,4 +44,8 @@ fig = plot_vector3d( [ r_f ] , [ axis_1 * r ] , fig, r/100, :black, "1" )
 fig = plot_vector3d( [ r_f ] , [ axis_2 * r ] , fig, r/100, :black, "2" ) 
 fig = plot_vector3d( [ r_f ] , [ axis_3 * r ] , fig, r/100, :black, "3" ) 
 
+# vertices of polygon along axis 1-3 plane 
+# ok, let's define the distance of vertices of polygon from center: how about r / 100 ? 
+
+# top vertex: 
 
