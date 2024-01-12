@@ -27,6 +27,9 @@ rv_E = vv2m(rv_E)
 # test functions 
 
 rv_vec = rv_E[end,:] 
+
+vertices = polygon_vertices( rv_vec ) 
+
 plot_polygon( rv_vec ) 
 
 ## ============================================ ##
