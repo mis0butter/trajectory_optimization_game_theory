@@ -25,6 +25,44 @@ rv_E = vv2m(rv_E)
 ## ============================================ ##
 # ... it's just vector addition to find the vertices of the polygon 
 
+function polygon_vertices( rv_f_E ) 
+
+    # center of polygon 
+    r_f = rv_f_E[1:3]  ;    axis_2 = -r_f / norm(r_f)
+    v_f = rv_f_E[4:6]  ;    axis_1 = v_f / norm(v_f) 
+
+    # define vector normal to orbit plane 
+    axis_3 = cross( axis_1, axis_2 )  ; axis_3 = axis_3 / norm(axis_3)     
+
+    # top vertex: move up from r_f along axis 3 
+    r_top = r_f + axis_3 * r/10 
+
+    # top-inner vertex: move up from r_f along axis 3 and left along axis 2, 60 degrees 
+    vec      = cosd(60) * axis_3 * r/10 + sind(60) * axis_2 * r/10 
+    r_topin  = r_f + vec
+
+    # bottom-inner vertex: move down from r_f along axis 3 and left along axis 2, 60 degrees 
+    vec      = - cosd(60) * axis_3 * r/10 + sind(60) * axis_2 * r/10 
+    r_botin  = r_f + vec 
+
+    # bottom vertex: move down from r_f along axis 3 
+    r_bot = r_f - axis_3 * r/10 
+
+    # bottom-outer vertex: move down from r_f along axis 3 and right along axis 2, 60 degrees 
+    vec      = - cosd(60) * axis_3 * r/10 - sind(60) * axis_2 * r/10 
+    r_botout = r_f + vec 
+
+    # top-outer vertex: move up from r_f along axis 3 and right along axis 2, 60 degrees 
+    vec       = cosd(60) * axis_3 * r/10 - sind(60) * axis_2 * r/10 
+    r_topout  = r_f + vec 
+
+    out = ( top = r_top, topin = r_topin, botin = r_botin, bot = r_bot, botout = r_botout, topout = r_topout ) 
+    return out 
+end 
+
+## ============================================ ##
+
+
 # plot 
 fig = plot_axes3d( )
 fig = plot_orbit( rv_E, fig ) 
