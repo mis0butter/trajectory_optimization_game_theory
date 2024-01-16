@@ -11,7 +11,7 @@ mu = 398600.4415
 r  = 6378.0
 kep0_P = [ r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180 ]
 rv_0_P = kep2cart(kep0_P, mu) 
-kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 180.0*pi/180 ]
+kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 30.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
 # tof for pursuer to catch up to evader 
@@ -38,8 +38,29 @@ fig = plot_polygon( rv_vec, fig )
 # segments 
 N = 10 
 
+# ----------------------- #
+# PLAYER ONE 
+
 # init state and end velocity (probably doesn't matter) 
 rv_0 = rv_0_E 
+v_f  = rv_E[end,4:6] 
+# Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+
+for i in eachindex(vertices)  
+
+    println(i) 
+    rv_f = [ vertices[i] ; v_f ]  
+    Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+    fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
+
+end 
+
+
+# ----------------------- #
+# PLAYER TWO 
+
+# init state and end velocity (probably doesn't matter) 
+rv_0 = rv_0_P  
 v_f  = rv_E[end,4:6] 
 # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
 
