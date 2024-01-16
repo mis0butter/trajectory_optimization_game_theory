@@ -22,28 +22,48 @@ t_P, rv_P = propagate_2Body(rv_0_P, tof, mu, 1.0)
 rv_P = vv2m(rv_P) 
 rv_E = vv2m(rv_E) 
 
-# plot 
-fig = plot_axes3d( )
-# fig = plot_orbit( rv_P, fig ) 
-fig = plot_orbit( rv_E, fig ) 
-
 rv_vec = rv_E[end,:] 
 
 # get vertices of polygon 
 vertices = polygon_vertices( rv_vec ) 
-plot_polygon( rv_vec, fig ) 
 
 ## ============================================ ##
 
-# define init and target vectors 
-v_f  = rv_E[end,4:6] 
-rv_f = [ vertices.top ; v_f ]  
-# rv_f = rv_E[end,:] 
-rv_0 = rv_0_E 
+# plot 
+fig = plot_axes3d( )
+# fig = plot_orbit( rv_P, fig ) 
+fig = plot_orbit( rv_E, fig ) 
+fig = plot_polygon( rv_vec, fig ) 
 
+# segments 
 N = 10 
-# Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
-Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
-fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig ) 
 
+# init state and end velocity (probably doesn't matter) 
+rv_0 = rv_0_E 
+v_f  = rv_E[end,4:6] 
+# Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+
+for i in eachindex(vertices)  
+
+    println(i) 
+    rv_f = [ vertices[i] ; v_f ]  
+    Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+    fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
+
+end 
+
+# # top  
+# rv_f = [ vertices.top ; v_f ]  
+# Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+# fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig ) 
+
+# # bottom 
+# rv_f = [ vertices.bot ; v_f ]  
+# Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+# fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig ) 
+
+# # top in 
+# rv_f = [ vertices.topin ; v_f ] 
+# Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+# fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig ) 
 

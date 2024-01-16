@@ -87,14 +87,17 @@ function plot_orbit(
 
     text_offset = (0,10) 
 
-    
-
     if isnothing(fig) 
         fig = Figure() 
-        Axis3(fig[1, 1], aspect=DataAspect(), 
-            xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
-            title = "Transfer Solution") 
+        Axis3(fig[1, 1]) 
     end 
+
+    # if isnothing(fig) 
+    #     fig = Figure() 
+    #     Axis3(fig[1, 1], aspect=DataAspect(), 
+    #         xlabel = "X (km)", ylabel = "Y (km)", zlabel = "Z (km)", 
+    #         title = "Transfer Solution") 
+    # end 
 
     # plot orbit 
     lines!( rv[:,1], rv[:,2], rv[:,3]; linewidth = 2 ) 
@@ -351,13 +354,11 @@ export plot_prop_Δv
 
 ## ============================================ ##
 
-""" 
-Plot lines of polygon at rv input  
-""" 
-
+"Plot lines of polygon at rv input"
 function plot_polygon( 
     rv_vec,                 # [N,6] state vector 
     fig = plot_axes3d(),    # figure handle 
+    r  = 6378.0,            # radius of Earth (km) 
 ) 
 
     vertices = polygon_vertices( rv_vec ) 
@@ -369,9 +370,9 @@ function plot_polygon(
     axis_1, axis_2, axis_3 = axis_123( rv_vec ) 
 
     # ok, let's plot this so that it all looks right 
-    fig = plot_vector3d( [ r_vec ] , [ axis_1 * r ] , fig, r/100, :black, "1" ) 
-    fig = plot_vector3d( [ r_vec ] , [ axis_2 * r ] , fig, r/100, :black, "2" ) 
-    fig = plot_vector3d( [ r_vec ] , [ axis_3 * r ] , fig, r/100, :black, "3" ) 
+    # fig = plot_vector3d( [ r_vec ] , [ axis_1 * r ] , fig, r/100, :black, "1" ) 
+    # fig = plot_vector3d( [ r_vec ] , [ axis_2 * r ] , fig, r/100, :black, "2" ) 
+    # fig = plot_vector3d( [ r_vec ] , [ axis_3 * r ] , fig, r/100, :black, "3" ) 
 
     # vertices of polygon along axis 2-3 plane 
     # ok, let's define the distance of vertices of polygon from center: how about r / 100 ? 
@@ -379,7 +380,6 @@ function plot_polygon(
     # top vertex: move up from r_f along axis 3 
     r_top = r_vec + axis_3 * r/10 
     # fig   = plot_scatter3d( r_top[1], r_top[2], r_top[3], fig, :circle ) 
-    l_topin = [ r_top[1], r_top[2], r_top[3] ] 
 
     # top-inner vertex: move up from r_f along axis 3 and left along axis 2, 60 degrees 
     vec      = cosd(60) * axis_3 * r/10 + sind(60) * axis_2 * r/10 

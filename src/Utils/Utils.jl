@@ -128,3 +128,5 @@ function polygon_vertices(
     return vertices 
 end 
 
+export polygon_vertices 
+
