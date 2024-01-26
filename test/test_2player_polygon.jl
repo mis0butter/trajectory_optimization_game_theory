@@ -2,6 +2,7 @@ using trajectory_optimization_game_theory
 using ForwardDiff 
 using FiniteDifferences 
 using LinearAlgebra 
+using Statistics 
 using Optim 
 
 ## ============================================ ##
@@ -112,28 +113,30 @@ end
 # loop through time corresponding with control inputs 
 us = eachindex( players[begin].U_vertices[begin][:,begin] )
 
-# start with vertex 1 
+# start with vertex 1 for players 1 and 2 
 i_vert = 1 
+j_vert = 1 
 
-cost_matrices = [] 
 
-# loop t hrough time 
+# loop through time 
+player1_cost_tt = [] 
+player2_cost_tt = [] 
 for tt in us 
 
     x1 = players[1].X_vertices[i_vert][tt,:] 
     u1 = players[1].U_vertices[i_vert][tt,:] 
-    x2 = players[2].X_vertices[i_vert][tt,:] 
-    u2 = players[2].U_vertices[i_vert][tt,:] 
+    x2 = players[2].X_vertices[j_vert][tt,:] 
+    u2 = players[2].U_vertices[j_vert][tt,:] 
 
-    # compute cost for player 1 
-    cost = stage_cost( x1, x2, u1, u2 )
-    println( "cost = ", cost )  
-
-    # compute cost for player 2 
-    cost = -stage_cost( x1, x2, u1, u2 )
+    # compute costs for player 1 and 2  
+    cost1 = stage_cost( x1, x2, u1, u2 )
+    cost2 = -stage_cost( x1, x2, u1, u2 )
+    push!( player1_cost_tt, cost1 ) 
+    push!( player2_cost_tt, cost2 ) 
     
 end 
-
+player1_cost = mean( player1_cost_tt )
+player2_cost = mean( player2_cost_tt )  
 
 
 
