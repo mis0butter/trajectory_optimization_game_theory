@@ -10,7 +10,9 @@ using Roots: find_zero
 using ForwardDiff
 
 # Modeling
-using LazySets
+using LazySets 
+using JuMP: JuMP, @variable, @constraint, @objective
+using OSQP: OSQP
 
 # Tools
 using CSV
@@ -23,6 +25,7 @@ include("Dyn/Dyn.jl")
 include("Opt/Opt.jl") 
 include("Utils/Utils.jl")
 include("Lambert/Lambert.jl") 
+include("Opt/matrix_game_solver.jl")
 
 ## ============================================ ##
 #  Sub-Module Includes
