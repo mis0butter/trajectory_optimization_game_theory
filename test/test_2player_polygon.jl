@@ -117,26 +117,40 @@ us = eachindex( players[begin].U_vertices[begin][:,begin] )
 i_vert = 1 
 j_vert = 1 
 
+player1_cost_matrix = zeros(6, 6) 
+player2_cost_matrix = zeros(6, 6) 
 
-# loop through time 
-player1_cost_tt = [] 
-player2_cost_tt = [] 
-for tt in us 
+for i_vert in 1 : length( vertices ) 
 
-    x1 = players[1].X_vertices[i_vert][tt,:] 
-    u1 = players[1].U_vertices[i_vert][tt,:] 
-    x2 = players[2].X_vertices[j_vert][tt,:] 
-    u2 = players[2].U_vertices[j_vert][tt,:] 
+    for j_vert in 1 : length( vertices ) 
 
-    # compute costs for player 1 and 2  
-    cost1 = stage_cost( x1, x2, u1, u2 )
-    cost2 = -stage_cost( x1, x2, u1, u2 )
-    push!( player1_cost_tt, cost1 ) 
-    push!( player2_cost_tt, cost2 ) 
-    
+        # loop through time 
+        player1_cost_tt = [] 
+        player2_cost_tt = [] 
+        for tt in us 
+
+            x1 = players[1].X_vertices[i_vert][tt,:] 
+            u1 = players[1].U_vertices[i_vert][tt,:] 
+            x2 = players[2].X_vertices[j_vert][tt,:] 
+            u2 = players[2].U_vertices[j_vert][tt,:] 
+
+            # compute costs for player 1 and 2  
+            cost1 = stage_cost( x1, x2, u1, u2 )
+            cost2 = -stage_cost( x1, x2, u1, u2 )
+            push!( player1_cost_tt, cost1 ) 
+            push!( player2_cost_tt, cost2 ) 
+            
+        end 
+        player1_cost = mean( player1_cost_tt )
+        player2_cost = mean( player2_cost_tt )  
+
+        # save cost in matrix 
+        player1_cost_matrix[i_vert, j_vert] = player1_cost 
+        player2_cost_matrix[i_vert, j_vert] = player2_cost 
+
+    end 
+
 end 
-player1_cost = mean( player1_cost_tt )
-player2_cost = mean( player2_cost_tt )  
 
 
 
