@@ -164,5 +164,9 @@ mixing_weights = let
     sol = solve_mixed_nash( cost_matrices[1] )
     (; sol.x, sol.y)
 end 
+println( "mixing weights = ", mixing_weights ) 
 
+rng = MersenneTwister(1) 
+
+chosen = [sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights]
 
