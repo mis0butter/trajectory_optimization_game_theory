@@ -28,9 +28,9 @@ A zero-sum game solver that casts the game as linear program.
 """
 struct MatrixGameSolver <: FiniteGameSolver end
 
-function solve_mixed_nash(A, B)
-    solve_mixed_nash(MatrixGameSolver(), A)
-end
+# function solve_mixed_nash(A, B)
+#     solve_mixed_nash( A )
+# end 
 
 function solve_mixed_nash(A)
     sol1 = solve_mixed_security_strategy(A)

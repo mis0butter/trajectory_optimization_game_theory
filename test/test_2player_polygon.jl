@@ -1,9 +1,13 @@
 using trajectory_optimization_game_theory 
-using ForwardDiff 
-using FiniteDifferences 
-using LinearAlgebra 
-using Statistics 
-using Optim 
+
+# using ForwardDiff 
+# using FiniteDifferences 
+using LinearAlgebra: norm 
+using Statistics: mean 
+# using Optim 
+
+using StatsBase: ProbabilityWeights, sample
+using Random: MersenneTwister
 
 ## ============================================ ##
 # init params 
@@ -121,7 +125,6 @@ player1_cost_matrix = zeros(6, 6)
 player2_cost_matrix = zeros(6, 6) 
 
 for i_vert in 1 : length( vertices ) 
-
     for j_vert in 1 : length( vertices ) 
 
         # loop through time 
@@ -136,7 +139,7 @@ for i_vert in 1 : length( vertices )
 
             # compute costs for player 1 and 2  
             cost1 = stage_cost( x1, x2, u1, u2 )
-            cost2 = -stage_cost( x1, x2, u1, u2 )
+            cost2 = - stage_cost( x1, x2, u1, u2 )
             push!( player1_cost_tt, cost1 ) 
             push!( player2_cost_tt, cost2 ) 
             
@@ -149,14 +152,17 @@ for i_vert in 1 : length( vertices )
         player2_cost_matrix[i_vert, j_vert] = player2_cost 
 
     end 
-
 end 
 
+## ============================================ ##
+# solve mixed nash 
 
+cost_matrices = ( player1_cost_matrix, player2_cost_matrix ) 
 
+# mixing weights 
+mixing_weights = let
+    sol = solve_mixed_nash( cost_matrices[1] )
+    (; sol.x, sol.y)
+end 
 
-
-# what do I need? 
-# I need to save the state and control history for each player 
-# I need to save the cost history for each player 
 

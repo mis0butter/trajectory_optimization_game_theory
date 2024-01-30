@@ -1,18 +1,22 @@
 module trajectory_optimization_game_theory
 
 # Math
-using LinearAlgebra
-using StaticArrays
+using LinearAlgebra: norm 
+using StaticArrays          # don't think I use this 
 using Rotations: AngleAxis, RotZ, RotZXZ
 
 # Optimization
-using Roots: find_zero
-using ForwardDiff
+using Roots: find_zero      # don't think I use this  
+using ForwardDiff           # think I only use gradient 
+using Optim                 # think i only use ... some functions 
 
 # Modeling
-using LazySets 
+using LazySets              # don't think I use this 
 using JuMP: JuMP, @variable, @constraint, @objective
-using OSQP: OSQP
+using OSQP: OSQP 
+
+using StatsBase: ProbabilityWeights, sample
+using Random: MersenneTwister
 
 # Tools
 using CSV
