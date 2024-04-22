@@ -47,4 +47,9 @@ fig = plot_orbit( rv_P, fig )
 fig = plot_orbit( rv_E, fig ) 
 fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig ) 
 
+## ============================================ ##
+
+filename_string = string( "test/outputs/min_delta_v.png" )
+savefig(filename_string)
+
 

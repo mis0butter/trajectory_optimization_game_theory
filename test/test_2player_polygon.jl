@@ -36,6 +36,28 @@ fig = plot_axes3d( )
 fig = plot_orbit( rv_E, fig ) 
 fig = plot_orbit( rv_P, fig ) 
 
+# ## ============================================ ##
+# # break up into N segments, see what happens 
+
+# tof = 1000 
+
+# # define init and target vectors for pursuer 
+# rv_f = rv_E[end,:] 
+# rv_0 = rv_0_P 
+
+# N = 20 
+# # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+# Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+# # Δv_sol = max_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+
+# # ----------------------- # 
+
+# # create fig 
+# fig = plot_axes3d( )
+# fig = plot_orbit( rv_P, fig ) 
+# fig = plot_orbit( rv_E, fig ) 
+# fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig ) 
+
 ## ============================================ ##
 
 # plot 
