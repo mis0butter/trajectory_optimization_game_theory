@@ -32,7 +32,11 @@ include("Lambert/Lambert.jl")
 include("Opt/matrix_game_solver.jl")
 
 ## ============================================ ##
-#  Sub-Module Includes
+#  stark stuff 
+
+include("Dyn/stark/stark_propagator.jl")
+include("Dyn/stark/starkCoeffs_time.jl")
+include("Dyn/stark/starkCoeffs_ecc.jl")
 
 # include("old/Dynamics/Dynamics.jl")
 # include("old/Modeling/Modeling.jl")
