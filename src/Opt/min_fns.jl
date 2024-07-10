@@ -1,6 +1,3 @@
-using LinearAlgebra 
-using Optim 
-
 ## ============================================ ##
 
 "Minimize Δv for trajectory with N segments "

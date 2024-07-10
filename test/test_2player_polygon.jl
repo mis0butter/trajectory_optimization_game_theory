@@ -9,6 +9,8 @@ using Statistics: mean
 using StatsBase: ProbabilityWeights, sample
 using Random: MersenneTwister
 
+rng = MersenneTwister(1) 
+
 ## ============================================ ##
 # init params 
 
@@ -16,7 +18,7 @@ mu = 398600.4415
 r  = 6378.0
 kep0_P = [ r+420.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 20.0*pi/180 ]
 rv_0_P = kep2cart(kep0_P, mu) 
-kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 12.0*pi/180, 0.0, 50.0*pi/180 ]
+kep0_E = [ r+520.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
 # tof for pursuer to catch up to evader 
@@ -166,7 +168,5 @@ mixing_weights = let
 end 
 println( "mixing weights = ", mixing_weights ) 
 
-rng = MersenneTwister(1) 
-
 chosen = [sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights]
-
+println( "chosen = ", chosen ) 

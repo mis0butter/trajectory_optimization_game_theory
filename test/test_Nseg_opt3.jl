@@ -23,7 +23,7 @@ rv_P = vv2m(rv_P)
 rv_E = vv2m(rv_E) 
 
 # plot 
-fig = plot_axes3d( )
+fig = plot_axes3d(  )
 fig = plot_orbit( rv_P, fig ) 
 fig = plot_orbit( rv_E, fig ) 
 

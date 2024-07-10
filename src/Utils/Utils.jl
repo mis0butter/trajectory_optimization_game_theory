@@ -99,11 +99,11 @@ function polygon_vertices(
 ) 
 
     # center of polygon 
-    r_vec = rv_vec[1:3] 
+    r_vec    = rv_vec[1:3] 
     _, axis_2, axis_3 = axis_123( rv_vec ) 
 
     # top vertex: move up from r_f along axis 3 
-    r_top = r_vec + axis_3 * dist 
+    r_top    = r_vec + axis_3 * dist 
 
     # top-inner vertex: move up from r_f along axis 3 and left along axis 2, 60 degrees 
     vec      = cosd(60) * axis_3 * dist + sind(60) * axis_2 * dist 
@@ -114,17 +114,17 @@ function polygon_vertices(
     r_botin  = r_vec + vec 
 
     # bottom vertex: move down from r_f along axis 3 
-    r_bot = r_vec - axis_3 * dist 
+    r_bot    = r_vec - axis_3 * dist 
 
     # bottom-outer vertex: move down from r_f along axis 3 and right along axis 2, 60 degrees 
     vec      = - cosd(60) * axis_3 * dist - sind(60) * axis_2 * dist 
     r_botout = r_vec + vec 
 
     # top-outer vertex: move up from r_f along axis 3 and right along axis 2, 60 degrees 
-    vec       = cosd(60) * axis_3 * dist - sind(60) * axis_2 * dist 
-    r_topout  = r_vec + vec 
+    vec      = cosd(60) * axis_3 * dist - sind(60) * axis_2 * dist 
+    r_topout = r_vec + vec 
 
-    vertices = ( top = r_top, topin = r_topin, botin = r_botin, bot = r_bot, botout = r_botout, topout = r_topout ) 
+    vertices = ( top = r_top, topin = r_topin, botin = r_botin, bot = r_bot, botout = r_botout, topout   = r_topout ) 
     return vertices 
 end 
 
