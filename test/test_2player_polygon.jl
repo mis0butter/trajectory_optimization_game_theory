@@ -66,50 +66,61 @@ players, fig = player_XU( params, rv_P, vertices, players, fig )
 ## ============================================ ## 
 # zero-sum game 
 
-# game cost 
-function stage_cost(x1, x2, u1, u2)
-    sqrt(norm(x1[1:3] - x2[1:3]) + 0.1) + 0.1 * (norm(u1) - norm(u2))
-end
+function player_cost_matrices( players ) 
 
-# loop through time corresponding with control inputs 
-us = eachindex( players[begin].U_vertices[begin][:,begin] )
+    # game cost 
+    function stage_cost(x1, x2, u1, u2)
+        sqrt(norm(x1[1:3] - x2[1:3]) + 0.1) + 0.1 * (norm(u1) - norm(u2))
+    end
 
-# start with vertex 1 for players 1 and 2 
-i_vert = 1 
-j_vert = 1 
+    # loop through time corresponding with control inputs 
+    us = eachindex( players[begin].U_vertices[begin][:,begin] )
 
-player1_cost_matrix = zeros(6, 6) 
-player2_cost_matrix = zeros(6, 6) 
+    # start with vertex 1 for players 1 and 2 
+    i_vert = 1 
+    j_vert = 1 
 
-for i_vert in 1 : length( vertices ) 
-    for j_vert in 1 : length( vertices ) 
+    player1_cost_matrix = zeros(6, 6) 
+    player2_cost_matrix = zeros(6, 6) 
 
-        # loop through time 
-        player1_cost_tt = [] 
-        player2_cost_tt = [] 
-        for tt in us 
+    n_vertices = length( players[1].t_vertices ) 
 
-            x1 = players[1].X_vertices[i_vert][tt,:] 
-            u1 = players[1].U_vertices[i_vert][tt,:] 
-            x2 = players[2].X_vertices[j_vert][tt,:] 
-            u2 = players[2].U_vertices[j_vert][tt,:] 
+    for i_vert in 1 : n_vertices 
+        for j_vert in 1 : n_vertices 
 
-            # compute costs for player 1 and 2  
-            cost1 = stage_cost( x1, x2, u1, u2 )
-            cost2 = - stage_cost( x1, x2, u1, u2 )
-            push!( player1_cost_tt, cost1 ) 
-            push!( player2_cost_tt, cost2 ) 
-            
+            # loop through time 
+            player1_cost_tt = [] 
+            player2_cost_tt = [] 
+            for tt in us 
+
+                x1 = players[1].X_vertices[i_vert][tt,:] 
+                u1 = players[1].U_vertices[i_vert][tt,:] 
+                x2 = players[2].X_vertices[j_vert][tt,:] 
+                u2 = players[2].U_vertices[j_vert][tt,:] 
+
+                # compute costs for player 1 and 2  
+                cost1 = stage_cost( x1, x2, u1, u2 )
+                cost2 = - stage_cost( x1, x2, u1, u2 )
+                push!( player1_cost_tt, cost1 ) 
+                push!( player2_cost_tt, cost2 ) 
+                
+            end 
+            player1_cost = mean( player1_cost_tt )
+            player2_cost = mean( player2_cost_tt )  
+
+            # save cost in matrix 
+            player1_cost_matrix[i_vert, j_vert] = player1_cost 
+            player2_cost_matrix[i_vert, j_vert] = player2_cost 
+
         end 
-        player1_cost = mean( player1_cost_tt )
-        player2_cost = mean( player2_cost_tt )  
-
-        # save cost in matrix 
-        player1_cost_matrix[i_vert, j_vert] = player1_cost 
-        player2_cost_matrix[i_vert, j_vert] = player2_cost 
-
     end 
+
+    return player1_cost_matrix, player2_cost_matrix 
 end 
+
+player1_cost_matrix, player2_cost_matrix = player_cost_matrices( players ) 
+
+
 
 ## ============================================ ##
 # solve mixed nash 
@@ -123,6 +134,7 @@ mixing_weights = let
 end 
 println( "mixing weights = ", mixing_weights ) 
 
+# sample from mixed nash 
 chosen = [sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights]
 println( "chosen = ", chosen ) 
 

@@ -145,3 +145,61 @@ function player_XU( params, rv_player, vertices, players = [], fig = nothing )
 end 
 
 export player_XU 
+
+
+## ============================================ ## 
+# zero-sum game 
+
+function player_cost_matrices( players ) 
+
+    # game cost 
+    function stage_cost(x1, x2, u1, u2)
+        sqrt(norm(x1[1:3] - x2[1:3]) + 0.1) + 0.1 * (norm(u1) - norm(u2))
+    end
+
+    # loop through time corresponding with control inputs 
+    us = eachindex( players[begin].U_vertices[begin][:,begin] )
+
+    # start with vertex 1 for players 1 and 2 
+    i_vert = 1 
+    j_vert = 1 
+
+    player1_cost_matrix = zeros(6, 6) 
+    player2_cost_matrix = zeros(6, 6) 
+
+    n_vertices = length( players[1].t_vertices ) 
+
+    for i_vert in 1 : n_vertices 
+        for j_vert in 1 : n_vertices 
+
+            # loop through time 
+            player1_cost_tt = [] 
+            player2_cost_tt = [] 
+            for tt in us 
+
+                x1 = players[1].X_vertices[i_vert][tt,:] 
+                u1 = players[1].U_vertices[i_vert][tt,:] 
+                x2 = players[2].X_vertices[j_vert][tt,:] 
+                u2 = players[2].U_vertices[j_vert][tt,:] 
+
+                # compute costs for player 1 and 2  
+                cost1 = stage_cost( x1, x2, u1, u2 )
+                cost2 = - stage_cost( x1, x2, u1, u2 )
+                push!( player1_cost_tt, cost1 ) 
+                push!( player2_cost_tt, cost2 ) 
+                
+            end 
+            player1_cost = mean( player1_cost_tt )
+            player2_cost = mean( player2_cost_tt )  
+
+            # save cost in matrix 
+            player1_cost_matrix[i_vert, j_vert] = player1_cost 
+            player2_cost_matrix[i_vert, j_vert] = player2_cost 
+
+        end 
+    end 
+
+    return player1_cost_matrix, player2_cost_matrix 
+end 
+
+export player_cost_matrices 

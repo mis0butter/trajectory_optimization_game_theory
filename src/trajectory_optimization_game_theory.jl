@@ -16,11 +16,12 @@ using JuMP: JuMP, @variable, @constraint, @objective
 using OSQP: OSQP 
 
 using StatsBase: ProbabilityWeights, sample
+using Statistics: mean  
 using Random: MersenneTwister
 
 # Tools
 using CSV
-using Suppressor: @suppress_err
+using Infiltrator 
 
 ## ============================================ ##
 
