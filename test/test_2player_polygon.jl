@@ -9,15 +9,21 @@ using Statistics: mean
 using StatsBase: ProbabilityWeights, sample
 using Random: MersenneTwister
 
-rng = MersenneTwister(1) 
 
 ## ============================================ ##
-# init params 
+# set up defaults 
+
+rng = MersenneTwister(1) 
 
 mu = 398600.4415
 r  = 6378.0
 kep0_P = [ r+420.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 20.0*pi/180 ]
 rv_0_P = kep2cart(kep0_P, mu) 
+
+
+## ============================================ ## 
+# init params 
+
 kep0_E = [ r+520.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
@@ -31,7 +37,7 @@ rv_E = vv2m(rv_E)
 
 rv_vec = rv_E[end,:] 
 
-# get vertices of polygon 
+# compute vertices of polygon 
 vertices = polygon_vertices( rv_vec ) 
 
 fig = plot_axes3d( )
@@ -40,73 +46,67 @@ fig = plot_orbit( rv_P, fig )
 
 ## ============================================ ##
 
+## ============================================ ## 
+# compute all possible Δv solutions 
+
+# segments 
+N = 10 
+
+
+## ============================================ ##
+
+function player_XU( rv_E, vertices, players = [], fig = nothing ) 
+
+    # init state and end velocity (probably doesn't matter) 
+    rv_0 = rv_E[1,:] 
+    v_f  = rv_E[end,4:6] 
+    # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+
+    X_vertices = [] 
+    U_vertices = [] 
+    t_vertices = [] 
+    for i in eachindex(vertices)  
+
+        rv_f   = [ vertices[i] ; v_f ]  
+        Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+        t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
+
+        # save hist 
+        push!( X_vertices, rv_hist ) 
+        push!( U_vertices, Δv_sol ) 
+        push!( t_vertices, t ) 
+
+        if !isnothing(fig)  
+            fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
+        end 
+
+    end 
+
+    push!( players, ( X_vertices = X_vertices, U_vertices = U_vertices, t_vertices = t_vertices ) ) 
+
+    return players, fig 
+end 
+
+## ============================================ ##
+
+
 # plot 
 fig = plot_axes3d( )
 fig = plot_orbit( rv_E, fig ) 
 # fig = plot_orbit( rv_P, fig ) 
 fig = plot_polygon( rv_vec, fig ) 
 
-# segments 
-N = 10 
+# function all_Δv_solns(  ) 
 
 # save player state and control hists 
 players = [] 
 
-# ----------------------- #
-# PLAYER ONE 
+# PLAYER ONE (EVADER) 
+players, fig = player_XU( rv_E, vertices, players, fig ) 
 
-# init state and end velocity (probably doesn't matter) 
-rv_0 = rv_0_E 
-v_f  = rv_E[end,4:6] 
-# Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+# PLAYER TWO (PURSUER) 
+players, fig = player_XU( rv_P, vertices, players, fig ) 
 
-X_vertices = [] 
-U_vertices = [] 
-t_vertices = [] 
-for i in eachindex(vertices)  
-
-    rv_f   = [ vertices[i] ; v_f ]  
-    Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
-    t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
-
-    # save hist 
-    push!( X_vertices, rv_hist ) 
-    push!( U_vertices, Δv_sol ) 
-    push!( t_vertices, t ) 
-
-    fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
-
-end 
-
-push!( players, ( X_vertices = X_vertices, U_vertices = U_vertices, t_vertices = t_vertices ) ) 
-
-# ----------------------- #
-# PLAYER TWO 
-
-# init state and end velocity (probably doesn't matter) 
-rv_0 = rv_0_P  
-v_f  = rv_E[end,4:6] 
-# Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
-
-X_vertices = [] 
-U_vertices = [] 
-t_vertices = [] 
-for i in eachindex(vertices)  
-
-    rv_f   = [ vertices[i] ; v_f ]  
-    Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
-    t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
-
-    # save hist 
-    push!( X_vertices, rv_hist ) 
-    push!( U_vertices, Δv_sol ) 
-    push!( t_vertices, t ) 
-
-    fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
-
-end 
-
-push!( players, ( X_vertices = X_vertices, U_vertices = U_vertices, t_vertices = t_vertices ) ) 
 
 ## ============================================ ## 
 # zero-sum game 
