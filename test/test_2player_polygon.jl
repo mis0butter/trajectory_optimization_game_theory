@@ -22,6 +22,11 @@ rv_0_E = kep2cart(kep0_E, mu)
 # tof for pursuer to catch up to evader 
 tof = 1000 
 
+# segments 
+N = 10 
+
+params = ( mu = mu, r = r, N = N, tof = tof )
+
 t_E, rv_E = propagate_2Body(rv_0_E, tof, mu, 1.0) 
 t_P, rv_P = propagate_2Body(rv_0_P, tof, mu, 1.0) 
 rv_P = vv2m(rv_P) 
@@ -36,43 +41,8 @@ fig = plot_axes3d( )
 fig = plot_orbit( rv_E, fig ) 
 fig = plot_orbit( rv_P, fig ) 
 
-# function player_XU( rv_player, vertices, players = [], fig = nothing ) 
-
-#     # init state and end velocity (probably doesn't matter) 
-#     rv_0 = rv_player[1,:] 
-#     v_f  = rv_player[end,4:6] 
-#     # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
-
-#     X_vertices = [] 
-#     U_vertices = [] 
-#     t_vertices = [] 
-#     for i in eachindex(vertices)  
-
-#         rv_f   = [ vertices[i] ; v_f ]  
-#         Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
-#         t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
-
-#         # save hist 
-#         push!( X_vertices, rv_hist ) 
-#         push!( U_vertices, Δv_sol ) 
-#         push!( t_vertices, t ) 
-
-#         if !isnothing(fig)  
-#             fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
-#         end 
-
-#     end 
-
-#     push!( players, ( X_vertices = X_vertices, U_vertices = U_vertices, t_vertices = t_vertices ) ) 
-
-#     return players, fig 
-# end 
-
 ## ============================================ ## 
 # compute all possible Δv solutions 
-
-# segments 
-N = 10 
 
 
 # plot 
@@ -87,10 +57,10 @@ fig = plot_polygon( rv_vec, fig )
 players = [] 
 
 # PLAYER ONE (EVADER) 
-players, fig = player_XU( rv_E, vertices, players, fig ) 
+players, fig = player_XU( params, rv_E, vertices, players, fig ) 
 
 # PLAYER TWO (PURSUER) 
-players, fig = player_XU( rv_P, vertices, players, fig ) 
+players, fig = player_XU( params, rv_P, vertices, players, fig ) 
 
 
 ## ============================================ ## 
