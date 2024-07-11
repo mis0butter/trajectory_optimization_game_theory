@@ -103,3 +103,40 @@ function solve_simplex_lp(A)
 end
 
 export solve_simplex_lp 
+
+## ============================================ ##
+
+# compute X, U, and t for a player 
+function player_XU( rv_player, vertices, players = [], fig = nothing ) 
+
+    # init state and end velocity (probably doesn't matter) 
+    rv_0 = rv_player[1,:] 
+    v_f  = rv_player[end,4:6] 
+    # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+
+    X_vertices = [] 
+    U_vertices = [] 
+    t_vertices = [] 
+    for i in eachindex(vertices)  
+
+        rv_f   = [ vertices[i] ; v_f ]  
+        Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+        t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
+
+        # save hist 
+        push!( X_vertices, rv_hist ) 
+        push!( U_vertices, Δv_sol ) 
+        push!( t_vertices, t ) 
+
+        if !isnothing(fig)  
+            fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
+        end 
+
+    end 
+
+    push!( players, ( X_vertices = X_vertices, U_vertices = U_vertices, t_vertices = t_vertices ) ) 
+
+    return players, fig 
+end 
+
+export player_XU 

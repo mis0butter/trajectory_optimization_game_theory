@@ -8,7 +8,7 @@ using Random: MersenneTwister
 
 
 ## ============================================ ##
-# set up defaults 
+# init params 
 
 rng = MersenneTwister(1) 
 
@@ -16,11 +16,6 @@ mu = 398600.4415
 r  = 6378.0
 kep0_P = [ r+420.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 20.0*pi/180 ]
 rv_0_P = kep2cart(kep0_P, mu) 
-
-
-## ============================================ ## 
-# init params 
-
 kep0_E = [ r+520.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
@@ -40,16 +35,6 @@ vertices = polygon_vertices( rv_vec )
 fig = plot_axes3d( )
 fig = plot_orbit( rv_E, fig ) 
 fig = plot_orbit( rv_P, fig ) 
-
-
-## ============================================ ## 
-# compute all possible Δv solutions 
-
-# segments 
-N = 10 
-
-
-## ============================================ ##
 
 # function player_XU( rv_player, vertices, players = [], fig = nothing ) 
 
@@ -83,7 +68,11 @@ N = 10
 #     return players, fig 
 # end 
 
-## ============================================ ##
+## ============================================ ## 
+# compute all possible Δv solutions 
+
+# segments 
+N = 10 
 
 
 # plot 
