@@ -29,7 +29,7 @@ include("Dyn/Dyn.jl")
 include("Opt/Opt.jl") 
 include("Utils/Utils.jl")
 include("Lambert/Lambert.jl") 
-include("Opt/matrix_game_solver.jl")
+include("game_theory/matrix_game_solver.jl")
 
 ## ============================================ ##
 #  Sub-Module Includes
