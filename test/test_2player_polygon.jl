@@ -55,11 +55,11 @@ N = 10
 
 ## ============================================ ##
 
-function player_XU( rv_E, vertices, players = [], fig = nothing ) 
+function player_XU( rv_player, vertices, players = [], fig = nothing ) 
 
     # init state and end velocity (probably doesn't matter) 
-    rv_0 = rv_E[1,:] 
-    v_f  = rv_E[end,4:6] 
+    rv_0 = rv_player[1,:] 
+    v_f  = rv_player[end,4:6] 
     # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
 
     X_vertices = [] 
