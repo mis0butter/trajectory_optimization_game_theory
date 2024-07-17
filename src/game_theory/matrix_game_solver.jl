@@ -126,17 +126,21 @@ export solve_simplex_lp
 
 ## ============================================ ##
 
-# compute X, U, and t for a player 
-function player_XU( params, vertices, players ) 
+# compute X, U, and t for a player (optimization) 
+function players_XU( params, game, players ) 
+
+    # get vertices 
+    rv_ref_polygon = game.rv_ref_polygon[end]  
+    vertices = polygon_vertices( rv_ref_polygon ) 
 
     for ii in eachindex(players) 
 
         p = players[ii] 
-        rv_player = p.rv_0 
+        rv_0_hist = p.rv_0_hist  
 
         # init state and end velocity (probably doesn't matter) 
-        rv_0 = rv_player[1,:] 
-        v_f  = rv_player[end,4:6] 
+        rv_0 = rv_0_hist[1,:] 
+        v_f  = rv_0_hist[end,4:6] 
     
         # get params 
         tof = params.tof ; N = params.N ; mu  = params.mu 
@@ -159,13 +163,13 @@ function player_XU( params, vertices, players )
     return players 
 end 
 
-export player_XU 
+export players_XU 
 
 
 ## ============================================ ## 
 # zero-sum game 
 
-function player_cost_matrices( players ) 
+function players_cost_matrices( players ) 
 
     # game cost 
     function stage_cost(x1, x2, u1, u2)
@@ -220,7 +224,7 @@ function player_cost_matrices( players )
     return players 
 end 
 
-export player_cost_matrices 
+export players_cost_matrices 
 
 
 ## ============================================ ##
@@ -244,6 +248,28 @@ function choose_weights( players, rng )
 end 
 
 export choose_weights 
+
+
+## ============================================ ##
+
+# compute X, U, and t for a player 
+function players_states( params, game, players, rng ) 
+
+    # compute X, U, and t for both players (optimization)   
+    players = players_XU( params, game, players ) 
+
+    # compute cost matrices 
+    players = players_cost_matrices( players ) 
+
+    # solve mixed nash 
+    players = choose_weights( players, rng )
+
+    return players 
+end 
+
+export players_states 
+
+
 
 
 

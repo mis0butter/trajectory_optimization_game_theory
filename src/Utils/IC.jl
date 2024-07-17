@@ -2,6 +2,64 @@ using LinearAlgebra
 
 ## ============================================ ##
 
+function init_game(  ) 
+
+    # orbit parameters of pursuer and evader 
+    tof = 1000          # tof for pursuer to catch up to evader  
+    N   = 10            # segments 
+    mu  = 398600.4415   # gravitational parameter 
+    r   = 6378.0        # Earth radius 
+    
+    # start time 
+    tt = 0 
+    tt_replan = 5       # replan every 5 * tof/N (100) seconds!!! 
+    tt_step   = tt_replan * tof / N 
+    
+    # orbital elements 
+    kep0_P = [ r+420.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 20.0*pi/180 ]
+    kep0_E = [ r+520.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
+    rv_0_E = kep2cart(kep0_E, mu) 
+    rv_0_P = kep2cart(kep0_P, mu) 
+    
+    t_E, rv_E_hist = propagate_2Body(rv_0_E, tof, mu, 1.0) 
+    t_P, rv_P_hist = propagate_2Body(rv_0_P, tof, mu, 1.0) 
+    rv_E_hist = vv2m(rv_E_hist) 
+    rv_P_hist = vv2m(rv_P_hist) 
+    
+    # save reference orbit 
+    kep0_ref_E = copy( kep0_E ) 
+    
+    # compute rv_ref for vertices of polygon 
+    rv_ref_polygon = rv_E_hist[end,:] 
+    
+    # save player state and control hists 
+    p = player_struct( [], [], [], [], [], [], [] ) 
+    players = [ p, deepcopy(p) ]  
+    
+    players[1].rv_0_hist = rv_E_hist 
+    players[2].rv_0_hist = rv_P_hist 
+    
+    # init game 
+    game = game_struct( [], [], [], [], [], [], [], [] ) 
+    push!( game.tt, tt ) 
+    push!( game.k_replan, 1 )
+    push!( game.rv_E, rv_0_E ) 
+    push!( game.rv_P, rv_0_P ) 
+    push!( game.rv_ref_E, rv_0_E ) 
+    push!( game.rv_ref_polygon, rv_ref_polygon )  
+    
+    # game parameters 
+    params = ( mu = mu, r = r, N = N, tof = tof, tt_replan = tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E ) 
+
+
+    return params, players, game 
+end 
+
+export init_game 
+
+
+## ============================================ ##
+
 "Create dummy IC for lambert transfer and then breaking up into smaller Δv. for testing purposes only!!!"
 function lambert_IC() 
 

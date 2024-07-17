@@ -1,12 +1,12 @@
 
 mutable struct player_struct 
-    X 
-    U 
-    t 
-    cost 
-    weights 
-    chosen 
-    rv_0 
+    X           # contains candidate trajectories to each vertex 
+    U           # contains candidate control inputs to each vertex 
+    t           # contains candidate times to each vertex 
+    cost        # cost matrix 
+    weights     # weights for each vertex 
+    chosen      # chosen vertex 
+    rv_0_hist   # initial trajectory 
 end 
 
 export player_struct 
@@ -25,9 +25,14 @@ export test_struct
 
 mutable struct game_struct 
 
-    tt          # timetag of the game 
-    p1_state 
-    p2_state 
+    tt              # timetag of the game 
+    k_replan        # replan index 
+    rv_E            # current vector for evader 
+    rv_P            # current vector for pursuer 
+    rv_ref_E        # reference vector for evader 
+    rv_ref_polygon  # reference vector for polygon  
+    p1_state        # player 1 state 
+    p2_state        # player 2 state 
 
 end 
 
