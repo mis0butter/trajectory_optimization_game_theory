@@ -22,33 +22,47 @@ push!( game.p2_state, players[2] )
 
 
 ## ============================================ ##
-
-# now that chosen has been sampled, choose the players[ii].X_vertices, players[ii].U_vertices, and players[ii].t_vertices 
-
-# propagate time and k_idx forward 
-tt = game.tt[end] + params.tt_step 
-push!( game.tt, tt ) 
-push!( game.k_replan, game.k_replan[end] + 1 )  
+# set up for next game step 
 
 # propagate SC state forward 
-p1 = game.p1_state[ game.k_replan[ end - 1 ] ] 
-p2 = game.p2_state[ game.k_replan[ end - 1 ] ] 
+p1 = game.p1_state[ end ] 
+p2 = game.p2_state[ end ] 
 
-rv_0_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ]
-rv_0_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ]
+# get current state 
+rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ]
+rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ]
 
-t_E, rv_E_hist = propagate_2Body(rv_0_E, tof, mu, 1.0) 
-t_P, rv_P_hist = propagate_2Body(rv_0_P, tof, mu, 1.0) 
+t_E, rv_E_hist = propagate_2Body(rv_E, tof, mu, 1.0) 
+t_P, rv_P_hist = propagate_2Body(rv_P, tof, mu, 1.0) 
 rv_P_hist = vv2m(rv_P_hist) 
 rv_E_hist = vv2m(rv_E_hist) 
 
-# compute vertices of polygon 
-rv_vec   = rv_E_hist[end,:] 
-vertices = polygon_vertices( rv_vec ) 
+# compute rv_ref for vertices of polygon - NEEDS TO BE UPDATED!!!! 
+rv_ref_polygon = rv_E_hist[end,:] 
+
+# save player state and control hists 
+p = player_struct( [], [], [], [], [], [], [] ) 
+players = [ p, deepcopy(p) ]  
+
+players[1].rv_0_hist = rv_E_hist 
+players[2].rv_0_hist = rv_P_hist 
+
+# propagate time and k_idx forward 
+push!( game.tt, game.tt[end] + params.tt_step ) 
+push!( game.k_replan, game.k_replan[end] + 1 )  
+push!( game.rv_E, rv_E ) 
+push!( game.rv_P, rv_P ) 
+push!( game.rv_ref_E, rv_E ) # THIS NEEDS TO BE UPDATED TO REFERENCE ORBIT !!! 
+push!( game.rv_ref_polygon, rv_ref_polygon )  
 
 ## ============================================ ##
 
+# compute all possible Δv solutions 
+players = players_states( params, game, players, rng ) 
 
+# save player state in game 
+push!( game.p1_state, players[1] ) 
+push!( game.p2_state, players[2] )  
 
 
 ## ============================================ ## 
