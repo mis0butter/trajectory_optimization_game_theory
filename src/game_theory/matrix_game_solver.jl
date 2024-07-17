@@ -2,6 +2,26 @@ abstract type FiniteGameSolver end
 
 ## ============================================ ##
 
+abstract type AbstractTrajectoryGenerator end
+export AbstractTrajectoryGenerator 
+
+## ============================================ ##
+
+struct FiniteTrajectoryGameSolver{TG,TT<:AbstractTrajectoryGenerator,TH,TR,TF<:FiniteGameSolver}
+    "Underlying trajectory game to be solved."
+    game::TG
+    "A trajectory generator to be used by all players."
+    trajectory_generator::TT
+    "The number of time steps to plan into the future."
+    planning_horizon::TH
+    "A random number generator to generate non-deterministic strategies."
+    rng::TR
+    "The solver for the high-level finite game."
+    finite_game_solver::TF
+end
+
+## ============================================ ##
+
 """
     solve_mixed_nash(solver, A)
 The entry-point to a game solver.
@@ -115,13 +135,11 @@ function player_XU( params, rv_player, vertices, players = [], fig = nothing )
     # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
 
     # get params 
-    tof = params.tof 
-    N   = params.N 
-    mu  = params.mu 
+    tof = params.tof ; N = params.N ; mu  = params.mu 
 
-    X_vertices = [] 
-    U_vertices = [] 
-    t_vertices = [] 
+    # init player: X, U, t, cost, chosen, weights 
+    p = player_struct( [], [], [], [], [], [] ) 
+
     for i in eachindex(vertices)  
 
         rv_f   = [ vertices[i] ; v_f ]  
@@ -129,9 +147,9 @@ function player_XU( params, rv_player, vertices, players = [], fig = nothing )
         t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
 
         # save hist 
-        push!( X_vertices, rv_hist ) 
-        push!( U_vertices, Δv_sol ) 
-        push!( t_vertices, t ) 
+        push!(p.X, rv_hist) 
+        push!(p.U, Δv_sol) 
+        push!(p.t, t) 
 
         if !isnothing(fig)  
             fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
@@ -139,7 +157,7 @@ function player_XU( params, rv_player, vertices, players = [], fig = nothing )
 
     end 
 
-    push!( players, ( X_vertices = X_vertices, U_vertices = U_vertices, t_vertices = t_vertices ) ) 
+    push!( players, p ) 
 
     return players, fig 
 end 
@@ -158,7 +176,7 @@ function player_cost_matrices( players )
     end
 
     # loop through time corresponding with control inputs 
-    us = eachindex( players[begin].U_vertices[begin][:,begin] )
+    U_idx = eachindex( players[1].U[1][:,1] )
 
     # start with vertex 1 for players 1 and 2 
     i_vert = 1 
@@ -167,7 +185,7 @@ function player_cost_matrices( players )
     player1_cost_matrix = zeros(6, 6) 
     player2_cost_matrix = zeros(6, 6) 
 
-    n_vertices = length( players[1].t_vertices ) 
+    n_vertices = length( players[begin].t ) 
 
     for i_vert in 1 : n_vertices 
         for j_vert in 1 : n_vertices 
@@ -175,12 +193,12 @@ function player_cost_matrices( players )
             # loop through time 
             player1_cost_tt = [] 
             player2_cost_tt = [] 
-            for tt in us 
+            for ii in U_idx 
 
-                x1 = players[1].X_vertices[i_vert][tt,:] 
-                u1 = players[1].U_vertices[i_vert][tt,:] 
-                x2 = players[2].X_vertices[j_vert][tt,:] 
-                u2 = players[2].U_vertices[j_vert][tt,:] 
+                x1 = players[1].X[i_vert][ii,:] 
+                u1 = players[1].U[i_vert][ii,:] 
+                x2 = players[2].X[j_vert][ii,:] 
+                u2 = players[2].U[j_vert][ii,:] 
 
                 # compute costs for player 1 and 2  
                 cost1 = stage_cost( x1, x2, u1, u2 )

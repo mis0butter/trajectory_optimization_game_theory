@@ -1,5 +1,6 @@
 include("plotting.jl")
 include("IC.jl") 
+include("structs.jl")
 
 ## ============================================ ##
 
