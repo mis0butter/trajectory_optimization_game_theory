@@ -127,39 +127,36 @@ export solve_simplex_lp
 ## ============================================ ##
 
 # compute X, U, and t for a player 
-function player_XU( params, rv_player, vertices, players = [], fig = nothing ) 
+function player_XU( params, vertices, players ) 
 
-    # init state and end velocity (probably doesn't matter) 
-    rv_0 = rv_player[1,:] 
-    v_f  = rv_player[end,4:6] 
-    # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
+    for ii in eachindex(players) 
 
-    # get params 
-    tof = params.tof ; N = params.N ; mu  = params.mu 
+        p = players[ii] 
+        rv_player = p.rv_0 
 
-    # init player: X, U, t, cost, chosen, weights 
-    p = player_struct( [], [], [], [], [], [] ) 
-
-    for i in eachindex(vertices)  
-
-        rv_f   = [ vertices[i] ; v_f ]  
-        Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
-        t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
-
-        # save hist 
-        push!(p.X, rv_hist) 
-        push!(p.U, Δv_sol) 
-        push!(p.t, t) 
-
-        if !isnothing(fig)  
-            fig = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
+        # init state and end velocity (probably doesn't matter) 
+        rv_0 = rv_player[1,:] 
+        v_f  = rv_player[end,4:6] 
+    
+        # get params 
+        tof = params.tof ; N = params.N ; mu  = params.mu 
+    
+        for jj in eachindex(vertices)  
+    
+            rv_f   = [ vertices[jj] ; v_f ]  
+            Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+            t, rv_hist = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
+    
+            # save hist 
+            push!(p.X, rv_hist) 
+            push!(p.U, Δv_sol) 
+            push!(p.t, t) 
+    
         end 
 
     end 
 
-    push!( players, p ) 
-
-    return players, fig 
+    return players 
 end 
 
 export player_XU 
@@ -217,7 +214,36 @@ function player_cost_matrices( players )
         end 
     end 
 
-    return player1_cost_matrix, player2_cost_matrix 
+    players[1].cost = player1_cost_matrix   
+    players[2].cost = player2_cost_matrix   
+
+    return players 
 end 
 
 export player_cost_matrices 
+
+
+## ============================================ ##
+
+function choose_weights( players, rng ) 
+
+    # mixing weights - ZERO SUM GAME!!! 
+    mixing_weights = let
+        sol = solve_mixed_nash( players[1].cost ) 
+        (; sol.x, sol.y) 
+    end 
+    players[1].weights = mixing_weights[1] 
+    players[2].weights = mixing_weights[2] 
+
+    # sample from mixed nash 
+    chosen = [sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights] 
+    players[1].chosen = chosen[1] 
+    players[2].chosen = chosen[2] 
+
+    return players 
+end 
+
+export choose_weights 
+
+
+

@@ -6,9 +6,10 @@ mutable struct player_struct
     cost 
     weights 
     chosen 
+    rv_0 
 end 
 
-export player 
+export player_struct 
 
 ## ============================================ ##
 
