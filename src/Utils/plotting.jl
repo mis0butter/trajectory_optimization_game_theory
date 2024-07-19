@@ -317,12 +317,13 @@ export plot_vector3d
 
 "Plot propagated orbit with delta v using GLMakie "
 function plot_prop_Δv(  
-    rv_0,           # initial state vector 
-    Δv_sol,         # [N,3] Δv vector 
-    N,              # number of segments 
-    tof_N_sol,      # time of flight for each segment 
-    mu  = 1.0,      # gravitational parameter 
-    fig = nothing,  # figure handle 
+    rv_0,               # initial state vector 
+    Δv_sol,             # [N,3] Δv vector 
+    N,                  # number of segments 
+    tof_N_sol,          # time of flight for each segment 
+    mu  = 1.0,          # gravitational parameter 
+    fig = nothing,      # figure handle 
+    plot_vector = true, # plot Δv vector 
 )
 
     if isnothing(fig) 
@@ -340,12 +341,16 @@ function plot_prop_Δv(
     fig = plot_orbit( rv_2Body, fig ) 
     # fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig ) 
 
-    # set up vector plotting 
-    nodes_N = rv_kepler[1:N, 1:3] 
-    xyz     = copy(nodes_N) 
-    uvw     = copy(2000 * Δv_sol)
+    if plot_vector 
 
-    fig = plot_vector3d( xyz, uvw, fig, 100 ) 
+        # set up vector plotting 
+        nodes_N = rv_kepler[1:N, 1:3] 
+        xyz     = copy(nodes_N) 
+        uvw     = copy(2000 * Δv_sol)
+
+        fig = plot_vector3d( xyz, uvw, fig, 100 ) 
+
+    end
 
     return fig 
 end 
@@ -427,5 +432,104 @@ function plot_polygon(
 end 
 
 export plot_polygon 
+
+## ============================================ ## 
+
+""" 
+Plot a candidate trajectory using GLMakie 
+
+Example usage: 
+
+    x = collect( range(-pi, pi, 100) ) 
+    y = sin.(x) 
+    z = cos.(x) 
+
+    fig = plot_traj_cand( [x y z] )
+"""
+
+function plot_traj_cand( 
+    rv,                 # [N,3] matrix of state vectors 
+    color  = 1,         # color  
+    alpha  = 1,         # transparency 
+    linestyle = :dash,  # line style 
+    fig    = nothing,   # figure handle 
+) 
+
+    if isnothing(fig) 
+        fig = Figure() 
+        Axis3(fig[1, 1]) 
+    end 
+
+    # plot orbit 
+    lines!( rv[:,1], rv[:,2], rv[:,3]; linewidth = 2, color = color, colorrange = (1,10), alpha = alpha, linestyle = linestyle ) 
+    scatter!( rv[1,1], rv[1,2], rv[1,3]; marker = :circle, markersize = 10, color = :black ) 
+    # scatter!( rv[end,1], rv[end,2], rv[end,3]; marker = :utriangle, markersize = 10, color = :black ) 
+
+    Auto() 
+
+    return fig 
+end 
+    
+export plot_traj_cand 
+
+## ============================================ ##
+
+"Plot propagated orbit with delta v using GLMakie "
+function plot_Δv_weights(  
+    game,               # game struct 
+    params,             # struct of parameters 
+    k,                  # k_replan step of the game      
+    fig = nothing,      # figure handle 
+)
+
+    if isnothing(fig) 
+        fig = Figure() 
+        Axis3(fig[1, 1]) 
+    end 
+
+    n_vertices = size( game.p1_state[1].cost , 1 ) 
+
+    # get params 
+    N  = params.N 
+    mu = params.mu 
+    tof_N_sol = params.tof / params.N 
+
+    p1_chosen = game.p1_state[k].chosen 
+    p2_chosen = game.p2_state[k].chosen 
+
+    for i in 1 : n_vertices  
+        
+        # ----------------------- #
+        # propagate 2 body and plot 
+
+        rv_0   = game.p1_state[k].rv_0_hist[1,:] 
+        Δv_sol = game.p1_state[k].U[i] 
+        weight = game.p1_state[k].weights[i] 
+
+        t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
+        if i == p1_chosen 
+            fig = plot_traj_cand( rv_2Body, 1, 1, :solid, fig ) 
+        end 
+        fig = plot_traj_cand( rv_2Body, 1, weight, :dash, fig ) 
+        
+        # ----------------------- #
+        # propagate 2 body and plot 
+
+        rv_0   = game.p2_state[k].rv_0_hist[1,:] 
+        Δv_sol = game.p2_state[k].U[i] 
+        weight = game.p2_state[k].weights[i] 
+
+        t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
+        if i == p2_chosen 
+            fig = plot_traj_cand( rv_2Body, 5, 1, :solid, fig ) 
+        end 
+        fig = plot_traj_cand( rv_2Body, 5, weight, :dash, fig ) 
+
+    end 
+
+    return fig 
+end 
+
+export plot_Δv_weights 
 
 

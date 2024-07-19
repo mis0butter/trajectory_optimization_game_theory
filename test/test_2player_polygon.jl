@@ -62,20 +62,26 @@ players = players_states( params, game, players, rng )
 
 # save player state in game 
 push!( game.p1_state, players[1] ) 
-push!( game.p2_state, players[2] )  
+push!( game.p2_state, players[2] ) 
 
 
+## ============================================ ##
 ## ============================================ ## 
 # plotting stuff 
 
+# k_replan step of the game 
+k = 1 
+
+rv_E_hist = game.p1_state[k].rv_0_hist 
+rv_P_hist = game.p2_state[k].rv_0_hist 
+
+# plot 
 # fig = plot_axes3d(  ) 
 # fig = plot_orbit( rv_E_hist, fig ) 
 # fig = plot_orbit( rv_P_hist, fig ) 
+fig = plot_polygon( game.rv_ref_polygon[k], fig ) 
 
-# # plot 
-# fig = plot_axes3d(  )
-# fig = plot_orbit( rv_E_hist, fig ) 
-# fig = plot_orbit( rv_P_hist, fig ) 
-# fig = plot_polygon( rv_ref_polygon, fig ) 
+fig = plot_Δv_weights( game, params, k, fig )      
+
 
 
