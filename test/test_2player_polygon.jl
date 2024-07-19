@@ -76,11 +76,10 @@ rv_E_hist = game.p1_state[k].rv_0_hist
 rv_P_hist = game.p2_state[k].rv_0_hist 
 
 # plot 
-# fig = plot_axes3d(  ) 
+fig = plot_axes3d(  ) 
 # fig = plot_orbit( rv_E_hist, fig ) 
 # fig = plot_orbit( rv_P_hist, fig ) 
 fig = plot_polygon( game.rv_ref_polygon[k], fig ) 
-
 fig = plot_Δv_weights( game, params, k, fig )      
 
 

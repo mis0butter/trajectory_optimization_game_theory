@@ -197,7 +197,7 @@ function plot_scatter3d(
     end 
 
     if isequal(length(z), 1)
-        GLMakie.scatter!( x, y, z, marker = marker, markersize = 20, color = color, strokecolor = color ) 
+        GLMakie.scatter!( x, y, z, marker = marker, markersize = 12, color = color, strokecolor = color ) 
         if !isnothing(text) 
             text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
         end
@@ -452,6 +452,7 @@ function plot_traj_cand(
     color  = 1,         # color  
     alpha  = 1,         # transparency 
     linestyle = :dash,  # line style 
+    linewidth = 2,      # line width 
     fig    = nothing,   # figure handle 
 ) 
 
@@ -461,8 +462,8 @@ function plot_traj_cand(
     end 
 
     # plot orbit 
-    lines!( rv[:,1], rv[:,2], rv[:,3]; linewidth = 2, color = color, colorrange = (1,10), alpha = alpha, linestyle = linestyle ) 
-    scatter!( rv[1,1], rv[1,2], rv[1,3]; marker = :circle, markersize = 10, color = :black ) 
+    lines!( rv[:,1], rv[:,2], rv[:,3]; linewidth = linewidth, color = color, alpha = alpha, linestyle = linestyle ) 
+    scatter!( rv[1,1], rv[1,2], rv[1,3]; marker = :circle, markersize = 20, color = color ) 
     # scatter!( rv[end,1], rv[end,2], rv[end,3]; marker = :utriangle, markersize = 10, color = :black ) 
 
     Auto() 
@@ -494,8 +495,8 @@ function plot_Δv_weights(
     mu = params.mu 
     tof_N_sol = params.tof / params.N 
 
-    p1_chosen = game.p1_state[k].chosen 
-    p2_chosen = game.p2_state[k].chosen 
+    p1_chosen = game.p1_state[k].chosen ; p1_color = :blue 
+    p2_chosen = game.p2_state[k].chosen ; p2_color = :red 
 
     for i in 1 : n_vertices  
         
@@ -507,10 +508,10 @@ function plot_Δv_weights(
         weight = game.p1_state[k].weights[i] 
 
         t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
+        fig = plot_traj_cand( rv_2Body, p1_color, weight, :dash, 5, fig ) 
         if i == p1_chosen 
-            fig = plot_traj_cand( rv_2Body, 1, 1, :solid, fig ) 
+            fig = plot_traj_cand( rv_2Body, p1_color, weight, :solid, 2, fig ) 
         end 
-        fig = plot_traj_cand( rv_2Body, 1, weight, :dash, fig ) 
         
         # ----------------------- #
         # propagate 2 body and plot 
@@ -520,10 +521,10 @@ function plot_Δv_weights(
         weight = game.p2_state[k].weights[i] 
 
         t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
+        fig = plot_traj_cand( rv_2Body, p2_color, weight, :dash, 5, fig ) 
         if i == p2_chosen 
-            fig = plot_traj_cand( rv_2Body, 5, 1, :solid, fig ) 
+            fig = plot_traj_cand( rv_2Body, p2_color, weight, :solid, 2, fig ) 
         end 
-        fig = plot_traj_cand( rv_2Body, 5, weight, :dash, fig ) 
 
     end 
 
