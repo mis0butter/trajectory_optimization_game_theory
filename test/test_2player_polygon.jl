@@ -75,6 +75,14 @@ k = 1
 rv_E_hist = game.p1_state[k].rv_0_hist 
 rv_P_hist = game.p2_state[k].rv_0_hist 
 
+# propagate SC state forward 
+p1 = game.p1_state[ k ] 
+p2 = game.p2_state[ k ] 
+
+# get current state 
+rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ]
+rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ]
+
 # plot 
 fig = plot_axes3d(  ) 
 # fig = plot_orbit( rv_E_hist, fig ) 
@@ -82,5 +90,15 @@ fig = plot_axes3d(  )
 fig = plot_polygon( game.rv_ref_polygon[k], fig ) 
 fig = plot_Δv_weights( game, params, k, fig )      
 
+for i in 1 : params.tt_replan 
 
+    # plot player 1 
+    rv_E = p1.X[ p1.chosen ][ i, : ] 
+    fig2 = plot_scatter3d( rv_E[1], rv_E[2], rv_E[3], fig, :circle, :blue ) 
+
+    # plot player 2 
+    rv_P = p2.X[ p2.chosen ][ i, : ] 
+    fig2 = plot_scatter3d( rv_P[1], rv_P[2], rv_P[3], fig2, :circle, :red ) 
+
+end 
 
