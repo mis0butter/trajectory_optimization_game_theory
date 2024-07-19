@@ -50,6 +50,7 @@ function plot_line3d(
     y,              # [N,1] grid of points 
     z,              # [N,1] grid of points  
     fig = nothing,  # figure handle 
+    color = :black   # line color 
 ) 
 
     if isnothing(fig) 
@@ -58,7 +59,7 @@ function plot_line3d(
     end 
 
     # plot orbit 
-    lines!( x, y, z; linewidth = 2 ) 
+    lines!( x, y, z; linewidth = 2, alpha = 0.5, color = color  ) 
 
     return fig 
 end 
@@ -510,7 +511,7 @@ function plot_Δv_weights(
         t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
         fig = plot_traj_cand( rv_2Body, p1_color, weight, :dash, 5, fig ) 
         if i == p1_chosen 
-            fig = plot_traj_cand( rv_2Body, p1_color, weight, :solid, 2, fig ) 
+            fig = plot_traj_cand( rv_2Body, p1_color, weight, :dot, 2, fig ) 
         end 
         
         # ----------------------- #
@@ -523,7 +524,7 @@ function plot_Δv_weights(
         t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_sol, N, tof_N_sol, mu ) 
         fig = plot_traj_cand( rv_2Body, p2_color, weight, :dash, 5, fig ) 
         if i == p2_chosen 
-            fig = plot_traj_cand( rv_2Body, p2_color, weight, :solid, 2, fig ) 
+            fig = plot_traj_cand( rv_2Body, p2_color, weight, :dot, 2, fig ) 
         end 
 
     end 
