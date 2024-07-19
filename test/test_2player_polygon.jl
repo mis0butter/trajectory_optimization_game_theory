@@ -94,11 +94,16 @@ for i in 1 : params.tt_replan
 
     # plot player 1 
     rv_E = p1.X[ p1.chosen ][ i, : ] 
-    fig2 = plot_scatter3d( rv_E[1], rv_E[2], rv_E[3], fig, :circle, :blue ) 
+    fig2 = plot_scatter3d( rv_E[1], rv_E[2], rv_E[3], fig, :circle, :blue, 20 ) 
 
     # plot player 2 
     rv_P = p2.X[ p2.chosen ][ i, : ] 
-    fig2 = plot_scatter3d( rv_P[1], rv_P[2], rv_P[3], fig2, :circle, :red ) 
+    fig2 = plot_scatter3d( rv_P[1], rv_P[2], rv_P[3], fig2, :circle, :red, 20 ) 
 
 end 
+
+## ============================================ ##
+
+k = 1 
+fig = plot_p1_p2_traj( game, params, k )  
 

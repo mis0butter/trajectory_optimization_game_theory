@@ -189,6 +189,7 @@ function plot_scatter3d(
     fig    = nothing,       # figure handle 
     marker = :utriangle,    # marker type 
     color  = :black,        # marker color 
+    markersize = 12,        # marker size 
     text   = nothing,       # text to add to plot 
 ) 
 
@@ -198,7 +199,7 @@ function plot_scatter3d(
     end 
 
     if isequal(length(z), 1)
-        GLMakie.scatter!( x, y, z, marker = marker, markersize = 12, color = color, strokecolor = color ) 
+        GLMakie.scatter!( x, y, z, marker = marker, markersize = markersize, color = color, strokecolor = color ) 
         if !isnothing(text) 
             text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
         end
@@ -533,5 +534,47 @@ function plot_Δv_weights(
 end 
 
 export plot_Δv_weights 
+
+## ============================================ ##
+
+function plot_p1_p2_traj( game, params, k ) 
+
+    # k_replan step of the game 
+    k = 1 
+
+    rv_E_hist = game.p1_state[k].rv_0_hist 
+    rv_P_hist = game.p2_state[k].rv_0_hist 
+
+    # propagate SC state forward 
+    p1 = game.p1_state[ k ] 
+    p2 = game.p2_state[ k ] 
+
+    # get current state 
+    rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ]
+    rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ]
+
+    # plot 
+    fig = plot_axes3d(  ) 
+    # fig = plot_orbit( rv_E_hist, fig ) 
+    # fig = plot_orbit( rv_P_hist, fig ) 
+    fig = plot_polygon( game.rv_ref_polygon[k], fig ) 
+    fig = plot_Δv_weights( game, params, k, fig )      
+
+    for i in 1 : params.tt_replan 
+
+        # plot player 1 
+        rv_E = p1.X[ p1.chosen ][ i, : ] 
+        fig = plot_scatter3d( rv_E[1], rv_E[2], rv_E[3], fig, :circle, :blue, 20 ) 
+
+        # plot player 2 
+        rv_P = p2.X[ p2.chosen ][ i, : ] 
+        fig = plot_scatter3d( rv_P[1], rv_P[2], rv_P[3], fig, :circle, :red, 20 ) 
+
+    end 
+
+    return fig 
+end 
+
+export plot_p1_p2_traj 
 
 
