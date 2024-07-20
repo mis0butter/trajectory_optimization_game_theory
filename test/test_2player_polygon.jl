@@ -32,6 +32,10 @@ p2 = game.p2_state[ end ]
 rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ]
 rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ]
 
+kep_E = kep2cart( rv_E, params.mu ) 
+
+## ============================================ ##
+
 t_E, rv_E_hist = propagate_2Body(rv_E, tof, mu, 1.0) 
 t_P, rv_P_hist = propagate_2Body(rv_P, tof, mu, 1.0) 
 rv_P_hist = vv2m(rv_P_hist) 

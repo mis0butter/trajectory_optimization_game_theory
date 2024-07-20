@@ -130,7 +130,7 @@ export solve_simplex_lp
 function players_XU( params, game, players ) 
 
     # get vertices 
-    rv_ref_polygon = game.rv_ref_polygon[end]  
+    rv_ref_polygon = game.rv_ref_E_polygon[ end ][ end,: ]  
     vertices = polygon_vertices( rv_ref_polygon ) 
 
     for ii in eachindex(players) 

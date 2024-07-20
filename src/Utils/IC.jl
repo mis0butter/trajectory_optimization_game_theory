@@ -29,8 +29,8 @@ function init_game(  )
     # save reference orbit 
     kep0_ref_E = copy( kep0_E ) 
     
-    # compute rv_ref for vertices of polygon 
-    rv_ref_polygon = rv_E_hist[end,:] 
+    # save rv_ref from E to position for vertices of polygon 
+    rv_ref_E_polygon = rv_E_hist 
     
     # save player state and control hists 
     p = player_struct( [], [], [], [], [], [], [] ) 
@@ -40,13 +40,12 @@ function init_game(  )
     players[2].rv_0_hist = rv_P_hist 
     
     # init game 
-    game = game_struct( [], [], [], [], [], [], [], [] ) 
+    game = game_struct( [], [], [], [], [], [], [] ) 
     push!( game.tt, tt ) 
     push!( game.k_replan, 1 )
     push!( game.rv_E, rv_0_E ) 
     push!( game.rv_P, rv_0_P ) 
-    push!( game.rv_ref_E, rv_0_E ) 
-    push!( game.rv_ref_polygon, rv_ref_polygon )  
+    push!( game.rv_ref_E_polygon, rv_ref_E_polygon )  
     
     # game parameters 
     params = ( mu = mu, r = r, N = N, tof = tof, tt_replan = tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E ) 
