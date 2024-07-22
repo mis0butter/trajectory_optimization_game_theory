@@ -557,7 +557,7 @@ function plot_p1_p2_traj( game, params, k )
     fig = plot_axes3d(  ) 
     # fig = plot_orbit( rv_E_hist, fig ) 
     # fig = plot_orbit( rv_P_hist, fig ) 
-    fig = plot_polygon( game.rv_ref_polygon[k], fig ) 
+    fig = plot_polygon( game.rv_ref_E_polygon[k][end,:], fig ) 
     fig = plot_Δv_weights( game, params, k, fig )      
 
     for i in 1 : params.tt_replan 

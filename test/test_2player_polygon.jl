@@ -25,7 +25,7 @@ push!( game.p2_state, players[2] )
 ## ============================================ ##
 # set up for next game step 
 
-# propagate SC state forward 
+# propagate current SC state forward 
 p1 = game.p1_state[ end ] 
 p2 = game.p2_state[ end ] 
 
