@@ -4,6 +4,21 @@ using Debugger
 
 ## ============================================ ##
 
+function prop_rv_E_P( rv_E, rv_P, params ) 
+
+    t_E, rv_E_hist = propagate_2Body(rv_E, params.tof, params.mu, 1.0) 
+    t_P, rv_P_hist = propagate_2Body(rv_P, params.tof, params.mu, 1.0) 
+    rv_P_hist = vv2m(rv_P_hist) 
+    rv_E_hist = vv2m(rv_E_hist) 
+
+    return t_E, rv_E_hist, t_P, rv_P_hist 
+end 
+
+export prop_rv_E_P 
+
+
+## ============================================ ##
+
 "propagate orbit based on given initial conditions, time, and gravitational parameter" 
 function propagate_2Body(x0, t, mu = 1.0, dt = nothing)
 

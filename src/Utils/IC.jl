@@ -25,7 +25,7 @@ function init_game(  )
     t_P, rv_P_hist = propagate_2Body(rv_0_P, tof, mu, 1.0) 
     rv_E_hist = vv2m(rv_E_hist) 
     rv_P_hist = vv2m(rv_P_hist) 
-    
+
     # save reference orbit 
     kep0_ref_E = copy( kep0_E ) 
     

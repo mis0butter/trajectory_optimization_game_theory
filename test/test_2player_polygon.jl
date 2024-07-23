@@ -25,49 +25,40 @@ push!( game.p2_state, players[2] )
 ## ============================================ ##
 # set up for next game step 
 
-# get most recent player states  
-rv_E, rv_P = rv_E_P( game, params ) 
+game = prop_game_step( game, params, rng ) 
+game = prop_game_step( game, params, rng ) 
 
-# return reference orbit for most recent step 
-rv_ref_E, kep_ref_E = find_ref_orbit( game, params ) 
+# # get most recent player states  
+# rv_E, rv_P = rv_E_P( game, params ) 
 
-# generate rv_ref_E_polygon_hist 
-rv_ref_E_polygon_hist = ref_polygon_hist( kep_ref_E, params ) 
+# # return reference orbit for most recent step 
+# rv_ref_E, kep_ref_E = find_ref_orbit( game, params ) 
 
-    # save OG reference orbit 
-    # kep0_ref_E = params.kep0_ref_E 
-    # kep0_ref_E[end] = kep_ref_E[end] 
+# # generate rv_ref_E_polygon_hist 
+# rv_ref_E_polygon_hist = ref_polygon_hist( kep_ref_E, params ) 
 
-    # rv0_ref_E = kep2cart( kep0_ref_E, params.mu ) 
+# # now move game forward one step 
+# push!( game.tt, game.tt[end] + params.tt_step ) 
+# push!( game.k_replan, game.k_replan[end] + 1 ) 
+# push!( game.rv_E, rv_E ) 
+# push!( game.rv_P, rv_P ) 
+# push!( game.rv_ref_E_polygon, rv_ref_E_polygon_hist ) 
 
-    # t_E, rv_ref_E_polygon_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
-    # rv_ref_E_polygon_hist = vv2m(rv_ref_E_polygon_hist) 
+# # save player state and control hists 
+# p = player_struct( [], [], [], [], [], [], [] ) 
+# players = [ p, deepcopy(p) ]  
 
-# now move game forward one step 
-push!( game.tt, game.tt[end] + params.tt_step ) 
-push!( game.k_replan, game.k_replan[end] + 1 ) 
-push!( game.rv_E, rv_E ) 
-push!( game.rv_P, rv_P ) 
-push!( game.rv_ref_E_polygon, rv_ref_E_polygon_hist ) 
+# _, rv_E_hist, _, rv_P_hist = prop_rv_E_P( rv_E, rv_P, params ) 
 
-# save player state and control hists 
-p = player_struct( [], [], [], [], [], [], [] ) 
-players = [ p, deepcopy(p) ]  
+# players[1].rv_0_hist = rv_E_hist 
+# players[2].rv_0_hist = rv_P_hist 
 
-t_E, rv_E_hist = propagate_2Body(rv_E, params.tof, params.mu, 1.0) 
-t_P, rv_P_hist = propagate_2Body(rv_P, params.tof, params.mu, 1.0) 
-rv_P_hist = vv2m(rv_P_hist) 
-rv_E_hist = vv2m(rv_E_hist) 
+# # compute all possible Δv solutions 
+# players = players_states( params, game, players, rng ) 
 
-players[1].rv_0_hist = rv_E_hist 
-players[2].rv_0_hist = rv_P_hist 
-
-# compute all possible Δv solutions 
-players = players_states( params, game, players, rng ) 
-
-# save player state in game 
-push!( game.p1_state, players[1] ) 
-push!( game.p2_state, players[2] ) 
+# # save player state in game 
+# push!( game.p1_state, players[1] ) 
+# push!( game.p2_state, players[2] ) 
 
 
 ## ============================================ ##
@@ -75,6 +66,6 @@ push!( game.p2_state, players[2] )
 # plotting stuff 
 
 # k_replan step of the game 
-k = 2 
+k = 1 
 fig = plot_p1_p2_traj( game, params, k )  
 
