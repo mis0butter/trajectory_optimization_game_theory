@@ -270,6 +270,77 @@ end
 export players_states 
 
 
+## ============================================ ##
 
+function rv_E_P( game, params ) 
+
+    # get most recent player states  
+    p1 = game.p1_state[ end ] 
+    p2 = game.p2_state[ end ] 
+    rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ] 
+    rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ] 
+
+    return rv_E, rv_P 
+end 
+
+export rv_E_P 
+
+
+## ============================================ ##
+
+function find_ref_orbit( game, params ) 
+
+    rv_E, rv_P = rv_E_P( game, params ) 
+
+    # # get most recent player states  
+    # p1 = game.p1_state[ end ] 
+    # p2 = game.p2_state[ end ] 
+    # rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ] 
+    # rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ] 
+
+    rv_ref_E_polygon_hist = game.rv_ref_E_polygon[ end ] 
+
+    # find smallest angle between rv_E and rv_ref_E_polygon_hist and index 
+    cos_min = 100 
+    ii_min  = 1 
+    for ii in axes( rv_ref_E_polygon_hist, 1 )
+
+        rv_ref_E_polygon = rv_ref_E_polygon_hist[ii,:] 
+        dot_p = dot( rv_E, rv_ref_E_polygon ) / ( norm(rv_E) * norm(rv_ref_E_polygon) )  
+        cos_a = acos( dot_p ) 
+
+        if cos_a < cos_min  
+            cos_min = cos_a  
+            ii_min  = ii 
+        end 
+    end 
+
+    # save reference orbit 
+    rv_ref_E  = rv_ref_E_polygon_hist[ii_min,:] 
+    kep_ref_E = cart2kep( rv_ref_E, params.mu ) 
+
+    return rv_ref_E, kep_ref_E 
+end 
+
+export find_ref_orbit 
+
+
+## ============================================ ##
+
+function ref_polygon_hist( kep_ref_E, params ) 
+
+    # save OG reference orbit 
+    kep0_ref_E = params.kep0_ref_E 
+    kep0_ref_E[end] = kep_ref_E[end] 
+
+    rv0_ref_E = kep2cart( kep0_ref_E, params.mu ) 
+
+    t_E, rv_ref_E_polygon_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
+    rv_ref_E_polygon_hist = vv2m(rv_ref_E_polygon_hist) 
+
+    return rv_ref_E_polygon_hist 
+end 
+
+export ref_polygon_hist 
 
 

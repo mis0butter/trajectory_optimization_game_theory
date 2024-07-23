@@ -539,12 +539,6 @@ export plot_Δv_weights
 
 function plot_p1_p2_traj( game, params, k ) 
 
-    # k_replan step of the game 
-    k = 1 
-
-    rv_E_hist = game.p1_state[k].rv_0_hist 
-    rv_P_hist = game.p2_state[k].rv_0_hist 
-
     # propagate SC state forward 
     p1 = game.p1_state[ k ] 
     p2 = game.p2_state[ k ] 
@@ -558,7 +552,6 @@ function plot_p1_p2_traj( game, params, k )
     # fig = plot_orbit( rv_E_hist, fig ) 
     # fig = plot_orbit( rv_P_hist, fig ) 
     fig = plot_polygon( game.rv_ref_E_polygon[k][end,:], fig ) 
-    fig = plot_Δv_weights( game, params, k, fig )      
 
     for i in 1 : params.tt_replan 
 
@@ -571,6 +564,30 @@ function plot_p1_p2_traj( game, params, k )
         fig = plot_scatter3d( rv_P[1], rv_P[2], rv_P[3], fig, :circle, :red, 20 ) 
 
     end 
+    
+    # if k > 1 
+    if k > 1 
+        for j = 1 : k - 1 
+
+            p1 = game.p1_state[ j ] 
+            p2 = game.p2_state[ j ] 
+
+            rv_E = p1.X[ p1.chosen ][ 1 : params.tt_replan + 1, : ] 
+            lines!( rv_E[:,1], rv_E[:,2], rv_E[:,3]; linewidth = 2, color = :blue ) 
+
+
+            rv_P = p2.X[ p2.chosen ][ 1 : params.tt_replan + 1, : ] 
+            lines!( rv_P[:,1], rv_P[:,2], rv_P[:,3]; linewidth = 2, color = :red ) 
+
+        end 
+    end 
+    
+    # plot all the weights 
+    fig = plot_Δv_weights( game, params, k, fig )      
+
+    # title 
+    ax = fig.current_axis 
+    ax.x.title = string( "k_replan = ", k )
 
     return fig 
 end 
