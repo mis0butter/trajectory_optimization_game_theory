@@ -179,9 +179,10 @@ export rand_IC
 ## ============================================ ##
 
 "Compute norm of U vectors for both players"
-function U_norm( game ) 
+function U_norm( game, params ) 
 
-    k_max = game.k_replan[end] 
+    tt_replan = params.tt_replan 
+    k_max     = game.k_replan[end] 
 
     p1_U_hist = [] 
     p2_U_hist = [] 
@@ -190,8 +191,8 @@ function U_norm( game )
         p1_chosen = game.p1_state[kk].chosen 
         p2_chosen = game.p2_state[kk].chosen  
     
-        p1_U = game.p1_state[kk].U[p1_chosen] 
-        p2_U = game.p2_state[kk].U[p2_chosen] 
+        p1_U = game.p1_state[ kk ].U[ p1_chosen ][ 1 : tt_replan, : ] 
+        p2_U = game.p2_state[ kk ].U[ p2_chosen ][ 1 : tt_replan, : ] 
     
         push!( p1_U_hist, p1_U ) 
         push!( p2_U_hist, p2_U ) 
@@ -207,4 +208,36 @@ function U_norm( game )
 end 
 
 export U_norm 
+
+## ============================================ ##
+
+function dist_norm( game, params ) 
+
+    tt_replan = params.tt_replan 
+    k_max     = game.k_replan[end] 
+
+    p1_r_hist = [] 
+    p2_r_hist = [] 
+    for kk = 1 : k_max 
+    
+        p1_chosen = game.p1_state[ kk ].chosen 
+        p2_chosen = game.p2_state[ kk ].chosen  
+    
+        p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : tt_replan , 1 : 3 ] 
+        p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : tt_replan , 1 : 3 ] 
+    
+        push!( p1_r_hist, p1_r ) 
+        push!( p2_r_hist, p2_r ) 
+    end 
+    
+    p1_r_hist = mapreduce( permutedims, hcat, p1_r_hist )' 
+    p2_r_hist = mapreduce( permutedims, hcat, p2_r_hist )' 
+
+    r_diff = p1_r_hist - p2_r_hist 
+    r_norm = [ norm( r_diff[ii,:] ) for ii in 1 : size(r_diff, 1) ] 
+    
+    return r_norm
+end 
+
+export dist_norm 
 

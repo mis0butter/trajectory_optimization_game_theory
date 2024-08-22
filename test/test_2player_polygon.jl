@@ -36,30 +36,32 @@ fig = plot_p1_p2_traj( game, params, k )
 
 ## ============================================ ##
 
-function U_norm( game ) 
 
-    k_max = game.k_replan[end] 
 
-    p1_U_hist = [] 
-    p2_U_hist = [] 
+function dist_norm( game, params ) 
+
+    tt_replan = params.tt_replan 
+    k_max     = game.k_replan[end] 
+
+    p1_r_hist = [] 
+    p2_r_hist = [] 
     for kk = 1 : k_max 
     
-        p1_chosen = game.p1_state[kk].chosen 
-        p2_chosen = game.p2_state[kk].chosen  
+        p1_chosen = game.p1_state[ kk ].chosen 
+        p2_chosen = game.p2_state[ kk ].chosen  
     
-        p1_U = game.p1_state[kk].U[p1_chosen] 
-        p2_U = game.p2_state[kk].U[p2_chosen] 
+        p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : tt_replan , 1 : 3 ] 
+        p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : tt_replan , 1 : 3 ] 
     
-        push!( p1_U_hist, p1_U ) 
-        push!( p2_U_hist, p2_U ) 
+        push!( p1_r_hist, p1_r ) 
+        push!( p2_r_hist, p2_r ) 
     end 
     
-    p1_U_hist = mapreduce( permutedims, hcat, p1_U_hist )' 
-    p2_U_hist = mapreduce( permutedims, hcat, p2_U_hist )' 
+    p1_r_hist = mapreduce( permutedims, hcat, p1_r_hist )' 
+    p2_r_hist = mapreduce( permutedims, hcat, p2_r_hist )' 
     
-    p1_U_norm = [ norm( p1_U_hist[ii,:] ) for ii in 1 : size(p1_U_hist, 1) ] 
-    p2_U_norm = [ norm( p2_U_hist[ii,:] ) for ii in 1 : size(p2_U_hist, 1) ] 
+    p1_r_norm = [ norm( p1_r_hist[ii,:] ) for ii in 1 : size(p1_r_hist, 1) ] 
+    p2_r_norm = [ norm( p2_r_hist[ii,:] ) for ii in 1 : size(p2_r_hist, 1) ] 
     
-    return p1_U_norm, p2_U_norm 
+    return p1_r_norm, p2_r_norm 
 end 
-
