@@ -223,8 +223,13 @@ function dist_norm( game, params )
         p1_chosen = game.p1_state[ kk ].chosen 
         p2_chosen = game.p2_state[ kk ].chosen  
     
+        # get traveled trajectory 
         p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : tt_replan , 1 : 3 ] 
         p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : tt_replan , 1 : 3 ] 
+        if kk == k_max 
+            p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : tt_replan + 1, 1 : 3 ] 
+            p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : tt_replan + 1, 1 : 3 ] 
+        end 
     
         push!( p1_r_hist, p1_r ) 
         push!( p2_r_hist, p2_r ) 
