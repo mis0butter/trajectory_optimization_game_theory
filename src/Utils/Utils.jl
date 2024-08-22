@@ -131,3 +131,48 @@ end
 
 export polygon_vertices 
 
+## ============================================ ##
+
+"Generate uniformly distributed random point(s) within a circle of radius R"
+
+function unif_random_points_circle( 
+    R = 6378 / 10,  # radius of circle 
+    N = 1,          # number of points 
+) 
+
+    θ = 2*pi*rand(N) 
+    r = R * sqrt.(rand(N)) 
+
+    x = r .* cos.(θ) 
+    y = r .* sin.(θ) 
+
+    return x, y 
+end 
+
+export unif_random_points_circle 
+
+## ============================================ ##
+
+"Generate uniformly distributed random point(s) within a circle of radius R around given state vector" 
+
+function rand_IC( 
+    rv_vec,         # [N,6] state vector 
+    R = 6378 / 10,  # radius of circle 
+    N = 1,          # number of points 
+) 
+
+    # center of polygon 
+    r_vec = rv_vec[1:3] 
+    _, axis_2, axis_3 = axis_123( rv_vec ) 
+
+    # generate random points 
+    x, y = unif_random_points_circle( R, N ) 
+
+    vec   = x[1] .* axis_2 + y[1] .* axis_3 
+    r_out = r_vec + vec 
+
+    return r_out 
+end
+
+export rand_IC 
+
