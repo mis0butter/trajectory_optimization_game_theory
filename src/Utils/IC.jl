@@ -16,10 +16,12 @@ function init_game(  )
     tt_step   = tt_replan * tof / N 
     
     # orbital elements 
-    kep0_P = [ r+420.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 20.0*pi/180 ]
     kep0_E = [ r+520.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
+    # kep0_P = [ r+420.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 20.0*pi/180 ]
     rv_0_E = kep2cart(kep0_E, mu) 
-    rv_0_P = kep2cart(kep0_P, mu) 
+    # rv_0_P = kep2cart(kep0_P, mu) 
+    r_0_P = rand_IC( rv_0_E ) 
+    rv_0_P = [ r_0_P ; rv_0_E[4:6] ]
     
     t_E, rv_E_hist = propagate_2Body(rv_0_E, tof, mu, 1.0) 
     t_P, rv_P_hist = propagate_2Body(rv_0_P, tof, mu, 1.0) 

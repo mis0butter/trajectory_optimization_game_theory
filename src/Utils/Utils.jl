@@ -176,3 +176,35 @@ end
 
 export rand_IC 
 
+## ============================================ ##
+
+"Compute norm of U vectors for both players"
+function U_norm( game ) 
+
+    k_max = game.k_replan[end] 
+
+    p1_U_hist = [] 
+    p2_U_hist = [] 
+    for kk = 1 : k_max 
+    
+        p1_chosen = game.p1_state[kk].chosen 
+        p2_chosen = game.p2_state[kk].chosen  
+    
+        p1_U = game.p1_state[kk].U[p1_chosen] 
+        p2_U = game.p2_state[kk].U[p2_chosen] 
+    
+        push!( p1_U_hist, p1_U ) 
+        push!( p2_U_hist, p2_U ) 
+    end 
+    
+    p1_U_hist = mapreduce( permutedims, hcat, p1_U_hist )' 
+    p2_U_hist = mapreduce( permutedims, hcat, p2_U_hist )' 
+    
+    p1_U_norm = [ norm( p1_U_hist[ii,:] ) for ii in 1 : size(p1_U_hist, 1) ] 
+    p2_U_norm = [ norm( p2_U_hist[ii,:] ) for ii in 1 : size(p2_U_hist, 1) ] 
+    
+    return p1_U_norm, p2_U_norm 
+end 
+
+export U_norm 
+
