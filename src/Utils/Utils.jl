@@ -181,7 +181,7 @@ export rand_IC
 "Compute norm of U vectors for both players"
 function U_norm( game, params ) 
 
-    tt_replan = params.tt_replan 
+    k_tt_replan = params.k_tt_replan 
     k_max     = game.k_replan[end] 
 
     p1_U_hist = [] 
@@ -191,8 +191,8 @@ function U_norm( game, params )
         p1_chosen = game.p1_state[kk].chosen 
         p2_chosen = game.p2_state[kk].chosen  
     
-        p1_U = game.p1_state[ kk ].U[ p1_chosen ][ 1 : tt_replan, : ] 
-        p2_U = game.p2_state[ kk ].U[ p2_chosen ][ 1 : tt_replan, : ] 
+        p1_U = game.p1_state[ kk ].U[ p1_chosen ][ 1 : k_tt_replan, : ] 
+        p2_U = game.p2_state[ kk ].U[ p2_chosen ][ 1 : k_tt_replan, : ] 
     
         push!( p1_U_hist, p1_U ) 
         push!( p2_U_hist, p2_U ) 
@@ -213,7 +213,7 @@ export U_norm
 
 function dist_norm( game, params ) 
 
-    tt_replan = params.tt_replan 
+    k_tt_replan = params.k_tt_replan 
     k_max     = game.k_replan[end] 
 
     p1_r_hist = [] 
@@ -224,11 +224,11 @@ function dist_norm( game, params )
         p2_chosen = game.p2_state[ kk ].chosen  
     
         # get traveled trajectory 
-        p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : tt_replan , 1 : 3 ] 
-        p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : tt_replan , 1 : 3 ] 
+        p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , 1 : 3 ] 
+        p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan , 1 : 3 ] 
         if kk == k_max 
-            p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : tt_replan + 1, 1 : 3 ] 
-            p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : tt_replan + 1, 1 : 3 ] 
+            p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan + 1, 1 : 3 ] 
+            p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan + 1, 1 : 3 ] 
         end 
     
         push!( p1_r_hist, p1_r ) 

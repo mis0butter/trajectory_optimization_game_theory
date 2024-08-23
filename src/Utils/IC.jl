@@ -8,12 +8,12 @@ function init_game( rng )
     tof = 1000          # tof for pursuer to catch up to evader  
     N   = 10            # segments 
     mu  = 398600.4415   # gravitational parameter 
-    r   = 6378.0        # Earth radius 
+    r   = 6378.0        # Earth radius [km] 
     
     # start time 
     tt = 0 
-    tt_replan = 5       # replan every 5 * tof/N (100) seconds!!! 
-    tt_step   = tt_replan * tof / N 
+    k_tt_replan = 5       # replan every 5 * tof/N (100) seconds!!! 
+    tt_step   = k_tt_replan * tof / N 
     
     # orbital elements 
     kep0_E = [ r+520.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
@@ -32,7 +32,7 @@ function init_game( rng )
     kep0_ref_E = copy( kep0_E ) 
     
     # game parameters 
-    params = ( mu = mu, r = r, N = N, tof = tof, tt_replan = tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E ) 
+    params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E ) 
     
     # save rv_ref from E to position for vertices of polygon 
     rv_ref_E_polygon = rv_E_hist 

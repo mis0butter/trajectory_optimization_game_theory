@@ -544,8 +544,8 @@ function plot_p1_p2_traj( game, params, k )
     p2 = game.p2_state[ k ] 
 
     # get current state 
-    rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ]
-    rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ]
+    rv_E = p1.X[ p1.chosen ][ params.k_tt_replan + 1, : ]
+    rv_P = p2.X[ p2.chosen ][ params.k_tt_replan + 1, : ]
 
     # plot 
     fig = plot_axes3d(  ) 
@@ -553,7 +553,7 @@ function plot_p1_p2_traj( game, params, k )
     # fig = plot_orbit( rv_P_hist, fig ) 
     fig = plot_polygon( game.rv_ref_E_polygon[k][end,:], fig ) 
 
-    for i in 1 : params.tt_replan 
+    for i in 1 : params.k_tt_replan 
 
         # plot player 1 
         rv_E = p1.X[ p1.chosen ][ i, : ] 
@@ -578,11 +578,11 @@ function plot_p1_p2_traj( game, params, k )
             p1 = game.p1_state[ j ] 
             p2 = game.p2_state[ j ] 
 
-            rv_E = p1.X[ p1.chosen ][ 1 : params.tt_replan + 1, : ] 
+            rv_E = p1.X[ p1.chosen ][ 1 : params.k_tt_replan + 1, : ] 
             lines!( rv_E[:,1], rv_E[:,2], rv_E[:,3]; linewidth = 2, color = :blue ) 
 
 
-            rv_P = p2.X[ p2.chosen ][ 1 : params.tt_replan + 1, : ] 
+            rv_P = p2.X[ p2.chosen ][ 1 : params.k_tt_replan + 1, : ] 
             lines!( rv_P[:,1], rv_P[:,2], rv_P[:,3]; linewidth = 2, color = :red ) 
 
         end 

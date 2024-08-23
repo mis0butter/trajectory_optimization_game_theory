@@ -17,22 +17,35 @@ params, players, game = init_game( rng )
 ## ============================================ ##
 # next game steps  
 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
-game = prop_game_step( game, params, rng ) 
+N_replan = 20 
+for ii = 1 : N_replan - 1 
+    game = prop_game_step( game, params, rng ) 
+end 
 
+# ----------------------- #
 # plotting stuff 
 
-# k_replan step of the game 
-k = 1 
-fig = plot_p1_p2_traj( game, params, k )  
+# k = 1 
+fig = plot_p1_p2_traj( game, params, N_replan )  
 
+
+## ============================================ ##
+## ============================================ ##
+# run multiple games 
+
+gameS = [] 
+N_games = 10 
+for ii = 1 : N_games 
+
+    params, players, game = init_game( rng ) 
+
+    N_replan = 20 
+    for jj = 1 : N_replan - 1 
+        game = prop_game_step( game, params, rng ) 
+    end 
+    push!( gameS, game ) 
+
+end 
 
 ## ============================================ ##
 
@@ -58,4 +71,7 @@ ax3 = Axis( fig[3,1], xlabel = "time", title = "distance" )
 lines!( ax3, 1 : length(r_norm), r_norm, color = :green )  
 
 fig 
+
+## ============================================ ##
+
 

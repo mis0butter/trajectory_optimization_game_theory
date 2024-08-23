@@ -277,8 +277,8 @@ function rv_E_P( game, params )
     # get most recent player states  
     p1 = game.p1_state[ end ] 
     p2 = game.p2_state[ end ] 
-    rv_E = p1.X[ p1.chosen ][ params.tt_replan + 1, : ] 
-    rv_P = p2.X[ p2.chosen ][ params.tt_replan + 1, : ] 
+    rv_E = p1.X[ p1.chosen ][ params.k_tt_replan + 1, : ] 
+    rv_P = p2.X[ p2.chosen ][ params.k_tt_replan + 1, : ] 
 
     return rv_E, rv_P 
 end 
