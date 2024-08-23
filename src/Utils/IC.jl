@@ -2,7 +2,7 @@ using LinearAlgebra
 
 ## ============================================ ##
 
-function init_game(  ) 
+function init_game( rng ) 
 
     # orbit parameters of pursuer and evader 
     tof = 1000          # tof for pursuer to catch up to evader  
@@ -31,6 +31,9 @@ function init_game(  )
     # save reference orbit 
     kep0_ref_E = copy( kep0_E ) 
     
+    # game parameters 
+    params = ( mu = mu, r = r, N = N, tof = tof, tt_replan = tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E ) 
+    
     # save rv_ref from E to position for vertices of polygon 
     rv_ref_E_polygon = rv_E_hist 
     
@@ -43,14 +46,19 @@ function init_game(  )
     
     # init game 
     game = game_struct( [], [], [], [], [], [], [] ) 
+    
     push!( game.tt, tt ) 
     push!( game.k_replan, 1 )
     push!( game.rv_E, rv_0_E ) 
     push!( game.rv_P, rv_0_P ) 
     push!( game.rv_ref_E_polygon, rv_ref_E_polygon )  
-    
-    # game parameters 
-    params = ( mu = mu, r = r, N = N, tof = tof, tt_replan = tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E ) 
+
+    # compute all possible Δv solutions 
+    players = players_states( params, game, players, rng ) 
+
+    # save player state in game 
+    push!( game.p1_state, players[1] ) 
+    push!( game.p2_state, players[2] )  
 
 
     return params, players, game 
