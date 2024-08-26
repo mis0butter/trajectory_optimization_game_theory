@@ -102,112 +102,174 @@ function R1(angle)
          0.0 cos(angle) sin(angle);
          0.0 -sin(angle) cos(angle)]
     return R
-end
+end 
 
 ## ============================================ ##
 
-export cart2kep
-function cart2kep(cart, mu, tol=1e-20)
-    # get position and velocity components
-    r = cart[1:3]
-    v = cart[4:6]
+export cart2kep  
+function cart2kep( rv, mu )
 
-    # orbit energy calc
-    h = cross(r, v) # specific angular momentum
-    # magR = norm(r)
-    magR = sqrt(r[1]^2 + r[2]^2 + r[3]^2) 
-    # magV = norm(v)
-    magV = sqrt(v[1]^2 + v[2]^2 + v[3]^2) 
-    energy = 0.5 * (magV ^ 2) - (mu / magR) # vis viva equation
+    r = rv[1:3] 
+    v = rv[4:6] 
+
+    pi2 = 2.0 * π
+
+    # position and velocity magnitude
+    rmag = norm(r)
+    vmag = norm(v)
+
+    # position unit vector
+    rhat = r / rmag
+
+    # angular momentum vectors
+    hv = cross(r, v)
+    hhat = hv / norm(hv)
 
     # eccentricity vector
-    ecc = (cross(v, h) - mu * (r / magR)) / mu
-    magEcc = norm(ecc) 
+    vtmp = v / mu
+    ecc = cross(vtmp, hv) - rhat
 
-    # semi-latus rectum 
-    h_norm2 = h[1]^2 + h[2]^2 + h[3]^2 
-    p = h_norm2 / mu 
+    # semimajor axis
+    sma = 1.0 / (2.0 / rmag - vmag^2 / mu)
+    p = hhat[1] / (1.0 + hhat[3])
+    q = -hhat[2] / (1.0 + hhat[3])
 
-    # semi-major axis 
-    sma = p / (1 - magEcc^2) 
+    const1 = 1.0 / (1.0 + p^2 + q^2)
 
-    # # determine orbit type based on eccentricity magnitude
-    # if (magEcc <= 1.0)
-    #     # ellipse
-    #     sma = -mu / (2.0 * energy)
-    # else
-    #     # hyperbola
-    #     sma = mu / (2.0 * energy)
-    # end
+    fhat = [const1 * (1.0 - p^2 + q^2),
+            const1 * 2.0 * p * q,
+            -const1 * 2.0 * p]
 
-    # get mean anomaly 
+    ghat = [const1 * 2.0 * p * q,
+            const1 * (1.0 + p^2 - q^2),
+            const1 * 2.0 * q]
 
-    # check_val = dot(r, ecc) / (magR * magEcc) 
-    # # if abs.(check_val) > 1.0 
-    #     println( "check_val = ", check_val ) 
-    # #     println( "dot(r, ecc) = ", dot(r, ecc) )
-    # #     println( "magR = ", magR )
-    # #     println( "magEcc = ", magEcc ) 
-    # #     println( "magR * magEcc = ", magR * magEcc )  
-    # # end 
+    h = dot(ecc, ghat)
+    xk = dot(ecc, fhat)
+    x1 = dot(r, fhat)
+    y1 = dot(r, ghat)
 
-    theta = acos(dot(r, ecc) / (magR * magEcc))
-    if (dot(r, v) < 0.0)
-        theta = 2.0 * pi - theta
-    end
-    inc = acos(h[3] / norm(h))
+    # orbital eccentricity
+    eccm = sqrt(h^2 + xk^2)
 
-    K = [0.0; 0.0; 1.0]
-    n = cross(K, h)
-    normN = norm(n)
+    # orbital inclination
+    inc = 2.0 * atan(sqrt(p^2 + q^2))
 
-    # get right ascension
-    raan = acos(n[1] / normN)
-    if n[2] < 0.0
-        raan = 2.0 * pi - raan
-    end
+    # true longitude
+    xlambdat = atan(y1, x1)
 
-    # get argument of periapsis
-    omega = acos(dot(n, ecc) / (normN * magEcc))
-    if ecc[3] < 0.0
-        omega = 2.0 * pi - omega
-    end
+    # check for equatorial orbit
+    raan = inc > 1e-8 ? atan(p, q) : 0.0
 
-    # singularity checks
-    I = [1.0; 0.0; 0.0]
+    # check for circular orbit
+    argper = eccm > 1e-8 ? mod(atan(h, xk) - raan, pi2) : 0.0
 
-    if magEcc < tol && inc < tol
-        raan = 0.0
-        omega = 0.0
+    # true anomaly
+    tanom = mod(xlambdat - raan - argper, pi2)
 
-        # set true longitude of periapsis as theta
-        theta = acos(dot(r, I) / magR)
-        if r[2] < 0.0
-            theta = 2.0 * pi - theta
-        end
-    elseif magEcc < tol
-        omega = 0.0
+    # load orbital element vector
+    oe = zeros(6)
+    oe[1] = sma
+    oe[2] = eccm
+    oe[3] = inc
+    oe[4] = raan 
+    oe[5] = argper 
+    oe[6] = tanom
 
-        # set argument of latitude as theta
-        theta = acos(dot(n, r) / (normN * magR))
-        if r[3] < 0.0
-            theta = 2.0 * pi - theta
-        end
-    elseif inc < tol
-        raan = 0.0
-
-        # set longitude of periapsis as omega
-        omega = acos(dot(ecc, I) / magEcc)
-        if ecc[2] < 0.0
-            omega = 2.0 * pi - omega
-        end
-    end
-
-    # output theta here refers to true anomaly!
-    kepState = [sma; magEcc; inc; raan; omega; theta]
-
-    return kepState
+    return oe
 end
+
+
+## ============================================ ##
+
+# export cart2kep
+# function cart2kep(cart, mu, tol=1e-20)
+
+#     # get position and velocity components
+#     r = cart[1:3]
+#     v = cart[4:6]
+
+#     # orbit energy calc
+#     h = cross(r, v) # specific angular momentum
+#     # magR = norm(r)
+#     magR = sqrt(r[1]^2 + r[2]^2 + r[3]^2) 
+#     # magV = norm(v)
+#     magV = sqrt(v[1]^2 + v[2]^2 + v[3]^2) 
+#     energy = 0.5 * (magV ^ 2) - (mu / magR) # vis viva equation
+
+#     # eccentricity vector
+#     ecc = (cross(v, h) - mu * (r / magR)) / mu
+#     magEcc = norm(ecc) 
+
+#     # semi-latus rectum 
+#     h_norm2 = h[1]^2 + h[2]^2 + h[3]^2 
+#     p = h_norm2 / mu 
+
+#     # semi-major axis 
+#     sma = p / (1 - magEcc^2) 
+
+#     theta = acos(dot(r, ecc) / (magR * magEcc))
+#     if (dot(r, v) < 0.0)
+#         theta = 2.0 * pi - theta
+#     end
+#     inc = acos(h[3] / norm(h))
+
+#     K = [0.0; 0.0; 1.0]
+#     n = cross(K, h)
+#     normN = norm(n)
+
+#     # get right ascension
+#     raan = acos(n[1] / normN)
+#     if n[2] < 0.0
+#         raan = 2.0 * pi - raan
+#     end
+
+#     # get argument of periapsis 
+#     out = dot(n, ecc) / (normN * magEcc) 
+#     if abs(out) > 1.0
+#         println( "out > 1.0" )
+#         out = sign(out) 
+#     end 
+#     omega = acos( out )
+#     if ecc[3] < 0.0
+#         omega = 2.0 * pi - omega
+#     end
+
+#     # singularity checks
+#     I = [1.0; 0.0; 0.0]
+
+#     if magEcc < tol && inc < tol
+#         raan = 0.0
+#         omega = 0.0
+
+#         # set true longitude of periapsis as theta
+#         theta = acos(dot(r, I) / magR)
+#         if r[2] < 0.0
+#             theta = 2.0 * pi - theta
+#         end
+#     elseif magEcc < tol
+#         omega = 0.0
+
+#         # set argument of latitude as theta
+#         theta = acos(dot(n, r) / (normN * magR))
+#         if r[3] < 0.0
+#             theta = 2.0 * pi - theta
+#         end
+#     elseif inc < tol
+#         raan = 0.0
+
+#         # set longitude of periapsis as omega
+#         omega = acos(dot(ecc, I) / magEcc)
+#         if ecc[2] < 0.0
+#             omega = 2.0 * pi - omega
+#         end
+#     end
+
+#     # output theta here refers to true anomaly!
+#     kepState = [sma; magEcc; inc; raan; omega; theta]
+
+#     return kepState
+# end
 
 ## ============================================ ##
 
