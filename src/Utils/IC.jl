@@ -4,25 +4,32 @@ using LinearAlgebra
 
 function init_game( rng ) 
 
-    # orbit parameters of pursuer and evader 
-    tof = 1000          # tof for pursuer to catch up to evader  
-    N   = 10            # segments 
+    # orbit params 
     mu  = 398600.4415   # gravitational parameter 
     r   = 6378.0        # Earth radius [km] 
     
-    # start time 
-    tt = 0 
-    k_tt_replan = 5       # replan every 5 * tof/N (100) seconds!!! 
-    tt_step   = k_tt_replan * tof / N 
-    
-    # orbital elements 
-    kep0_E = [ r+520.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
-    # kep0_P = [ r+420.0, 0.1, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 20.0*pi/180 ]
+    # orbital elements
+    a      = r + 620.0  
+    kep0_E = [ a, 0.01, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
     rv_0_E = kep2cart(kep0_E, mu) 
-    # rv_0_P = kep2cart(kep0_P, mu) 
+
+    # initial conditions for pursuer 
     r_0_P = rand_IC( rv_0_E ) 
     rv_0_P = [ r_0_P ; rv_0_E[4:6] ]
+
+    # get period of orbit 
+    T = 2*pi*sqrt( a^3 / mu ) 
+
+    # orbit parameters of pursuer and evader 
+    k_tt_replan = 5       # replan every 5 * tof/N (100) seconds!!! 
+    tof = T / k_tt_replan # tof for pursuer to catch up to evader  
+    N   = 10              # segments 
     
+    # start time 
+    tt = 0 
+    tt_step = k_tt_replan * tof / N 
+    
+    # propagate ref orbits 
     t_E, rv_E_hist = propagate_2Body(rv_0_E, tof, mu, 1.0) 
     t_P, rv_P_hist = propagate_2Body(rv_0_P, tof, mu, 1.0) 
     rv_E_hist = vv2m(rv_E_hist) 
@@ -32,7 +39,7 @@ function init_game( rng )
     kep0_ref_E = copy( kep0_E ) 
     
     # game parameters 
-    params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E ) 
+    params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E, T = T ) 
     
     # save rv_ref from E to position for vertices of polygon 
     rv_ref_E_polygon = rv_E_hist 

@@ -568,8 +568,8 @@ function plot_p1_p2_traj( game, params, k )
     # plot triangles on chosen vertices 
     rv_E_des = p1.X[ p1.chosen ][ end, : ] 
     rv_P_des = p2.X[ p2.chosen ][ end, : ] 
-    fig = plot_scatter3d( rv_E_des[1], rv_E_des[2], rv_E_des[3], fig, :triangle, :blue, 15 ) 
-    fig = plot_scatter3d( rv_P_des[1], rv_P_des[2], rv_P_des[3], fig, :triangle, :red, 15 ) 
+    fig = plot_scatter3d( rv_E_des[1], rv_E_des[2], rv_E_des[3], fig, :utriangle, :blue, 15 ) 
+    fig = plot_scatter3d( rv_P_des[1], rv_P_des[2], rv_P_des[3], fig, :utriangle, :red, 15 ) 
     
     # if k > 1 
     if k > 1 
