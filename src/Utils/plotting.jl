@@ -365,7 +365,7 @@ export plot_prop_Δv
 function plot_polygon( 
     rv_vec,                 # [N,6] state vector 
     fig = plot_axes3d(),    # figure handle 
-    r  = 6378.0,            # radius of Earth (km) 
+    r   = R_polygon,            # radius of Earth (km) 
 ) 
 
     vertices = polygon_vertices( rv_vec ) 
@@ -385,11 +385,11 @@ function plot_polygon(
     # ok, let's define the distance of vertices of polygon from center: how about r / 100 ? 
 
     # top vertex: move up from r_f along axis 3 
-    r_top = r_vec + axis_3 * r/10 
+    r_top = r_vec + axis_3 * r 
     # fig   = plot_scatter3d( r_top[1], r_top[2], r_top[3], fig, :circle ) 
 
     # top-inner vertex: move up from r_f along axis 3 and left along axis 2, 60 degrees 
-    vec      = cosd(60) * axis_3 * r/10 + sind(60) * axis_2 * r/10 
+    vec      = cosd(60) * axis_3 * r + sind(60) * axis_2 * r
     r_topin  = r_vec + vec
     # fig      = plot_scatter3d( r_topin[1], r_topin[2], r_topin[3], fig, :circle )  
 
@@ -397,7 +397,7 @@ function plot_polygon(
     fig = plot_line3d( mat, fig ) 
 
     # bottom-inner vertex: move down from r_f along axis 3 and left along axis 2, 60 degrees 
-    vec      = - cosd(60) * axis_3 * r/10 + sind(60) * axis_2 * r/10 
+    vec      = - cosd(60) * axis_3 * r + sind(60) * axis_2 * r
     r_botin  = r_vec + vec 
     # fig      = plot_scatter3d( r_botin[1], r_botin[2], r_botin[3], fig, :circle ) 
 
@@ -405,14 +405,14 @@ function plot_polygon(
     fig = plot_line3d( mat, fig ) 
 
     # bottom vertex: move down from r_f along axis 3 
-    r_bot = r_vec - axis_3 * r/10 
+    r_bot = r_vec - axis_3 * r
     # fig   = plot_scatter3d( r_bot[1], r_bot[2], r_bot[3], fig, :circle ) 
 
     mat = [ r_botin' ; r_bot' ] 
     fig = plot_line3d( mat, fig ) 
 
     # bottom-outer vertex: move down from r_f along axis 3 and right along axis 2, 60 degrees 
-    vec      = - cosd(60) * axis_3 * r/10 - sind(60) * axis_2 * r/10 
+    vec      = - cosd(60) * axis_3 * r - sind(60) * axis_2 * r
     r_botout = r_vec + vec 
     # fig      = plot_scatter3d( r_botout[1], r_botout[2], r_botout[3], fig, :circle ) 
 
@@ -420,7 +420,7 @@ function plot_polygon(
     fig = plot_line3d( mat, fig ) 
 
     # top-outer vertex: move up from r_f along axis 3 and right along axis 2, 60 degrees 
-    vec       = cosd(60) * axis_3 * r/10 - sind(60) * axis_2 * r/10 
+    vec       = cosd(60) * axis_3 * r - sind(60) * axis_2 * r
     r_topout  = r_vec + vec 
     # fig       = plot_scatter3d( r_topout[1], r_topout[2], r_topout[3], fig, :circle ) 
 
@@ -599,5 +599,96 @@ function plot_p1_p2_traj( game, params, k )
 end 
 
 export plot_p1_p2_traj 
+
+## ============================================ ##
+
+function plot_MC_stats( gameS, params )
+
+    dist_rnorm_all   = [] 
+    p1_Unorm_sum_all = [] 
+    p2_Unorm_sum_all = [] 
+    for ii in eachindex(gameS)
+
+        game = gameS[ii] 
+
+        # compute norm of U and distance vectors 
+        dist_rnorm = dist_norm( game, params ) 
+        p1_U_norm, p2_U_norm = U_norm( game, params ) 
+        p1_Unorm_sum = cumsum( p1_U_norm ) 
+        p2_Unorm_sum = cumsum( p2_U_norm ) 
+
+        push!( dist_rnorm_all, dist_rnorm ) 
+        push!( p1_Unorm_sum_all, p1_Unorm_sum ) 
+        push!( p2_Unorm_sum_all, p2_Unorm_sum ) 
+
+    end 
+
+    dist_rnorm_all   = vv2m( dist_rnorm_all ) 
+    p1_Unorm_sum_all = vv2m( p1_Unorm_sum_all ) 
+    p2_Unorm_sum_all = vv2m( p2_Unorm_sum_all ) 
+
+    dist_norm_mean    = mean( dist_rnorm_all, dims = 1 )[:] 
+    p1_Unorm_sum_mean = mean( p1_Unorm_sum_all, dims = 1 )[:] 
+    p2_Unorm_sum_mean = mean( p2_Unorm_sum_all, dims = 1 )[:] 
+
+    T = params.tof * params.k_tt_replan 
+
+    # plot 
+    fig = Figure( resolution = (600, 600) ) 
+
+    title_string = string("games = ", length(gameS), "\n", "mean cumsum norm of U vectors")
+    ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
+    tt = ( 0 : length(p1_Unorm_sum_mean)-1 ) * T / length(p1_Unorm_sum_mean)  
+    p1_ax1 = lines!( ax1, tt, p1_Unorm_sum_mean, color = :blue ) 
+    p2_ax1 = lines!( ax1, tt, p2_Unorm_sum_mean, color = :red ) 
+    Legend( fig[1,2], [ p1_ax1, p2_ax1 ], ["p1", "p2"] ) 
+    for ii in eachindex(gameS)
+        lines!( ax1, tt, p1_Unorm_sum_all[ii,:][:], color = :blue, alpha = 0.1 ) 
+        lines!( ax1, tt, p2_Unorm_sum_all[ii,:][:], color = :red, alpha = 0.1 ) 
+    end 
+
+    ax2 = Axis( fig[2,1], xlabel = "time (s)", title = "mean distance" ) 
+
+    tt = ( 0 : length(dist_norm_mean)-1 ) * T / length(dist_norm_mean)  
+    lines!( ax2, tt, dist_norm_mean, color = :green ) 
+    for ii in eachindex(gameS)
+        lines!( ax2, tt, dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
+    end 
+
+    return fig 
+end 
+
+export plot_MC_stats 
+
+## ============================================ ##
+
+function plot_game_stats( gameS, ii, params ) 
+
+    game = gameS[ii] 
+
+    r_norm = dist_norm( game, params ) 
+    p1_U_norm, p2_U_norm = U_norm( game, params ) 
+    p1_Unorm_sum = cumsum( p1_U_norm ) 
+    p2_Unorm_sum = cumsum( p2_U_norm ) 
+
+    fig = Figure( resolution = (600, 800) )
+
+    title_string = string( "game = ", ii, "\n norm of U vectors" ) 
+    ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
+    p1_ax1 = lines!( ax1, 1 : length(p1_U_norm), p1_U_norm, color = :blue ) 
+    p2_ax1 = lines!( ax1, 1 : length(p2_U_norm), p2_U_norm, color = :red ) 
+    Legend( fig[1,2], [ p1_ax1, p2_ax1 ], ["p1", "p2"] ) 
+
+    ax2 = Axis( fig[2,1], xlabel = "time", title = "cumsum of norm of U vectors" ) 
+    lines!( ax2, 1 : length(p1_Unorm_sum), p1_Unorm_sum, color = :blue ) 
+    lines!( ax2, 1 : length(p2_Unorm_sum), p2_Unorm_sum, color = :red ) 
+
+    ax3 = Axis( fig[3,1], xlabel = "time", title = "distance" ) 
+    lines!( ax3, 1 : length(r_norm), r_norm, color = :green )  
+
+    return fig 
+end 
+
+export plot_game_stats 
 
 

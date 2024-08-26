@@ -2,6 +2,9 @@ include("plotting.jl")
 include("IC.jl") 
 include("structs.jl")
 
+# radius of polygon circle!!!! 
+R_polygon = 6378.0 / 100 
+
 ## ============================================ ##
 
 "Convert vector of vectors into matrix"
@@ -96,7 +99,7 @@ export axis_123
 "Compute vertices of polygon around given state vector"  
 function polygon_vertices( 
     rv_vec,                 # [N,6] state vector 
-    dist = 6378.0 / 10,    # radius of polygon 
+    dist = R_polygon,    # radius of polygon 
 ) 
 
     # center of polygon 
@@ -136,7 +139,7 @@ export polygon_vertices
 "Generate uniformly distributed random point(s) within a circle of radius R"
 
 function unif_random_points_circle( 
-    R = 6378 / 10,  # radius of circle 
+    R = R_polygon,  # radius of circle 
     N = 1,          # number of points 
 ) 
 
@@ -157,7 +160,7 @@ export unif_random_points_circle
 
 function rand_IC( 
     rv_vec,         # [N,6] state vector 
-    R = 6378 / 10,  # radius of circle 
+    R = R_polygon,  # radius of circle 
     N = 1,          # number of points 
 ) 
 
