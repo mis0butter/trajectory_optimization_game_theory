@@ -602,7 +602,7 @@ export plot_p1_p2_traj
 
 ## ============================================ ##
 
-function plot_MC_stats( gameS, params )
+function plot_MC_stats( gameS, params, strategy = "mixed" )
 
     dist_rnorm_all   = [] 
     p1_Unorm_sum_all = [] 
@@ -612,8 +612,8 @@ function plot_MC_stats( gameS, params )
         game = gameS[ii] 
 
         # compute norm of U and distance vectors 
-        dist_rnorm = dist_norm( game, params ) 
-        p1_U_norm, p2_U_norm = U_norm( game, params ) 
+        dist_rnorm = dist_norm( game, params, strategy ) 
+        p1_U_norm, p2_U_norm = U_norm( game, params, strategy ) 
         p1_Unorm_sum = cumsum( p1_U_norm ) 
         p2_Unorm_sum = cumsum( p2_U_norm ) 
 
@@ -636,7 +636,7 @@ function plot_MC_stats( gameS, params )
     # plot 
     fig = Figure( resolution = (600, 600) ) 
 
-    title_string = string("games = ", length(gameS), "\n", "mean cumsum norm of U vectors")
+    title_string = string(strategy, " games = ", length(gameS), "\n", "mean cumsum norm of U vectors")
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     tt = ( 0 : length(p1_Unorm_sum_mean)-1 ) * T / length(p1_Unorm_sum_mean)  
     p1_ax1 = lines!( ax1, tt, p1_Unorm_sum_mean, color = :blue ) 
@@ -662,18 +662,18 @@ export plot_MC_stats
 
 ## ============================================ ##
 
-function plot_game_stats( gameS, ii, params ) 
+function plot_game_stats( gameS, ii, params, strategy = "mixed" ) 
 
     game = gameS[ii] 
 
-    r_norm = dist_norm( game, params ) 
-    p1_U_norm, p2_U_norm = U_norm( game, params ) 
+    r_norm = dist_norm( game, params, strategy ) 
+    p1_U_norm, p2_U_norm = U_norm( game, params, strategy ) 
     p1_Unorm_sum = cumsum( p1_U_norm ) 
     p2_Unorm_sum = cumsum( p2_U_norm ) 
 
     fig = Figure( resolution = (600, 800) )
 
-    title_string = string( "game = ", ii, "\n norm of U vectors" ) 
+    title_string = string( strategy, " game = ", ii, "\n norm of U vectors" ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     p1_ax1 = lines!( ax1, 1 : length(p1_U_norm), p1_U_norm, color = :blue ) 
     p2_ax1 = lines!( ax1, 1 : length(p2_U_norm), p2_U_norm, color = :red ) 

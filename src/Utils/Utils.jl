@@ -190,24 +190,9 @@ function U_norm( game, params, strategy = "mixed" )
     p1_U_hist = [] 
     p2_U_hist = [] 
     for kk = 1 : k_max 
-    
-        # if strategy == "mixed" 
-        #     p1_chosen = game.p1_state[kk].chosen 
-        #     p2_chosen = game.p2_state[kk].chosen  
-        # elseif strategy == "pure" 
-        #     p1_chosen = argmax( game.p1_state[kk].weights )  
-        #     p2_chosen = argmax( game.p2_state[kk].weights ) 
-        # else 
-        #     len = length( game.p1_state[kk].weights ) 
-        #     p1_chosen = rand(1:len) 
-        #     p2_chosen = rand(1:len) 
-        # end 
 
         p1_chosen, p2_chosen = p_strategy( game, kk, strategy ) 
 
-        # p1_chosen = game.p1_state[kk].chosen 
-        # p2_chosen = game.p2_state[kk].chosen  
-    
         p1_U = game.p1_state[ kk ].U[ p1_chosen ][ 1 : k_tt_replan, : ] 
         p2_U = game.p2_state[ kk ].U[ p2_chosen ][ 1 : k_tt_replan, : ] 
     
@@ -236,18 +221,6 @@ function dist_norm( game, params, strategy = "mixed" )
     p1_r_hist = [] 
     p2_r_hist = [] 
     for kk = 1 : k_max 
-    
-        # if strategy == "mixed" 
-        #     p1_chosen = game.p1_state[kk].chosen 
-        #     p2_chosen = game.p2_state[kk].chosen  
-        # elseif strategy == "pure" 
-        #     p1_chosen = argmax( game.p1_state[kk].weights )  
-        #     p2_chosen = argmax( game.p2_state[kk].weights ) 
-        # else 
-        #     len = length( game.p1_state[kk].weights ) 
-        #     p1_chosen = rand(1:len) 
-        #     p2_chosen = rand(1:len) 
-        # end 
 
         p1_chosen, p2_chosen = p_strategy( game, kk, strategy ) 
     
