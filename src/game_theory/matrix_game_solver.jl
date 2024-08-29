@@ -117,7 +117,9 @@ function solve_simplex_lp(A)
     end
 
     JuMP.optimize!(model) 
+
     @exfiltrate 
+    
     (JuMP.termination_status(model) == JuMP.MOI.OPTIMAL) ||
         error("OSQP did not find an optimal solution to this matrix game.")
     (; x = JuMP.value.(z), V = JuMP.objective_value(model))
@@ -278,8 +280,11 @@ function rv_E_P( game, params )
     # get most recent player states  
     p1 = game.p1_state[ end ] 
     p2 = game.p2_state[ end ] 
-    rv_E = p1.X[ p1.chosen ][ params.k_tt_replan + 1, : ] 
-    rv_P = p2.X[ p2.chosen ][ params.k_tt_replan + 1, : ] 
+
+    p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
+
+    rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ] 
+    rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ] 
 
     return rv_E, rv_P 
 end 

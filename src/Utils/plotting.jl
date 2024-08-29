@@ -1,5 +1,3 @@
-using GLMakie 
-
 ## ============================================ ##
 # plot Cartesian axes 
 
@@ -537,13 +535,13 @@ export plot_Δv_weights
 
 ## ============================================ ##
 
-function plot_p1_p2_traj( game, params, kk, strategy = "mixed" ) 
+function plot_p1_p2_traj( game, params, kk ) 
 
     # propagate SC state forward 
     p1 = game.p1_state[ kk ] 
     p2 = game.p2_state[ kk ] 
 
-    p1_chosen, p2_chosen = p_strategy( game, kk, strategy ) 
+    p1_chosen, p2_chosen = p_strategy( game, kk, params.strategy ) 
 
     # get current state 
     rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ]
@@ -595,7 +593,7 @@ function plot_p1_p2_traj( game, params, kk, strategy = "mixed" )
 
     # title 
     ax = fig.current_axis 
-    ax.x.title = string( "k_replan = ", kk )
+    ax.x.title = string( params.strategy, " game: k_replan = ", kk )
 
     return fig 
 end 
@@ -638,7 +636,9 @@ function plot_MC_stats( gameS, params )
     # plot 
     fig = Figure( resolution = (600, 600) ) 
 
-    title_string = string(params.strategy, " games = ", length(gameS), "\n", "mean cumsum norm of U vectors")
+    p1_Unorm_mean_end = @sprintf "%.3g" p1_Unorm_sum_mean[end]  
+    p2_Unorm_mean_end = @sprintf "%.3g" p2_Unorm_sum_mean[end]  
+    title_string = string(params.strategy, " games = ", length(gameS), "\n", "mean cumsum norm of U vectors \n", "p1 = ", p1_Unorm_mean_end, ", p2 = ", p2_Unorm_mean_end ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     tt = ( 0 : length(p1_Unorm_sum_mean)-1 ) * T / length(p1_Unorm_sum_mean)  
     p1_ax1 = lines!( ax1, tt, p1_Unorm_sum_mean, color = :blue ) 
@@ -649,9 +649,9 @@ function plot_MC_stats( gameS, params )
         lines!( ax1, tt, p2_Unorm_sum_all[ii,:][:], color = :red, alpha = 0.1 ) 
     end 
 
-    ax2 = Axis( fig[2,1], xlabel = "time (s)", title = "mean distance" ) 
-
-    tt = ( 0 : length(dist_norm_mean)-1 ) * T / length(dist_norm_mean)  
+    dist_norm_mean_mean = @sprintf "%.3g" mean(dist_norm_mean)   
+    ax2 = Axis( fig[2,1], xlabel = "time (s)", title = string( "mean distance: ", dist_norm_mean_mean ) )  
+    tt  = ( 0 : length(dist_norm_mean)-1 ) * T / length(dist_norm_mean)  
     lines!( ax2, tt, dist_norm_mean, color = :green ) 
     for ii in eachindex(gameS)
         lines!( ax2, tt, dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
@@ -662,11 +662,9 @@ end
 
 export plot_MC_stats 
 
-## ============================================ ##
+## ============================================ ## 
 
-function plot_game_stats( gameS, ii, params ) 
-
-    game = gameS[ii] 
+function plot_game_stats( game, params ) 
 
     r_norm = dist_norm( game, params ) 
     p1_U_norm, p2_U_norm = U_norm( game, params ) 
@@ -675,18 +673,23 @@ function plot_game_stats( gameS, ii, params )
 
     fig = Figure( resolution = (600, 800) )
 
-    title_string = string( params.strategy, " game = ", ii, "\n norm of U vectors" ) 
+    title_string = string( params.strategy, " game \n norm of U vectors" ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     p1_ax1 = lines!( ax1, 1 : length(p1_U_norm), p1_U_norm, color = :blue ) 
     p2_ax1 = lines!( ax1, 1 : length(p2_U_norm), p2_U_norm, color = :red ) 
     Legend( fig[1,2], [ p1_ax1, p2_ax1 ], ["p1", "p2"] ) 
 
-    ax2 = Axis( fig[2,1], xlabel = "time", title = "cumsum of norm of U vectors" ) 
+    p1_Unorm_end = @sprintf "%.3g" p1_Unorm_sum[end] 
+    p2_Unorm_end = @sprintf "%.3g" p2_Unorm_sum[end] 
+    title_string = string( "cumsum of U norm \n p1 = ", p1_Unorm_end, ", p2 = ", p2_Unorm_end )  
+    ax2 = Axis( fig[2,1], xlabel = "time", title = title_string ) 
     lines!( ax2, 1 : length(p1_Unorm_sum), p1_Unorm_sum, color = :blue ) 
     lines!( ax2, 1 : length(p2_Unorm_sum), p2_Unorm_sum, color = :red ) 
 
     ax3 = Axis( fig[3,1], xlabel = "time", title = "distance" ) 
     lines!( ax3, 1 : length(r_norm), r_norm, color = :green )  
+
+    @exfiltrate 
 
     return fig 
 end 

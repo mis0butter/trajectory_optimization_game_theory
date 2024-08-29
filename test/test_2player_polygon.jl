@@ -55,8 +55,9 @@ end
 
 ## ============================================ ##
 
-ii = 9 
-fig = plot_game_stats( gameS, ii, params ) 
+ii   = 9 
+game = gameS[ ii ] 
+fig  = plot_game_stats( game, params ) 
 
 ## ============================================ ##
 
