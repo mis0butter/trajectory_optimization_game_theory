@@ -78,7 +78,7 @@ function solve_mixed_security_strategy(player_cost_matrix)
     if min_value <= 0
         c = -min_value+1
         M = player_cost_matrix + (-min_value+1) * ones(r,p) 
-    end
+    end 
 
     # TODO: solve the LP associated to a zero sum game
     ans = solve_simplex_lp(M)
@@ -116,7 +116,8 @@ function solve_simplex_lp(A)
         @constraint( model,z[i] >= 1e-4 )
     end
 
-    JuMP.optimize!(model)
+    JuMP.optimize!(model) 
+    @exfiltrate 
     (JuMP.termination_status(model) == JuMP.MOI.OPTIMAL) ||
         error("OSQP did not find an optimal solution to this matrix game.")
     (; x = JuMP.value.(z), V = JuMP.objective_value(model))

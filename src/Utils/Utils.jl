@@ -182,7 +182,7 @@ export rand_IC
 ## ============================================ ##
 
 "Compute norm of U vectors for both players"
-function U_norm( game, params ) 
+function U_norm( game, params, strategy = "mixed" ) 
 
     k_tt_replan = params.k_tt_replan 
     k_max     = game.k_replan[end] 
@@ -191,8 +191,22 @@ function U_norm( game, params )
     p2_U_hist = [] 
     for kk = 1 : k_max 
     
-        p1_chosen = game.p1_state[kk].chosen 
-        p2_chosen = game.p2_state[kk].chosen  
+        # if strategy == "mixed" 
+        #     p1_chosen = game.p1_state[kk].chosen 
+        #     p2_chosen = game.p2_state[kk].chosen  
+        # elseif strategy == "pure" 
+        #     p1_chosen = argmax( game.p1_state[kk].weights )  
+        #     p2_chosen = argmax( game.p2_state[kk].weights ) 
+        # else 
+        #     len = length( game.p1_state[kk].weights ) 
+        #     p1_chosen = rand(1:len) 
+        #     p2_chosen = rand(1:len) 
+        # end 
+
+        p1_chosen, p2_chosen = p_strategy( game, kk, strategy ) 
+
+        # p1_chosen = game.p1_state[kk].chosen 
+        # p2_chosen = game.p2_state[kk].chosen  
     
         p1_U = game.p1_state[ kk ].U[ p1_chosen ][ 1 : k_tt_replan, : ] 
         p2_U = game.p2_state[ kk ].U[ p2_chosen ][ 1 : k_tt_replan, : ] 
@@ -214,7 +228,7 @@ export U_norm
 
 ## ============================================ ##
 
-function dist_norm( game, params ) 
+function dist_norm( game, params, strategy = "mixed" ) 
 
     k_tt_replan = params.k_tt_replan 
     k_max     = game.k_replan[end] 
@@ -223,8 +237,19 @@ function dist_norm( game, params )
     p2_r_hist = [] 
     for kk = 1 : k_max 
     
-        p1_chosen = game.p1_state[ kk ].chosen 
-        p2_chosen = game.p2_state[ kk ].chosen  
+        # if strategy == "mixed" 
+        #     p1_chosen = game.p1_state[kk].chosen 
+        #     p2_chosen = game.p2_state[kk].chosen  
+        # elseif strategy == "pure" 
+        #     p1_chosen = argmax( game.p1_state[kk].weights )  
+        #     p2_chosen = argmax( game.p2_state[kk].weights ) 
+        # else 
+        #     len = length( game.p1_state[kk].weights ) 
+        #     p1_chosen = rand(1:len) 
+        #     p2_chosen = rand(1:len) 
+        # end 
+
+        p1_chosen, p2_chosen = p_strategy( game, kk, strategy ) 
     
         # get traveled trajectory 
         p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , 1 : 3 ] 
@@ -248,4 +273,25 @@ function dist_norm( game, params )
 end 
 
 export dist_norm 
+
+## ============================================ ##
+
+function p_strategy( game, kk, strategy = "mixed" ) 
+    
+    if strategy == "mixed" 
+        p1_chosen = game.p1_state[kk].chosen 
+        p2_chosen = game.p2_state[kk].chosen  
+    elseif strategy == "pure" 
+        p1_chosen = argmax( game.p1_state[kk].weights )  
+        p2_chosen = argmax( game.p2_state[kk].weights ) 
+    else 
+        len = length( game.p1_state[kk].weights ) 
+        p1_chosen = rand(1:len) 
+        p2_chosen = rand(1:len) 
+    end 
+
+    return p1_chosen, p2_chosen 
+end 
+
+export p_strategy 
 
