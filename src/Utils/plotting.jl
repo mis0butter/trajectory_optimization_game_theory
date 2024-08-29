@@ -537,21 +537,23 @@ export plot_Δv_weights
 
 ## ============================================ ##
 
-function plot_p1_p2_traj( game, params, k ) 
+function plot_p1_p2_traj( game, params, kk, strategy = "mixed" ) 
 
     # propagate SC state forward 
-    p1 = game.p1_state[ k ] 
-    p2 = game.p2_state[ k ] 
+    p1 = game.p1_state[ kk ] 
+    p2 = game.p2_state[ kk ] 
+
+    p1_chosen, p2_chosen = p_strategy( game, kk, strategy ) 
 
     # get current state 
-    rv_E = p1.X[ p1.chosen ][ params.k_tt_replan + 1, : ]
-    rv_P = p2.X[ p2.chosen ][ params.k_tt_replan + 1, : ]
+    rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ]
+    rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ]
 
     # plot 
     fig = plot_axes3d(  ) 
     # fig = plot_orbit( rv_E_hist, fig ) 
     # fig = plot_orbit( rv_P_hist, fig ) 
-    fig = plot_polygon( game.rv_ref_E_polygon[k][end,:], fig ) 
+    fig = plot_polygon( game.rv_ref_E_polygon[kk][end,:], fig ) 
 
     for i in 1 : params.k_tt_replan 
 
@@ -572,8 +574,8 @@ function plot_p1_p2_traj( game, params, k )
     fig = plot_scatter3d( rv_P_des[1], rv_P_des[2], rv_P_des[3], fig, :utriangle, :red, 15 ) 
     
     # if k > 1 
-    if k > 1 
-        for j = 1 : k - 1 
+    if kk > 1 
+        for j = 1 : kk - 1 
 
             p1 = game.p1_state[ j ] 
             p2 = game.p2_state[ j ] 
@@ -589,11 +591,11 @@ function plot_p1_p2_traj( game, params, k )
     end 
     
     # plot all the weights 
-    fig = plot_Δv_weights( game, params, k, fig )      
+    fig = plot_Δv_weights( game, params, kk, fig )      
 
     # title 
     ax = fig.current_axis 
-    ax.x.title = string( "k_replan = ", k )
+    ax.x.title = string( "k_replan = ", kk )
 
     return fig 
 end 
@@ -602,7 +604,7 @@ export plot_p1_p2_traj
 
 ## ============================================ ##
 
-function plot_MC_stats( gameS, params, strategy = "mixed" )
+function plot_MC_stats( gameS, params )
 
     dist_rnorm_all   = [] 
     p1_Unorm_sum_all = [] 
@@ -612,8 +614,8 @@ function plot_MC_stats( gameS, params, strategy = "mixed" )
         game = gameS[ii] 
 
         # compute norm of U and distance vectors 
-        dist_rnorm = dist_norm( game, params, strategy ) 
-        p1_U_norm, p2_U_norm = U_norm( game, params, strategy ) 
+        dist_rnorm = dist_norm( game, params ) 
+        p1_U_norm, p2_U_norm = U_norm( game, params ) 
         p1_Unorm_sum = cumsum( p1_U_norm ) 
         p2_Unorm_sum = cumsum( p2_U_norm ) 
 
@@ -636,7 +638,7 @@ function plot_MC_stats( gameS, params, strategy = "mixed" )
     # plot 
     fig = Figure( resolution = (600, 600) ) 
 
-    title_string = string(strategy, " games = ", length(gameS), "\n", "mean cumsum norm of U vectors")
+    title_string = string(params.strategy, " games = ", length(gameS), "\n", "mean cumsum norm of U vectors")
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     tt = ( 0 : length(p1_Unorm_sum_mean)-1 ) * T / length(p1_Unorm_sum_mean)  
     p1_ax1 = lines!( ax1, tt, p1_Unorm_sum_mean, color = :blue ) 
@@ -662,18 +664,18 @@ export plot_MC_stats
 
 ## ============================================ ##
 
-function plot_game_stats( gameS, ii, params, strategy = "mixed" ) 
+function plot_game_stats( gameS, ii, params ) 
 
     game = gameS[ii] 
 
-    r_norm = dist_norm( game, params, strategy ) 
-    p1_U_norm, p2_U_norm = U_norm( game, params, strategy ) 
+    r_norm = dist_norm( game, params ) 
+    p1_U_norm, p2_U_norm = U_norm( game, params ) 
     p1_Unorm_sum = cumsum( p1_U_norm ) 
     p2_Unorm_sum = cumsum( p2_U_norm ) 
 
     fig = Figure( resolution = (600, 800) )
 
-    title_string = string( strategy, " game = ", ii, "\n norm of U vectors" ) 
+    title_string = string( params.strategy, " game = ", ii, "\n norm of U vectors" ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     p1_ax1 = lines!( ax1, 1 : length(p1_U_norm), p1_U_norm, color = :blue ) 
     p2_ax1 = lines!( ax1, 1 : length(p2_U_norm), p2_U_norm, color = :red ) 
