@@ -6,9 +6,10 @@ using Statistics: mean, var, std
 using StatsBase: ProbabilityWeights, sample
 using Random: MersenneTwister
 
-rng = MersenneTwister( 1 )
-
+using CSV, DataFrames 
 using Infiltrator 
+
+rng = MersenneTwister( 1 )
 
 
 ## ============================================ ##
@@ -56,15 +57,18 @@ end
 fig = plot_MC_stats( gameS, params ) 
 print_MC_stats( gameS, params ) 
 
+
 ## ============================================ ##
 
 ii   = 9 
 game = gameS[ ii ] 
 fig  = plot_game_stats( game, params ) 
 
+
 ## ============================================ ##
 
 fig = plot_MC_stats( gameS, params ) 
+
 
 ## ============================================ ##
 
