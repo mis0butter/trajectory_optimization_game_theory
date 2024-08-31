@@ -4,7 +4,7 @@ using Debugger
 
 ## ============================================ ##
 
-function prop_rv_E_P( rv_E, rv_P, params ) 
+function prop_rv_E_P_strategy( rv_E, rv_P, params ) 
 
     t_E, rv_E_hist = propagate_2Body(rv_E, params.tof, params.mu, 1.0) 
     t_P, rv_P_hist = propagate_2Body(rv_P, params.tof, params.mu, 1.0) 
@@ -14,7 +14,7 @@ function prop_rv_E_P( rv_E, rv_P, params )
     return t_E, rv_E_hist, t_P, rv_P_hist 
 end 
 
-export prop_rv_E_P 
+export prop_rv_E_P_strategy 
 
 
 ## ============================================ ##

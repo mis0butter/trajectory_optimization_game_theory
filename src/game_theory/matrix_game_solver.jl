@@ -110,10 +110,10 @@ function solve_simplex_lp(A)
     # TODO: add constraints and objective
     @variable( model, z[1 : r] )
     @objective( model, Max, ones(r)' * z ) 
-    @constraint( model, c1, ones(p) >= A'*z )
+    @constraint( model, c1, ones(p) >= A'*z ) 
 
     for i in 1 : r 
-        @constraint( model,z[i] >= 1e-4 )
+        @constraint( model, z[i] >= 1e-4 )
     end
 
     JuMP.optimize!(model) 
@@ -121,7 +121,8 @@ function solve_simplex_lp(A)
     @exfiltrate 
     
     (JuMP.termination_status(model) == JuMP.MOI.OPTIMAL) ||
-        error("OSQP did not find an optimal solution to this matrix game.")
+        # error("OSQP did not find an optimal solution to this matrix game.")
+        println("termination status = ", JuMP.termination_status(model)) 
     (; x = JuMP.value.(z), V = JuMP.objective_value(model))
 end
 
@@ -275,7 +276,7 @@ export players_states
 
 ## ============================================ ##
 
-function rv_E_P( game, params ) 
+function rv_E_P_strategy( game, params ) 
 
     # get most recent player states  
     p1 = game.p1_state[ end ] 
@@ -289,14 +290,14 @@ function rv_E_P( game, params )
     return rv_E, rv_P 
 end 
 
-export rv_E_P 
+export rv_E_P_strategy 
 
 
 ## ============================================ ##
 
 function find_ref_orbit( game, params ) 
 
-    rv_E, rv_P = rv_E_P( game, params ) 
+    rv_E, rv_P = rv_E_P_strategy( game, params ) 
 
     rv_ref_E_polygon_hist = game.rv_ref_E_polygon[ end ] 
 
@@ -349,7 +350,7 @@ export ref_polygon_hist
 function prop_game_step( game, params, rng ) 
 
     # get most recent player states  
-    rv_E, rv_P = rv_E_P( game, params ) 
+    rv_E, rv_P = rv_E_P_strategy( game, params ) 
 
     # return reference orbit for most recent step 
     rv_ref_E, kep_ref_E = find_ref_orbit( game, params ) 
@@ -368,7 +369,7 @@ function prop_game_step( game, params, rng )
     p = player_struct( [], [], [], [], [], [], [] ) 
     players = [ p, deepcopy(p) ]  
 
-    _, rv_E_hist, _, rv_P_hist = prop_rv_E_P( rv_E, rv_P, params ) 
+    _, rv_E_hist, _, rv_P_hist = prop_rv_E_P_strategy( rv_E, rv_P, params ) 
 
     players[1].rv_0_hist = rv_E_hist 
     players[2].rv_0_hist = rv_P_hist 
@@ -384,4 +385,25 @@ function prop_game_step( game, params, rng )
 end 
 
 export prop_game_step 
+
+## ============================================ ##
+
+function p_strategy( game, kk, strategy = "mixed" ) 
+    
+    if strategy == "mixed" 
+        p1_chosen = game.p1_state[kk].chosen 
+        p2_chosen = game.p2_state[kk].chosen  
+    elseif strategy == "pure" 
+        p1_chosen = argmax( game.p1_state[kk].weights )  
+        p2_chosen = argmax( game.p2_state[kk].weights ) 
+    else 
+        len = length( game.p1_state[kk].weights ) 
+        p1_chosen = rand(1:len) 
+        p2_chosen = rand(1:len) 
+    end 
+
+    return p1_chosen, p2_chosen 
+end 
+
+export p_strategy 
 

@@ -1,7 +1,7 @@
 using LinearAlgebra 
 
 # radius of polygon circle!!!! 
-R_polygon = 6378.0 / 10 
+R_polygon = 6378.0 / 100 
 
 ## ============================================ ##
 

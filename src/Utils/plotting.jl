@@ -602,7 +602,7 @@ export plot_p1_p2_traj
 
 ## ============================================ ##
 
-function plot_MC_stats( gameS, params )
+function MC_stats( gameS, params ) 
 
     dist_rnorm_all   = [] 
     p1_Unorm_sum_all = [] 
@@ -627,17 +627,53 @@ function plot_MC_stats( gameS, params )
     p1_Unorm_sum_all = vv2m( p1_Unorm_sum_all ) 
     p2_Unorm_sum_all = vv2m( p2_Unorm_sum_all ) 
 
+    return dist_rnorm_all, p1_Unorm_sum_all, p2_Unorm_sum_all 
+end 
+
+export MC_stats 
+
+## ============================================ ##
+
+function print_MC_stats( gameS, params ) 
+
+    dist_rnorm_all, p1_Unorm_sum_all, p2_Unorm_sum_all = MC_stats( gameS, params ) 
+
+    dist_norm_mean    = mean( dist_rnorm_all, dims = 1 )[:] 
+    p1_Unorm_sum_mean = mean( p1_Unorm_sum_all, dims = 1 )[:] 
+    p2_Unorm_sum_mean = mean( p2_Unorm_sum_all, dims = 1 )[:] 
+    
+    dist_norm_mean_mean = @sprintf "%.3g" mean(dist_norm_mean)  
+    p1_Unorm_mean_end   = @sprintf "%.3g" p1_Unorm_sum_mean[end]  
+    p2_Unorm_mean_end   = @sprintf "%.3g" p2_Unorm_sum_mean[end]  
+
+    println( params.strategy, " games = ", length(gameS) )
+    println( "mean distance: ", dist_norm_mean_mean ) 
+    println( "mean cumsum norm of U vectors: p1 = ", p1_Unorm_mean_end, ", p2 = ", p2_Unorm_mean_end ) 
+
+end 
+
+export print_MC_stats 
+
+## ============================================ ##
+
+function plot_MC_stats( gameS, params )
+
+    dist_rnorm_all, p1_Unorm_sum_all, p2_Unorm_sum_all = MC_stats( gameS, params ) 
+
     dist_norm_mean    = mean( dist_rnorm_all, dims = 1 )[:] 
     p1_Unorm_sum_mean = mean( p1_Unorm_sum_all, dims = 1 )[:] 
     p2_Unorm_sum_mean = mean( p2_Unorm_sum_all, dims = 1 )[:] 
 
+    dist_norm_mean_mean = @sprintf "%.3g" mean(dist_norm_mean)  
+    p1_Unorm_mean_end   = @sprintf "%.3g" p1_Unorm_sum_mean[end]  
+    p2_Unorm_mean_end   = @sprintf "%.3g" p2_Unorm_sum_mean[end]  
+
     T = params.tof * params.k_tt_replan 
 
-    # plot 
-    fig = Figure( resolution = (600, 600) ) 
+    # figure 
+    fig = Figure( resolution = (600, 400) ) 
 
-    p1_Unorm_mean_end = @sprintf "%.3g" p1_Unorm_sum_mean[end]  
-    p2_Unorm_mean_end = @sprintf "%.3g" p2_Unorm_sum_mean[end]  
+    # axis 1 
     title_string = string(params.strategy, " games = ", length(gameS), "\n", "mean cumsum norm of U vectors \n", "p1 = ", p1_Unorm_mean_end, ", p2 = ", p2_Unorm_mean_end ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     tt = ( 0 : length(p1_Unorm_sum_mean)-1 ) * T / length(p1_Unorm_sum_mean)  
@@ -649,13 +685,16 @@ function plot_MC_stats( gameS, params )
         lines!( ax1, tt, p2_Unorm_sum_all[ii,:][:], color = :red, alpha = 0.1 ) 
     end 
 
-    dist_norm_mean_mean = @sprintf "%.3g" mean(dist_norm_mean)   
+    # axis 2 
     ax2 = Axis( fig[2,1], xlabel = "time (s)", title = string( "mean distance: ", dist_norm_mean_mean ) )  
     tt  = ( 0 : length(dist_norm_mean)-1 ) * T / length(dist_norm_mean)  
     lines!( ax2, tt, dist_norm_mean, color = :green ) 
     for ii in eachindex(gameS)
         lines!( ax2, tt, dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
     end 
+
+    # print stats 
+    print_MC_stats( gameS, params ) 
 
     return fig 
 end 

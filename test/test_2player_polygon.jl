@@ -14,7 +14,7 @@ using Infiltrator
 ## ============================================ ##
 # init params 
 
-params, players, game = init_game( rng ) ; 
+params, players, game = init_game( rng, "pure" ) ; 
 
 # ----------------------- #
 # next game steps  
@@ -36,13 +36,13 @@ fig = plot_p1_p2_traj( game, params, N_replan )
 ## ============================================ ##
 # run multiple games 
 
-N_games  = 10
+N_games  = 100 
 N_replan = 10 
 
 gameS = [] 
 for jj = 1 : N_games 
 
-    params, players, game = init_game( rng ) 
+    params, players, game = init_game( rng, "random" ) 
 
     for ii = 1 : N_replan - 1 
         print( "game: ", jj, " step: ", ii, "\n" ) 
@@ -52,6 +52,9 @@ for jj = 1 : N_games
     push!( gameS, game ) 
 
 end 
+
+fig = plot_MC_stats( gameS, params ) 
+print_MC_stats( gameS, params ) 
 
 ## ============================================ ##
 

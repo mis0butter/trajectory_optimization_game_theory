@@ -2,9 +2,6 @@ include("plotting.jl")
 include("IC.jl") 
 include("structs.jl")
 
-# radius of polygon circle!!!! 
-R_polygon = 6378.0 / 100 
-
 ## ============================================ ##
 
 "Convert vector of vectors into matrix"
