@@ -45,7 +45,8 @@ function init_game( rng, strategy = "mixed" )
     params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E, T = T, strategy = strategy ) 
     
     # save rv_ref from E to position for vertices of polygon 
-    rv_ref_E = rv_E_hist 
+    # rv_ref_E = rv_E_hist
+    t_ref_E, rv_ref_E = prop_kepler_tof_Nseg( rv_0_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu )  
     
     # save player state and control hists 
     p = player_struct( [], [], [], [], [], [], [] ) 
@@ -61,6 +62,7 @@ function init_game( rng, strategy = "mixed" )
     push!( game.k_replan, 1 )
     push!( game.rv_E, rv_0_E ) 
     push!( game.rv_P, rv_0_P ) 
+    push!( game.t_ref_E, t_ref_E ) 
     push!( game.rv_ref_E, rv_ref_E )  
 
     # compute all possible Δv solutions 
@@ -70,6 +72,7 @@ function init_game( rng, strategy = "mixed" )
     push!( game.p1_state, players[1] ) 
     push!( game.p2_state, players[2] )  
 
+    @exfiltrate 
 
     return params, players, game 
 end 
