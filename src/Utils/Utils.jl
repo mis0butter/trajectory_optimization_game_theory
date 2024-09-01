@@ -208,60 +208,52 @@ end
 
 export U_norm 
 
+
 ## ============================================ ##
 
-function dist_norm( game, params ) 
+function p_rv_hist( game, params ) 
 
     k_tt_replan = params.k_tt_replan 
     k_max       = game.k_replan[end] 
 
-    p1_r_hist = [] 
-    p2_r_hist = [] 
+    p1_rv_hist = [] 
+    p2_rv_hist = [] 
     for kk = 1 : k_max 
 
         p1_chosen, p2_chosen = p_strategy( game, kk, params.strategy ) 
     
         # get traveled trajectory 
-        p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , 1 : 3 ] 
-        p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan , 1 : 3 ] 
+        p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , : ] 
+        p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan , : ] 
         if kk == k_max 
-            p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan + 1, 1 : 3 ] 
-            p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan + 1, 1 : 3 ] 
+            p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan + 1, : ] 
+            p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan + 1, : ] 
         end 
     
-        push!( p1_r_hist, p1_r ) 
-        push!( p2_r_hist, p2_r ) 
+        push!( p1_rv_hist, p1_r ) 
+        push!( p2_rv_hist, p2_r ) 
     end 
     
-    p1_r_hist = mapreduce( permutedims, hcat, p1_r_hist )' 
-    p2_r_hist = mapreduce( permutedims, hcat, p2_r_hist )' 
+    p1_rv_hist = mapreduce( permutedims, hcat, p1_rv_hist )' 
+    p2_rv_hist = mapreduce( permutedims, hcat, p2_rv_hist )' 
 
-    r_diff = p1_r_hist - p2_r_hist 
+    return p1_rv_hist, p2_rv_hist 
+end 
+
+export p_rv_hist 
+
+
+## ============================================ ## 
+
+function dist_norm( game, params ) 
+
+    p1_rv_hist, p2_rv_hist = p_rv_hist( game, params )
+
+    r_diff = p1_rv_hist[:,1:3] - p2_rv_hist[:,1:3] 
     r_norm = [ norm( r_diff[ii,:] ) for ii in 1 : size(r_diff, 1) ] 
     
     return r_norm
 end 
 
 export dist_norm 
-
-## ============================================ ##
-
-function p_strategy( game, kk, strategy = "mixed" ) 
-    
-    if strategy == "mixed" 
-        p1_chosen = game.p1_state[kk].chosen 
-        p2_chosen = game.p2_state[kk].chosen  
-    elseif strategy == "pure" 
-        p1_chosen = argmax( game.p1_state[kk].weights )  
-        p2_chosen = argmax( game.p2_state[kk].weights ) 
-    else 
-        len = length( game.p1_state[kk].weights ) 
-        p1_chosen = rand(1:len) 
-        p2_chosen = rand(1:len) 
-    end 
-
-    return p1_chosen, p2_chosen 
-end 
-
-export p_strategy 
 
