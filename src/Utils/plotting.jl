@@ -551,7 +551,7 @@ function plot_p1_p2_traj( game, params, kk )
     fig = plot_axes3d(  ) 
     # fig = plot_orbit( rv_E_hist, fig ) 
     # fig = plot_orbit( rv_P_hist, fig ) 
-    fig = plot_polygon( game.rv_ref_E_polygon[kk][end,:], fig ) 
+    fig = plot_polygon( game.rv_ref_E[kk][end,:], fig ) 
 
     for i in 1 : params.k_tt_replan 
 
@@ -692,9 +692,6 @@ function plot_MC_stats( gameS, params )
     for ii in eachindex(gameS)
         lines!( ax2, tt, dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
     end 
-
-    # print stats 
-    print_MC_stats( gameS, params ) 
 
     return fig 
 end 

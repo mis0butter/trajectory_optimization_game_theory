@@ -20,7 +20,7 @@ params, players, game = init_game( rng, "pure" ) ;
 # ----------------------- #
 # next game steps  
 
-N_replan = 9  
+N_replan = 10   
 for ii = 1 : N_replan - 1 
     print( "step: ", ii, "\n" ) 
     game = prop_game_step( game, params, rng ) 
@@ -71,6 +71,8 @@ fig = plot_MC_stats( gameS, params )
 
 
 ## ============================================ ##
+
+
 
 
 

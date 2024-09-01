@@ -134,7 +134,7 @@ export solve_simplex_lp
 function players_XU( params, game, players ) 
 
     # get vertices 
-    rv_ref_polygon = game.rv_ref_E_polygon[ end ][ end,: ]  
+    rv_ref_polygon = game.rv_ref_E[ end ][ end,: ]  
     vertices = polygon_vertices( rv_ref_polygon ) 
 
     for ii in eachindex(players) 
@@ -282,8 +282,10 @@ function rv_E_P_strategy( game, params )
     p1 = game.p1_state[ end ] 
     p2 = game.p2_state[ end ] 
 
+    # choose the trajectory based on the strategy 
     p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
 
+    # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
     rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ] 
     rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ] 
 
@@ -299,15 +301,15 @@ function find_ref_orbit( game, params )
 
     rv_E, rv_P = rv_E_P_strategy( game, params ) 
 
-    rv_ref_E_polygon_hist = game.rv_ref_E_polygon[ end ] 
+    rv_ref_E_hist = game.rv_ref_E[ end ] 
 
-    # find smallest angle between rv_E and rv_ref_E_polygon_hist and index 
+    # find smallest angle between rv_E and rv_ref_E_hist and index 
     cos_min = 100 
     ii_min  = 1 
-    for ii in axes( rv_ref_E_polygon_hist, 1 )
+    for ii in axes( rv_ref_E_hist, 1 )
 
-        rv_ref_E_polygon = rv_ref_E_polygon_hist[ii,:] 
-        dot_p = dot( rv_E, rv_ref_E_polygon ) / ( norm(rv_E) * norm(rv_ref_E_polygon) )  
+        rv_ref_E = rv_ref_E_hist[ii,:] 
+        dot_p = dot( rv_E, rv_ref_E ) / ( norm(rv_E) * norm(rv_ref_E) )  
         cos_a = acos( dot_p ) 
 
         if cos_a < cos_min  
@@ -317,8 +319,10 @@ function find_ref_orbit( game, params )
     end 
 
     # save reference orbit 
-    rv_ref_E  = rv_ref_E_polygon_hist[ii_min,:] 
+    rv_ref_E  = rv_ref_E_hist[ii_min,:] 
     kep_ref_E = cart2kep( rv_ref_E, params.mu ) 
+
+    @exfiltrate 
 
     return rv_ref_E, kep_ref_E 
 end 
@@ -328,7 +332,7 @@ export find_ref_orbit
 
 ## ============================================ ##
 
-function ref_polygon_hist( kep_ref_E, params ) 
+function prop_rv_ref( kep_ref_E, params ) 
 
     # save OG reference orbit 
     kep0_ref_E = params.kep0_ref_E 
@@ -336,13 +340,13 @@ function ref_polygon_hist( kep_ref_E, params )
 
     rv0_ref_E = kep2cart( kep0_ref_E, params.mu ) 
 
-    t_E, rv_ref_E_polygon_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
-    rv_ref_E_polygon_hist = vv2m(rv_ref_E_polygon_hist) 
+    t_ref_E, rv_ref_E_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
+    rv_ref_E_hist = vv2m(rv_ref_E_hist) 
 
-    return rv_ref_E_polygon_hist 
+    return t_ref_E, rv_ref_E_hist 
 end 
 
-export ref_polygon_hist 
+export prop_rv_ref 
 
 
 ## ============================================ ##
@@ -355,21 +359,21 @@ function prop_game_step( game, params, rng )
     # return reference orbit for most recent step 
     rv_ref_E, kep_ref_E = find_ref_orbit( game, params ) 
 
-    # generate rv_ref_E_polygon_hist 
-    rv_ref_E_polygon_hist = ref_polygon_hist( kep_ref_E, params ) 
+    # generate rv_ref_E_hist 
+    t_ref_E, rv_ref_E_hist = prop_rv_ref( kep_ref_E, params ) 
 
     # now move game forward one step 
     push!( game.tt, game.tt[end] + params.tt_step ) 
     push!( game.k_replan, game.k_replan[end] + 1 ) 
     push!( game.rv_E, rv_E ) 
     push!( game.rv_P, rv_P ) 
-    push!( game.rv_ref_E_polygon, rv_ref_E_polygon_hist ) 
+    push!( game.rv_ref_E, rv_ref_E_hist ) 
 
     # save player state and control hists 
     p = player_struct( [], [], [], [], [], [], [] ) 
     players = [ p, deepcopy(p) ]  
 
-    _, rv_E_hist, _, rv_P_hist = prop_rv_E_P_strategy( rv_E, rv_P, params ) 
+    _, rv_E_hist, _, rv_P_hist = prop_rv_E_P( rv_E, rv_P, params ) 
 
     players[1].rv_0_hist = rv_E_hist 
     players[2].rv_0_hist = rv_P_hist 
