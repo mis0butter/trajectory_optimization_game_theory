@@ -301,25 +301,31 @@ function find_ref_orbit( game, params )
 
     rv_E, rv_P = rv_E_P_strategy( game, params ) 
 
+    t_ref_E_hist  = game.t_ref_E[ end ] 
     rv_ref_E_hist = game.rv_ref_E[ end ] 
 
-    # find smallest angle between rv_E and rv_ref_E_hist and index 
-    cos_min = 100 
-    ii_min  = 1 
-    for ii in axes( rv_ref_E_hist, 1 )
+    
+    # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
+    t_ref_E  = t_ref_E_hist[ params.k_tt_replan + 1, : ] 
+    rv_ref_E = rv_ref_E_hist[ params.k_tt_replan + 1, : ] 
 
-        rv_ref_E = rv_ref_E_hist[ii,:] 
-        dot_p = dot( rv_E, rv_ref_E ) / ( norm(rv_E) * norm(rv_ref_E) )  
-        cos_a = acos( dot_p ) 
+    # # find smallest angle between rv_E and rv_ref_E_hist and index 
+    # cos_min = 100 
+    # ii_min  = 1 
+    # for ii in axes( rv_ref_E_hist, 1 )
 
-        if cos_a < cos_min  
-            cos_min = cos_a  
-            ii_min  = ii 
-        end 
-    end 
+    #     rv_ref_E = rv_ref_E_hist[ii,:] 
+    #     dot_p = dot( rv_E, rv_ref_E ) / ( norm(rv_E) * norm(rv_ref_E) )  
+    #     cos_a = acos( dot_p ) 
 
-    # save reference orbit 
-    rv_ref_E  = rv_ref_E_hist[ii_min,:] 
+    #     if cos_a < cos_min  
+    #         cos_min = cos_a  
+    #         ii_min  = ii 
+    #     end 
+    # end 
+
+    # # save reference orbit 
+    # rv_ref_E  = rv_ref_E_hist[ii_min,:] 
     kep_ref_E = cart2kep( rv_ref_E, params.mu ) 
 
     @exfiltrate 
@@ -368,6 +374,7 @@ function prop_game_step( game, params, rng )
     push!( game.k_replan, game.k_replan[end] + 1 ) 
     push!( game.rv_E, rv_E ) 
     push!( game.rv_P, rv_P ) 
+    push!( game.t_ref_E, t_ref_E ) 
     push!( game.rv_ref_E, rv_ref_E_hist ) 
 
     # save player state and control hists 

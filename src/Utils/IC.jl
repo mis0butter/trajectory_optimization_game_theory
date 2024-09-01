@@ -72,8 +72,6 @@ function init_game( rng, strategy = "mixed" )
     push!( game.p1_state, players[1] ) 
     push!( game.p2_state, players[2] )  
 
-    @exfiltrate 
-
     return params, players, game 
 end 
 
