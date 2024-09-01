@@ -55,7 +55,7 @@ function init_game( rng, strategy = "mixed" )
     players[2].rv_0_hist = rv_P_hist 
     
     # init game 
-    game = game_struct( [], [], [], [], [], [], [] ) 
+    game = game_struct( [], [], [], [], [], [], [], [] ) 
     
     push!( game.tt, tt ) 
     push!( game.k_replan, 1 )

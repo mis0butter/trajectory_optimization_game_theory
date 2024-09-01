@@ -340,8 +340,11 @@ function prop_rv_ref( kep_ref_E, params )
 
     rv0_ref_E = kep2cart( kep0_ref_E, params.mu ) 
 
-    t_ref_E, rv_ref_E_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
-    rv_ref_E_hist = vv2m(rv_ref_E_hist) 
+    # t_ref_E, rv_ref_E_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
+    t_ref_E, rv_ref_E_hist = prop_kepler_tof_Nseg( rv0_ref_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu ) 
+    # rv_ref_E_hist = vv2m(rv_ref_E_hist) 
+
+    @exfiltrate 
 
     return t_ref_E, rv_ref_E_hist 
 end 
