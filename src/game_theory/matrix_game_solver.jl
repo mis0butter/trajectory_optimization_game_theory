@@ -330,7 +330,7 @@ function find_ref_orbit( game, params )
 
     @exfiltrate 
 
-    return rv_ref_E, kep_ref_E 
+    return t_ref_E, rv_ref_E, kep_ref_E 
 end 
 
 export find_ref_orbit 
@@ -364,24 +364,24 @@ function prop_game_step( game, params, rng )
     rv_E, rv_P = rv_E_P_strategy( game, params ) 
 
     # return reference orbit for most recent step 
-    rv_ref_E, kep_ref_E = find_ref_orbit( game, params ) 
+    t_ref_E, rv_ref_E, kep_ref_E = find_ref_orbit( game, params ) 
 
     # generate rv_ref_E_hist 
-    t_ref_E, rv_ref_E_hist = prop_rv_ref( kep_ref_E, params ) 
+    t_ref_E_hist, rv_ref_E_hist = prop_rv_ref( kep_ref_E, params ) 
 
     # now move game forward one step 
     push!( game.tt, game.tt[end] + params.tt_step ) 
     push!( game.k_replan, game.k_replan[end] + 1 ) 
     push!( game.rv_E, rv_E ) 
     push!( game.rv_P, rv_P ) 
-    push!( game.t_ref_E, t_ref_E ) 
+    push!( game.t_ref_E, t_ref_E .+ t_ref_E_hist ) 
     push!( game.rv_ref_E, rv_ref_E_hist ) 
 
     # save player state and control hists 
     p = player_struct( [], [], [], [], [], [], [] ) 
     players = [ p, deepcopy(p) ]  
 
-    _, rv_E_hist, _, rv_P_hist = prop_rv_E_P( rv_E, rv_P, params ) 
+    t_E_hist, rv_E_hist, t_P_hist, rv_P_hist = prop_rv_E_P( rv_E, rv_P, params ) 
 
     players[1].rv_0_hist = rv_E_hist 
     players[2].rv_0_hist = rv_P_hist 
@@ -392,6 +392,8 @@ function prop_game_step( game, params, rng )
     # save player state in game 
     push!( game.p1_state, players[1] ) 
     push!( game.p2_state, players[2] ) 
+
+    @exfiltrate 
 
     return game 
 end 

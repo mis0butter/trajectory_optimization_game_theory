@@ -9,12 +9,11 @@ using Random: MersenneTwister
 using CSV, DataFrames 
 using Infiltrator 
 
-rng = MersenneTwister( 1 )
-
 
 ## ============================================ ##
 # init params 
 
+rng = MersenneTwister( 1 )
 params, players, game = init_game( rng, "pure" ) ; 
 
 # ----------------------- #
