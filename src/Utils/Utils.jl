@@ -216,6 +216,7 @@ function p_rv_ref_hist( game, params )
     k_tt_replan = params.k_tt_replan 
     k_max       = game.k_replan[end] 
 
+    tt_hist     = [] 
     p1_rv_hist  = [] 
     p2_rv_hist  = [] 
     rv_ref_hist = [] 
@@ -224,28 +225,32 @@ function p_rv_ref_hist( game, params )
         p1_chosen, p2_chosen = p_strategy( game, kk, params.strategy ) 
     
         # get traveled trajectory 
+        tt  = game.t_ref_E[ kk ][ 1 : k_tt_replan ] 
         p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , : ] 
         p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan , : ] 
         rv_ref = game.rv_ref_E[ kk ][ 1 : k_tt_replan , : ] 
         if kk == k_max 
+            tt   = game.t_ref_E[ kk ][ 1 : k_tt_replan + 1 ] 
             p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan + 1, : ] 
             p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan + 1, : ] 
             rv_ref = game.rv_ref_E[ kk ][ 1 : k_tt_replan + 1, : ] 
         end 
 
+        push!( tt_hist, tt ) 
         push!( p1_rv_hist, p1_r ) 
         push!( p2_rv_hist, p2_r ) 
         push!( rv_ref_hist, rv_ref ) 
 
     end 
     
+    tt_hist     = mapreduce( permutedims, hcat, tt_hist )' 
     p1_rv_hist  = mapreduce( permutedims, hcat, p1_rv_hist )' 
     p2_rv_hist  = mapreduce( permutedims, hcat, p2_rv_hist )' 
     rv_ref_hist = mapreduce( permutedims, hcat, rv_ref_hist )' 
 
     @exfiltrate 
 
-    return p1_rv_hist, p2_rv_hist, rv_ref_hist  
+    return tt_hist, p1_rv_hist, p2_rv_hist, rv_ref_hist  
 end 
 
 export p_rv_ref_hist 
@@ -255,7 +260,7 @@ export p_rv_ref_hist
 
 function dist_ref_norm( game, params ) 
 
-    p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params )
+    _, p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params )
 
     p1_r_diff = p1_rv_hist[:,1:3] - rv_ref_hist[:,1:3] 
     p2_r_diff = p2_rv_hist[:,1:3] - rv_ref_hist[:,1:3] 
@@ -273,7 +278,7 @@ export dist_ref_norm
 
 function dist_norm( game, params ) 
 
-    p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params )
+    _, p1_rv_hist, p2_rv_hist, _ = p_rv_ref_hist( game, params )
 
     r_diff = p1_rv_hist[:,1:3] - p2_rv_hist[:,1:3] 
     r_norm = [ norm( r_diff[ii,:] ) for ii in 1 : size(r_diff, 1) ] 
