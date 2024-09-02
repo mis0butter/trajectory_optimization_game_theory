@@ -14,7 +14,7 @@ using Infiltrator
 # init params 
 
 rng = MersenneTwister( 1 )
-params, players, game = init_game( rng, "pure" ) ; 
+params, players, game = init_game( rng, "mixed" ) ; 
 
 # ----------------------- #
 # next game steps  

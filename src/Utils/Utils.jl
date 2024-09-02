@@ -226,12 +226,12 @@ function p_rv_ref_hist( game, params )
         # get traveled trajectory 
         p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , : ] 
         p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan , : ] 
+        rv_ref = game.rv_ref_E[ kk ][ 1 : k_tt_replan , : ] 
         if kk == k_max 
             p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan + 1, : ] 
             p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan + 1, : ] 
+            rv_ref = game.rv_ref_E[ kk ][ 1 : k_tt_replan + 1, : ] 
         end 
-
-        rv_ref = game.rv_ref_E[ kk ][ 1 : k_tt_replan + 1, : ] 
 
         push!( p1_rv_hist, p1_r ) 
         push!( p2_rv_hist, p2_r ) 
@@ -243,10 +243,30 @@ function p_rv_ref_hist( game, params )
     p2_rv_hist  = mapreduce( permutedims, hcat, p2_rv_hist )' 
     rv_ref_hist = mapreduce( permutedims, hcat, rv_ref_hist )' 
 
+    @exfiltrate 
+
     return p1_rv_hist, p2_rv_hist, rv_ref_hist  
 end 
 
 export p_rv_ref_hist 
+
+
+## ============================================ ## 
+
+function dist_ref_norm( game, params ) 
+
+    p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params )
+
+    p1_r_diff = p1_rv_hist[:,1:3] - rv_ref_hist[:,1:3] 
+    p2_r_diff = p2_rv_hist[:,1:3] - rv_ref_hist[:,1:3] 
+
+    p1_ref_norm = [ norm( p1_r_diff[ii,:] ) for ii in 1 : size(p1_r_diff, 1) ] 
+    p2_ref_norm = [ norm( p2_r_diff[ii,:] ) for ii in 1 : size(p2_r_diff, 1) ] 
+    
+    return p1_ref_norm, p2_ref_norm 
+end 
+
+export dist_ref_norm 
 
 
 ## ============================================ ## 
