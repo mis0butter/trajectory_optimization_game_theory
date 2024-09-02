@@ -70,7 +70,10 @@ fig = plot_MC_stats( games_vec, params )
 
 
 ## ============================================ ##
-# save 
+# save as CSV 
+
+# Define the folder and filename
+save_folder   = string("test/results/", params.strategy, "/")
  
 data0  = [] .* zeros(1,4) 
 header = [ "tt_hist", "p1_rv_hist", "p2_rv_hist", "rv_ref_hist" ] 
@@ -78,31 +81,22 @@ data_frame = DataFrame( data0, header )
 
 for ii in eachindex(games_vec) 
 
+    game_folder = string(save_folder, "game_", ii,"/") 
+
+    if !isdir(game_folder)
+        mkdir(game_folder)
+    end 
+
     game = games_vec[ ii ] 
     
     tt_hist, p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params ) 
 
-    data  = [ tt_hist , p1_rv_hist , p2_rv_hist , rv_ref_hist ] 
-    push!( data_frame, data )
+   
+    CSV.write( string(game_folder, "tt_hist.csv"), DataFrame(tt_hist, :auto) ) 
+    CSV.write( string(game_folder, "p1_rv_hist.csv"), DataFrame(p1_rv_hist, :auto) )  
+    CSV.write( string(game_folder, "p2_rv_hist.csv"), DataFrame(p2_rv_hist, :auto) ) 
+    CSV.write( string(game_folder, "rv_ref_hist.csv"), DataFrame(rv_ref_hist, :auto) ) 
     
 end 
 
-save_folder   = string( "test/results/", params.strategy, "/")  
-filename      = string( "games_N=", length(games_vec), ".csv" ) 
-full_filename = string( save_folder, filename ) 
-
-CSV.write( full_filename, data_frame, header=header ) 
-
-
-## ============================================ ##
-
-# reading this file is so stupid 
-
-# load CSV file as data frame 
-df = CSV.read( full_filename, DataFrame ) 
-
-kk = 1 
-
-str_chop = chop( df.tt_hist[kk]; head=1, tail=1 ) 
-str_vec  = split( str_chop, ";") 
 
