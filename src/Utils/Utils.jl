@@ -225,14 +225,14 @@ function p_rv_ref_hist( game, params )
         p1_chosen, p2_chosen = p_strategy( game, kk, params.strategy ) 
     
         # get traveled trajectory 
-        tt  = game.t_ref_E[ kk ][ 1 : k_tt_replan ] 
-        p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , : ] 
-        p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan , : ] 
+        tt     = game.t_ref_E[ kk ][ 1 : k_tt_replan ] 
+        p1_r   = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan , : ] 
+        p2_r   = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan , : ] 
         rv_ref = game.rv_ref_E[ kk ][ 1 : k_tt_replan , : ] 
         if kk == k_max 
-            tt   = game.t_ref_E[ kk ][ 1 : k_tt_replan + 1 ] 
-            p1_r = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan + 1, : ] 
-            p2_r = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan + 1, : ] 
+            tt     = game.t_ref_E[ kk ][ 1 : k_tt_replan + 1 ] 
+            p1_r   = game.p1_state[ kk ].X[ p1_chosen ][ 1 : k_tt_replan + 1, : ] 
+            p2_r   = game.p2_state[ kk ].X[ p2_chosen ][ 1 : k_tt_replan + 1, : ] 
             rv_ref = game.rv_ref_E[ kk ][ 1 : k_tt_replan + 1, : ] 
         end 
 
@@ -243,10 +243,10 @@ function p_rv_ref_hist( game, params )
 
     end 
     
-    tt_hist     = mapreduce( permutedims, hcat, tt_hist )' 
-    p1_rv_hist  = mapreduce( permutedims, hcat, p1_rv_hist )' 
-    p2_rv_hist  = mapreduce( permutedims, hcat, p2_rv_hist )' 
-    rv_ref_hist = mapreduce( permutedims, hcat, rv_ref_hist )' 
+    tt_hist     = float.( mapreduce( permutedims, hcat, tt_hist )'     )
+    p1_rv_hist  = float.( mapreduce( permutedims, hcat, p1_rv_hist )'  )
+    p2_rv_hist  = float.( mapreduce( permutedims, hcat, p2_rv_hist )'  )
+    rv_ref_hist = float.( mapreduce( permutedims, hcat, rv_ref_hist )' ) 
 
     @exfiltrate 
 

@@ -308,7 +308,7 @@ function find_ref_orbit( game, params )
     # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
     t_ref_E  = t_ref_E_hist[ params.k_tt_replan + 1, : ] 
     rv_ref_E = rv_ref_E_hist[ params.k_tt_replan + 1, : ] 
-    
+
     kep_ref_E = cart2kep( rv_ref_E, params.mu ) 
 
     @exfiltrate 
@@ -382,6 +382,7 @@ function prop_game_step( game, params, rng )
 end 
 
 export prop_game_step 
+
 
 ## ============================================ ##
 
