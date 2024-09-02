@@ -1,2 +1,4 @@
 test/results/ 
+*.jld 
+*.jld2 
 /Manifest.toml
