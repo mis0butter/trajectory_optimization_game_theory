@@ -9,11 +9,12 @@ using Random: MersenneTwister
 using CSV, DataFrames 
 using Infiltrator 
 
+rng = MersenneTwister( 1 ) 
 
 ## ============================================ ##
 # init params 
 
-rng = MersenneTwister( 1 )
+rng = MersenneTwister( 1 ) 
 params, players, game = init_game( rng, "mixed" ) ; 
 
 # ----------------------- #
@@ -36,7 +37,7 @@ fig = plot_p1_p2_traj( game, params, N_replan )
 ## ============================================ ##
 # run multiple games 
 
-N_games  = 100 
+N_games  = 2 
 N_replan = 10 
 
 games_vec = [] 
@@ -53,13 +54,10 @@ for jj = 1 : N_games
 
 end 
 
-fig = plot_MC_stats( games_vec, params ) 
-print_MC_stats( games_vec, params ) 
+fig = plot_MC_stats( games_vec ) 
+print_MC_stats( games_vec ) 
 
-save_games_vec_output( games_vec, params )  
-
-
-
+save_games_vec( games_vec )  
 
 
 ## ============================================ ##
@@ -91,19 +89,6 @@ fig = plot_MC_stats( games_vec, params )
 ## ============================================ ##
 # save as CSV 
 
-function save_games_vec_output( games_vec, params ) 
-
-    save_folder   = string( "test/results/", params.strategy, "/" ) 
-    if !isdir(save_folder)
-        mkdir(save_folder)
-    end 
-
-    filename      = string( "games_", N_games, ".jld2" ) 
-    full_filename = string( save_folder, filename ) 
-
-    @save full_filename games_vec params 
-
-end 
 
 
 ## ============================================ ##

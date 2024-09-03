@@ -56,7 +56,7 @@ function init_game( rng, strategy = "mixed" )
     players[2].rv_0_hist = rv_P_hist 
     
     # init game 
-    game = game_struct( [], [], [], [], [], [], [], [] ) 
+    game = game_struct( [], [], [], [], [], [], [], [], [] ) 
     
     push!( game.tt, tt ) 
     push!( game.k_replan, 1 )
@@ -64,6 +64,7 @@ function init_game( rng, strategy = "mixed" )
     push!( game.rv_P, rv_0_P ) 
     push!( game.t_ref_E, t_ref_E ) 
     push!( game.rv_ref_E, rv_ref_E )  
+    push!( game.params, params ) 
 
     # compute all possible Δv solutions 
     players = players_states( params, game, players, rng ) 

@@ -33,6 +33,7 @@ mutable struct game_struct
     rv_ref_E            # reference vector for polygon from rv_ref_E 
     p1_state            # player 1 state 
     p2_state            # player 2 state 
+    params              # game parameters 
 
 end 
 
