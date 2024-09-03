@@ -291,6 +291,8 @@ export dist_norm
 
 ## ============================================ ##
 
+using JLD2 
+
 function save_games_vec( games_vec, params = games_vec[1].params[1] ) 
 
     save_folder   = string( "test/results/", params.strategy, "/" ) 
@@ -303,21 +305,24 @@ function save_games_vec( games_vec, params = games_vec[1].params[1] )
     filename      = string( "games_", N_games, ".jld2" ) 
     full_filename = string( save_folder, filename ) 
 
-    @save full_filename games_vec params 
+    @save full_filename games_vec 
 
 end 
 
 export save_games_vec 
 
-function load_games_vec( strategy = "mixed" ) 
+
+## ============================================ ##
+
+function load_games_vec( N_games, strategy = "mixed" ) 
 
     save_folder   = string( "test/results/", strategy, "/" ) 
     filename      = string( "games_", N_games, ".jld2" ) 
     full_filename = string( save_folder, filename ) 
 
-    @load full_filename games_vec params 
+    @load full_filename games_vec 
 
-    return games_vec, params  
+    return games_vec 
 end 
 
 export load_games_vec 

@@ -40,9 +40,17 @@ fig = plot_p1_p2_traj( game, params, N_replan )
 N_games  = 100 
 N_replan = 10 
 
-# games_vec = run_MC_games( rng, N_games, N_replan, "mixed" ) 
-games_vec = run_MC_games( rng, N_games, N_replan, "pure" ) 
-games_vec = run_MC_games( rng, N_games, N_replan, "random" ) 
+games_vec = run_MC_games( rng, N_games, N_replan, "mixed" ) 
+# games_vec = run_MC_games( rng, N_games, N_replan, "pure" ) 
+# games_vec = run_MC_games( rng, N_games, N_replan, "random" ) 
+
+
+## ============================================ ##
+# load and plot games_vec 
+
+games_vec = load_games_vec( 100, "mixed" ) 
+fig = plot_MC_stats( games_vec ) 
+
 
 
 
@@ -61,41 +69,13 @@ games_vec = run_MC_games( rng, N_games, N_replan, "random" )
 
 
 ## ============================================ ##
-# save 
-
-save_folder   = string( "test/results/", params.strategy, "/" ) 
-filename      = string( "games_", N_games, ".jld2" ) 
-full_filename = string( save_folder, filename ) 
-
-@save full_filename games_vec  
-# @load full_filename games_vec 
-
-
-
 ## ============================================ ##
-## ============================================ ##
-## ============================================ ##
-
+# plot single game 
 
 ii   = 9 
 game = games_vec[ ii ] 
 fig  = plot_game_stats( game, params ) 
 
-
-## ============================================ ##
-
-fig = plot_MC_stats( games_vec ) 
-
-
-## ============================================ ##
-# plot player distance from reference orbit 
-
-
-for ii in eachindex(games_vec) 
-
-    println(ii) 
-
-end 
 
 
 
