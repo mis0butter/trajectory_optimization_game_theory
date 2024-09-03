@@ -67,7 +67,8 @@ save_folder   = string( "test/results/", params.strategy, "/" )
 filename      = string( "games_", N_games, ".jld2" ) 
 full_filename = string( save_folder, filename ) 
 
-@save full_filename games_vec params 
+@save full_filename games_vec  
+# @load full_filename games_vec 
 
 
 
@@ -87,7 +88,14 @@ fig = plot_MC_stats( games_vec )
 
 
 ## ============================================ ##
-# save as CSV 
+# plot player distance from reference orbit 
+
+
+for ii in eachindex(games_vec) 
+
+    println(ii) 
+
+end 
 
 
 
