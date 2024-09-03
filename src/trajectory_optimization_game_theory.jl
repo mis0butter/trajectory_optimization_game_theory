@@ -16,7 +16,7 @@ using JuMP: JuMP, @variable, @constraint, @objective
 using OSQP: OSQP 
 
 using StatsBase: ProbabilityWeights, sample
-using Statistics: mean  
+using Statistics: mean, var, std 
 using Random: MersenneTwister
 
 # Tools

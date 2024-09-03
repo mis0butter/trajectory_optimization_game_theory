@@ -327,9 +327,8 @@ end
 
 export load_games_vec 
 
+
 ## ============================================ ##
-
-
 
 function run_MC_games( rng, N_games, N_replan, strategy ) 
 
@@ -354,3 +353,113 @@ function run_MC_games( rng, N_games, N_replan, strategy )
 end 
 
 export run_MC_games 
+
+
+## ============================================ ##
+
+function MC_stats( games_vec, params = games_vec[1].params[1] ) 
+
+    dist_rnorm_all   = [] 
+    p1_Unorm_sum_all = [] 
+    p2_Unorm_sum_all = [] 
+    p1_ref_norm_all  = [] 
+    p2_ref_norm_all  = [] 
+    
+    for ii in eachindex(games_vec)
+
+        game = games_vec[ii] 
+
+        # compute norm of U and distance vectors 
+        dist_rnorm = dist_norm( game, params ) 
+        p1_U_norm, p2_U_norm = U_norm( game, params ) 
+        p1_Unorm_sum = cumsum( p1_U_norm ) 
+        p2_Unorm_sum = cumsum( p2_U_norm ) 
+
+        p1_ref_norm, p2_ref_norm = dist_ref_norm( game, params ) 
+
+        push!( dist_rnorm_all, dist_rnorm ) 
+        push!( p1_Unorm_sum_all, p1_Unorm_sum ) 
+        push!( p2_Unorm_sum_all, p2_Unorm_sum ) 
+        push!( p1_ref_norm_all, p1_ref_norm ) 
+        push!( p2_ref_norm_all, p2_ref_norm ) 
+
+    end 
+
+    dist_rnorm_all    = vv2m( dist_rnorm_all ) 
+    p1_Unorm_sum_all  = vv2m( p1_Unorm_sum_all ) 
+    p2_Unorm_sum_all  = vv2m( p2_Unorm_sum_all ) 
+    p1_ref_norm_all   = vv2m( p1_ref_norm_all ) 
+    p2_ref_norm_all   = vv2m( p2_ref_norm_all ) 
+
+    dist_norm_mean    = mean( dist_rnorm_all,   dims = 1 )[:] 
+    p1_Unorm_sum_mean = mean( p1_Unorm_sum_all, dims = 1 )[:] 
+    p2_Unorm_sum_mean = mean( p2_Unorm_sum_all, dims = 1 )[:] 
+    p1_ref_norm_mean  = mean( p1_ref_norm_all,  dims = 1 )[:] 
+    p2_ref_norm_mean  = mean( p2_ref_norm_all,  dims = 1 )[:] 
+
+    dist_norm_std     = std( dist_rnorm_all,    dims = 1 )[:] 
+    p1_Unorm_sum_std  = std( p1_Unorm_sum_all,  dims = 1 )[:] 
+    p2_Unorm_sum_std  = std( p2_Unorm_sum_all,  dims = 1 )[:] 
+    p1_ref_norm_std   = std( p1_ref_norm_all,   dims = 1 )[:] 
+    p2_ref_norm_std   = std( p2_ref_norm_all,   dims = 1 )[:] 
+
+    stats = ( dist_rnorm_all = dist_rnorm_all, 
+              p1_Unorm_sum_all = p1_Unorm_sum_all, 
+              p2_Unorm_sum_all = p2_Unorm_sum_all, 
+              p1_ref_norm_all  = p1_ref_norm_all, 
+              p2_ref_norm_all  = p2_ref_norm_all, 
+              dist_norm_mean   = dist_norm_mean, 
+              p1_Unorm_sum_mean = p1_Unorm_sum_mean, 
+              p2_Unorm_sum_mean = p2_Unorm_sum_mean, 
+              p1_ref_norm_mean  = p1_ref_norm_mean, 
+              p2_ref_norm_mean  = p2_ref_norm_mean, 
+              dist_norm_std    = dist_norm_std, 
+              p1_Unorm_sum_std = p1_Unorm_sum_std, 
+              p2_Unorm_sum_std = p2_Unorm_sum_std, 
+              p1_ref_norm_std  = p1_ref_norm_std, 
+              p2_ref_norm_std  = p2_ref_norm_std )  
+
+    return stats  
+end 
+
+export MC_stats 
+
+
+## ============================================ ##
+
+function print_MC_stats( games_vec, params = games_vec[1].params[1], print_stats = false ) 
+
+    stats = MC_stats( games_vec, params ) 
+    
+    dist_norm_mean_mean   = @sprintf "%.3g" mean(stats.dist_norm_mean)  
+    p1_Unorm_mean_end     = @sprintf "%.3g" stats.p1_Unorm_sum_mean[end]  
+    p2_Unorm_mean_end     = @sprintf "%.3g" stats.p2_Unorm_sum_mean[end]  
+    p1_ref_norm_mean_mean = @sprintf "%.3g" mean(stats.p1_ref_norm_mean)
+    p2_ref_norm_mean_mean = @sprintf "%.3g" mean(stats.p2_ref_norm_mean) 
+
+    sprintf_stats = ( dist_norm_mean_mean = dist_norm_mean_mean, 
+                      p1_Unorm_mean_end   = p1_Unorm_mean_end, 
+                      p2_Unorm_mean_end   = p2_Unorm_mean_end, 
+                      p1_ref_norm_mean_mean = p1_ref_norm_mean_mean, 
+                      p2_ref_norm_mean_mean = p2_ref_norm_mean_mean )  
+
+    if print_stats == true 
+
+        println( params.strategy, " games = ", length(games_vec) )
+        println( "mean player distance: ", dist_norm_mean_mean ) 
+        println( "mean cumsum norm of U vectors: p1 = ", p1_Unorm_mean_end, ", p2 = ", p2_Unorm_mean_end ) 
+        println( "mean player distance from reference orbit: p1 = ", p1_ref_norm_mean_mean, ", p2 = ", p2_ref_norm_mean_mean )      
+
+    end 
+
+    return sprintf_stats 
+end 
+
+export print_MC_stats 
+
+
+
+
+
+
+

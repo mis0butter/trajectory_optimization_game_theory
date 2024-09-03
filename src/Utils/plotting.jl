@@ -600,127 +600,48 @@ end
 
 export plot_p1_p2_traj 
 
-## ============================================ ##
-
-function MC_stats( games_vec, params = games_vec[1].params[1] ) 
-
-    dist_rnorm_all   = [] 
-    p1_Unorm_sum_all = [] 
-    p2_Unorm_sum_all = [] 
-    p1_ref_norm_all = [] 
-    p2_ref_norm_all = [] 
-    
-    for ii in eachindex(games_vec)
-
-        game = games_vec[ii] 
-
-        # compute norm of U and distance vectors 
-        dist_rnorm = dist_norm( game, params ) 
-        p1_U_norm, p2_U_norm = U_norm( game, params ) 
-        p1_Unorm_sum = cumsum( p1_U_norm ) 
-        p2_Unorm_sum = cumsum( p2_U_norm ) 
-
-        p1_ref_norm, p2_ref_norm = dist_ref_norm( game, params ) 
-
-        push!( dist_rnorm_all, dist_rnorm ) 
-        push!( p1_Unorm_sum_all, p1_Unorm_sum ) 
-        push!( p2_Unorm_sum_all, p2_Unorm_sum ) 
-        push!( p1_ref_norm_all, p1_ref_norm ) 
-        push!( p2_ref_norm_all, p2_ref_norm ) 
-
-    end 
-
-    dist_rnorm_all   = vv2m( dist_rnorm_all ) 
-    p1_Unorm_sum_all = vv2m( p1_Unorm_sum_all ) 
-    p2_Unorm_sum_all = vv2m( p2_Unorm_sum_all ) 
-    p1_ref_norm_all  = vv2m( p1_ref_norm_all ) 
-    p2_ref_norm_all  = vv2m( p2_ref_norm_all ) 
-
-    return dist_rnorm_all, p1_Unorm_sum_all, p2_Unorm_sum_all, p1_ref_norm_all, p2_ref_norm_all 
-end 
-
-export MC_stats 
-
-## ============================================ ##
-
-function print_MC_stats( games_vec, params = games_vec[1].params[1] ) 
-
-    dist_rnorm_all, p1_Unorm_sum_all, p2_Unorm_sum_all, p1_ref_norm_all, p2_ref_norm_all = MC_stats( games_vec, params ) 
-
-    dist_norm_mean    = mean( dist_rnorm_all, dims = 1 )[:] 
-    p1_Unorm_sum_mean = mean( p1_Unorm_sum_all, dims = 1 )[:] 
-    p2_Unorm_sum_mean = mean( p2_Unorm_sum_all, dims = 1 )[:] 
-    p1_ref_norm_mean = mean( p1_ref_norm_all, dims = 1 )[:] 
-    p2_ref_norm_mean = mean( p2_ref_norm_all, dims = 1 )[:] 
-    
-    dist_norm_mean_mean = @sprintf "%.3g" mean(dist_norm_mean)  
-    p1_Unorm_mean_end   = @sprintf "%.3g" p1_Unorm_sum_mean[end]  
-    p2_Unorm_mean_end   = @sprintf "%.3g" p2_Unorm_sum_mean[end]  
-    p1_ref_norm_mean_mean = @sprintf "%.3g" mean(p1_ref_norm_mean)
-    p2_ref_norm_mean_mean = @sprintf "%.3g" mean(p2_ref_norm_mean) 
-
-
-    println( params.strategy, " games = ", length(games_vec) )
-    println( "mean player distance: ", dist_norm_mean_mean ) 
-    println( "mean cumsum norm of U vectors: p1 = ", p1_Unorm_mean_end, ", p2 = ", p2_Unorm_mean_end ) 
-    println( "mean player distance from reference orbit: p1 = ", p1_ref_norm_mean_mean, ", p2 = ", p2_ref_norm_mean_mean ) 
-
-end 
-
-export print_MC_stats 
 
 ## ============================================ ##
 
 function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
 
-    dist_rnorm_all, p1_Unorm_sum_all, p2_Unorm_sum_all, p1_ref_norm_all, p2_ref_norm_all = MC_stats( games_vec, params ) 
-
-    dist_norm_mean    = mean( dist_rnorm_all, dims = 1 )[:] 
-    p1_Unorm_sum_mean = mean( p1_Unorm_sum_all, dims = 1 )[:] 
-    p2_Unorm_sum_mean = mean( p2_Unorm_sum_all, dims = 1 )[:] 
-    p1_ref_norm_mean = mean( p1_ref_norm_all, dims = 1 )[:] 
-    p2_ref_norm_mean = mean( p2_ref_norm_all, dims = 1 )[:] 
-    
-    dist_norm_mean_mean = @sprintf "%.3g" mean(dist_norm_mean)  
-    p1_Unorm_mean_end   = @sprintf "%.3g" p1_Unorm_sum_mean[end]  
-    p2_Unorm_mean_end   = @sprintf "%.3g" p2_Unorm_sum_mean[end]  
-    p1_ref_norm_mean_mean = @sprintf "%.3g" mean(p1_ref_norm_mean)
-    p2_ref_norm_mean_mean = @sprintf "%.3g" mean(p2_ref_norm_mean) 
+    stats = MC_stats( games_vec, params ) 
+    sprintf_stats = print_MC_stats( games_vec ) 
 
     T = params.tof * params.k_tt_replan 
 
     # figure 
-    fig = Figure( resolution = (600, 600) ) 
+    fig = Figure( size = (600, 600) ) 
 
     # axis 1 
-    title_string = string(params.strategy, " games = ", length(games_vec), "\n", "mean cumsum norm of U vectors \n", "p1 = ", p1_Unorm_mean_end, ", p2 = ", p2_Unorm_mean_end ) 
+    title_string = string(params.strategy, " games = ", length(games_vec), "\n", "mean cumsum norm of U vectors \n", "p1 = ", sprintf_stats.p1_Unorm_mean_end, ", p2 = ", sprintf_stats.p2_Unorm_mean_end ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
-    tt = ( 0 : length(p1_Unorm_sum_mean)-1 ) * T / length(p1_Unorm_sum_mean)  
-    p1_ax1 = lines!( ax1, tt, p1_Unorm_sum_mean, color = :blue ) 
-    p2_ax1 = lines!( ax1, tt, p2_Unorm_sum_mean, color = :red ) 
+    tt = ( 0 : length(stats.p1_Unorm_sum_mean)-1 ) * T / length(stats.p1_Unorm_sum_mean)  
+    p1_ax1 = lines!( ax1, tt, stats.p1_Unorm_sum_mean, color = :blue ) 
+    p2_ax1 = lines!( ax1, tt, stats.p2_Unorm_sum_mean, color = :red ) 
     Legend( fig[1,2], [ p1_ax1, p2_ax1 ], ["p1", "p2"] ) 
     for ii in eachindex(games_vec)
-        lines!( ax1, tt, p1_Unorm_sum_all[ii,:][:], color = :blue, alpha = 0.1 ) 
-        lines!( ax1, tt, p2_Unorm_sum_all[ii,:][:], color = :red, alpha = 0.1 ) 
+        lines!( ax1, tt, stats.p1_Unorm_sum_all[ii,:][:], color = :blue, alpha = 0.1 ) 
+        lines!( ax1, tt, stats.p2_Unorm_sum_all[ii,:][:], color = :red,  alpha = 0.1 ) 
     end 
 
     # axis 2 
-    ax2 = Axis( fig[2,1], xlabel = "time (s)", title = string( "mean player distance: ", dist_norm_mean_mean ) )  
-    tt  = ( 0 : length(dist_norm_mean)-1 ) * T / length(dist_norm_mean)  
-    lines!( ax2, tt, dist_norm_mean, color = :green ) 
+    ax2 = Axis( fig[2,1], xlabel = "time (s)", title = string( "mean player distance: ", sprintf_stats.dist_norm_mean_mean ) )  
+    tt  = ( 0 : length(stats.dist_norm_mean)-1 ) * T / length(stats.dist_norm_mean)  
+    lines!( ax2, tt, stats.dist_norm_mean, color = :green ) 
     for ii in eachindex(games_vec)
-        lines!( ax2, tt, dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
+        lines!( ax2, tt, stats.dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
     end 
 
     # axis 3 
-    title_string = string( "mean player distance from reference orbit: ", "p1 = ", p1_ref_norm_mean_mean, ", p2 = ", p2_ref_norm_mean_mean ) 
+    title_string = string( "mean player distance from reference orbit: ", "p1 = ", sprintf_stats.p1_ref_norm_mean_mean, ", p2 = ", sprintf_stats.p2_ref_norm_mean_mean ) 
     ax3 = Axis( fig[3,1], xlabel = "time", title = title_string ) 
-    tt = ( 0 : length(p1_ref_norm_mean)-1 ) * T / length(p1_ref_norm_mean) 
-    p1_ax3 = lines!( ax3, tt, p1_ref_norm_mean, color = :blue ) 
-    p2_ax3 = lines!( ax3, tt, p2_ref_norm_mean, color = :red ) 
+    tt = ( 0 : length(stats.p1_ref_norm_mean)-1 ) * T / length(stats.p1_ref_norm_mean) 
+    p1_ax3 = lines!( ax3, tt, stats.p1_ref_norm_mean, color = :blue ) 
+    p2_ax3 = lines!( ax3, tt, stats.p2_ref_norm_mean, color = :red ) 
     for ii in eachindex(games_vec)
-        lines!( ax3, tt, p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
-        lines!( ax3, tt, p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
+        lines!( ax3, tt, stats.p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
+        lines!( ax3, tt, stats.p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
     end
 
     return fig 
@@ -737,7 +658,7 @@ function plot_game_stats( game, params )
     p1_Unorm_sum = cumsum( p1_U_norm ) 
     p2_Unorm_sum = cumsum( p2_U_norm ) 
 
-    fig = Figure( resolution = (600, 800) )
+    fig = Figure( size = (600, 800) )
 
     title_string = string( params.strategy, " game \n norm of U vectors" ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
