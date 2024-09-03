@@ -37,27 +37,27 @@ fig = plot_p1_p2_traj( game, params, N_replan )
 ## ============================================ ##
 # run multiple games 
 
-N_games  = 2 
+N_games  = 100 
 N_replan = 10 
 
-games_vec = [] 
-for jj = 1 : N_games 
+# games_vec = run_MC_games( rng, N_games, N_replan, "mixed" ) 
+games_vec = run_MC_games( rng, N_games, N_replan, "pure" ) 
+games_vec = run_MC_games( rng, N_games, N_replan, "random" ) 
 
-    params, players, game = init_game( rng, "random" ) 
 
-    for ii = 1 : N_replan - 1 
-        print( "game: ", jj, " step: ", ii, "\n" ) 
-        game = prop_game_step( game, params, rng ) 
-    end 
 
-    push!( games_vec, game ) 
 
-end 
 
-fig = plot_MC_stats( games_vec ) 
-print_MC_stats( games_vec ) 
 
-save_games_vec( games_vec )  
+
+
+
+
+
+
+
+
+
 
 
 ## ============================================ ##
@@ -83,7 +83,7 @@ fig  = plot_game_stats( game, params )
 
 ## ============================================ ##
 
-fig = plot_MC_stats( games_vec, params ) 
+fig = plot_MC_stats( games_vec ) 
 
 
 ## ============================================ ##

@@ -321,3 +321,31 @@ function load_games_vec( strategy = "mixed" )
 end 
 
 export load_games_vec 
+
+## ============================================ ##
+
+
+
+function run_MC_games( rng, N_games, N_replan, strategy ) 
+
+    games_vec = [] 
+    for jj = 1 : N_games 
+
+        params, players, game = init_game( rng, strategy ) 
+
+        for ii = 1 : N_replan - 1 
+            print( "game: ", jj, " step: ", ii, "\n" ) 
+            game = prop_game_step( game, params, rng ) 
+        end 
+
+        push!( games_vec, game ) 
+
+    end 
+    
+    print_MC_stats( games_vec ) 
+    save_games_vec( games_vec )  
+
+    return games_vec 
+end 
+
+export run_MC_games 
