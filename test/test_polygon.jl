@@ -30,7 +30,8 @@ rv_vec = rv_E[end,:]
 
 vertices = polygon_vertices( rv_vec ) 
 
-plot_polygon( rv_vec ) 
+params = ( R_polygon = 6378.0 / 100 ) 
+plot_polygon( rv_vec, params ) 
 
 ## ============================================ ##
 

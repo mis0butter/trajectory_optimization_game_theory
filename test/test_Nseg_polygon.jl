@@ -22,10 +22,10 @@ t_P, rv_P = propagate_2Body(rv_0_P, tof, mu, 1.0)
 rv_P = vv2m(rv_P) 
 rv_E = vv2m(rv_E) 
 
-rv_vec = rv_E[end,:] 
+rv_state = rv_E[end,:] 
 
 # get vertices of polygon 
-vertices = polygon_vertices( rv_vec ) 
+vertices = polygon_vertices( rv_state ) 
 
 ## ============================================ ##
 
@@ -33,7 +33,8 @@ vertices = polygon_vertices( rv_vec )
 fig = plot_axes3d( )
 # fig = plot_orbit( rv_P, fig ) 
 fig = plot_orbit( rv_E, fig ) 
-fig = plot_polygon( rv_vec, fig ) 
+params = ( R_polygon = 6378.0 / 100 )
+fig = plot_polygon( rv_state, params, fig ) 
 
 # segments 
 N = 10 

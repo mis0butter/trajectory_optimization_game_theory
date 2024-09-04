@@ -361,18 +361,20 @@ export plot_prop_Δv
 
 "Plot lines of polygon at rv input"
 function plot_polygon( 
-    rv_vec,                 # [N,6] state vector 
-    fig = plot_axes3d(),    # figure handle 
-    r   = R_polygon,            # radius of Earth (km) 
-) 
+    rv_state,                   # [N,6] state vector 
+    parameters,                 # struct of parameters 
+    figure = plot_axes3d()      # figure handle 
+    ) 
 
-    vertices = polygon_vertices( rv_vec ) 
+    R_polygon = parameters.R_polygon 
+
+    vertices  = polygon_vertices( rv_state ) 
     
-    fig = plot_scatter3d( rv_vec[1], rv_vec[2], rv_vec[3], fig ) 
+    figure = plot_scatter3d( rv_state[1], rv_state[2], rv_state[3], figure ) 
     
     # center of polygon 
-    r_vec = rv_vec[1:3] 
-    axis_1, axis_2, axis_3 = axis_123( rv_vec ) 
+    r_vec = rv_state[1:3] 
+    axis_1, axis_2, axis_3 = axis_123( rv_state ) 
 
     # ok, let's plot this so that it all looks right 
     # fig = plot_vector3d( [ r_vec ] , [ axis_1 * r ] , fig, r/100, :black, "1" ) 
@@ -383,52 +385,52 @@ function plot_polygon(
     # ok, let's define the distance of vertices of polygon from center: how about r / 100 ? 
 
     # top vertex: move up from r_f along axis 3 
-    r_top = r_vec + axis_3 * r 
+    r_top = r_vec + axis_3 * R_polygon 
     # fig   = plot_scatter3d( r_top[1], r_top[2], r_top[3], fig, :circle ) 
 
     # top-inner vertex: move up from r_f along axis 3 and left along axis 2, 60 degrees 
-    vec      = cosd(60) * axis_3 * r + sind(60) * axis_2 * r
+    vec      = cosd(60) * axis_3 * R_polygon + sind(60) * axis_2 * R_polygon
     r_topin  = r_vec + vec
     # fig      = plot_scatter3d( r_topin[1], r_topin[2], r_topin[3], fig, :circle )  
 
     mat = [ r_top' ; r_topin' ] 
-    fig = plot_line3d( mat, fig ) 
+    figure = plot_line3d( mat, figure ) 
 
     # bottom-inner vertex: move down from r_f along axis 3 and left along axis 2, 60 degrees 
-    vec      = - cosd(60) * axis_3 * r + sind(60) * axis_2 * r
+    vec      = - cosd(60) * axis_3 * R_polygon + sind(60) * axis_2 * R_polygon
     r_botin  = r_vec + vec 
     # fig      = plot_scatter3d( r_botin[1], r_botin[2], r_botin[3], fig, :circle ) 
 
     mat = [ r_topin' ; r_botin' ] 
-    fig = plot_line3d( mat, fig ) 
+    figure = plot_line3d( mat, figure ) 
 
     # bottom vertex: move down from r_f along axis 3 
-    r_bot = r_vec - axis_3 * r
+    r_bot = r_vec - axis_3 * R_polygon
     # fig   = plot_scatter3d( r_bot[1], r_bot[2], r_bot[3], fig, :circle ) 
 
     mat = [ r_botin' ; r_bot' ] 
-    fig = plot_line3d( mat, fig ) 
+    figure = plot_line3d( mat, figure ) 
 
     # bottom-outer vertex: move down from r_f along axis 3 and right along axis 2, 60 degrees 
-    vec      = - cosd(60) * axis_3 * r - sind(60) * axis_2 * r
+    vec      = - cosd(60) * axis_3 * R_polygon - sind(60) * axis_2 * R_polygon
     r_botout = r_vec + vec 
     # fig      = plot_scatter3d( r_botout[1], r_botout[2], r_botout[3], fig, :circle ) 
 
     mat = [ r_bot' ; r_botout' ] 
-    fig = plot_line3d( mat, fig ) 
+    figure = plot_line3d( mat, figure ) 
 
     # top-outer vertex: move up from r_f along axis 3 and right along axis 2, 60 degrees 
-    vec       = cosd(60) * axis_3 * r - sind(60) * axis_2 * r
+    vec       = cosd(60) * axis_3 * R_polygon - sind(60) * axis_2 * R_polygon
     r_topout  = r_vec + vec 
     # fig       = plot_scatter3d( r_topout[1], r_topout[2], r_topout[3], fig, :circle ) 
 
     mat = [ r_botout' ; r_topout' ] 
-    fig = plot_line3d( mat, fig ) 
+    figure = plot_line3d( mat, figure ) 
 
     mat = [ r_topout' ; r_top' ] 
-    fig = plot_line3d( mat, fig ) 
+    figure = plot_line3d( mat, figure ) 
 
-    return fig 
+    return figure 
 end 
 
 export plot_polygon 
@@ -535,41 +537,41 @@ export plot_Δv_weights
 
 ## ============================================ ##
 
-function plot_p1_p2_traj( game, params, kk ) 
+function plot_p1_p2_traj( game, parameters, kk ) 
 
     # propagate SC state forward 
     p1 = game.p1_state[ kk ] 
     p2 = game.p2_state[ kk ] 
 
-    p1_chosen, p2_chosen = p_strategy( game, kk, params.strategy ) 
+    player1_chosen, player2_chosen = p_strategy( game, kk, parameters.strategy ) 
 
     # get current state 
-    rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ]
-    rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ]
+    rv_E = p1.X[ player1_chosen ][ parameters.k_tt_replan + 1, : ]
+    rv_P = p2.X[ player2_chosen ][ parameters.k_tt_replan + 1, : ]
 
     # plot 
     fig = plot_axes3d(  ) 
     # fig = plot_orbit( rv_E_hist, fig ) 
     # fig = plot_orbit( rv_P_hist, fig ) 
-    fig = plot_polygon( game.rv_ref_E[kk][end,:], fig ) 
+    fig = plot_polygon( game.rv_ref_E[kk][end,:], parameters, fig ) 
 
-    for i in 1 : params.k_tt_replan 
+    for i in 1 : parameters.k_tt_replan 
 
         # plot player 1 
         rv_E = p1.X[ p1.chosen ][ i, : ] 
-        fig = plot_scatter3d( rv_E[1], rv_E[2], rv_E[3], fig, :circle, :blue, 20 ) 
+        fig  = plot_scatter3d( rv_E[1], rv_E[2], rv_E[3], fig, :circle, :blue, 20 ) 
 
         # plot player 2 
         rv_P = p2.X[ p2.chosen ][ i, : ] 
-        fig = plot_scatter3d( rv_P[1], rv_P[2], rv_P[3], fig, :circle, :red, 20 ) 
+        fig  = plot_scatter3d( rv_P[1], rv_P[2], rv_P[3], fig, :circle, :red, 20 ) 
 
     end 
 
     # plot triangles on chosen vertices 
-    rv_E_des = p1.X[ p1.chosen ][ end, : ] 
-    rv_P_des = p2.X[ p2.chosen ][ end, : ] 
-    fig = plot_scatter3d( rv_E_des[1], rv_E_des[2], rv_E_des[3], fig, :utriangle, :blue, 15 ) 
-    fig = plot_scatter3d( rv_P_des[1], rv_P_des[2], rv_P_des[3], fig, :utriangle, :red, 15 ) 
+    rv_E_target = p1.X[ p1.chosen ][ end, : ] 
+    rv_P_target = p2.X[ p2.chosen ][ end, : ] 
+    fig = plot_scatter3d( rv_E_target[1], rv_E_target[2], rv_E_target[3], fig, :utriangle, :blue, 15 ) 
+    fig = plot_scatter3d( rv_P_target[1], rv_P_target[2], rv_P_target[3], fig, :utriangle, :red, 15 ) 
     
     # if k > 1 
     if kk > 1 
@@ -578,22 +580,21 @@ function plot_p1_p2_traj( game, params, kk )
             p1 = game.p1_state[ j ] 
             p2 = game.p2_state[ j ] 
 
-            rv_E = p1.X[ p1.chosen ][ 1 : params.k_tt_replan + 1, : ] 
+            rv_E = p1.X[ p1.chosen ][ 1 : parameters.k_tt_replan + 1, : ] 
             lines!( rv_E[:,1], rv_E[:,2], rv_E[:,3]; linewidth = 2, color = :blue ) 
 
-
-            rv_P = p2.X[ p2.chosen ][ 1 : params.k_tt_replan + 1, : ] 
+            rv_P = p2.X[ p2.chosen ][ 1 : parameters.k_tt_replan + 1, : ] 
             lines!( rv_P[:,1], rv_P[:,2], rv_P[:,3]; linewidth = 2, color = :red ) 
 
         end 
     end 
     
     # plot all the weights 
-    fig = plot_Δv_weights( game, params, kk, fig )      
+    fig = plot_Δv_weights( game, parameters, kk, fig )      
 
     # title 
     ax = fig.current_axis 
-    ax.x.title = string( params.strategy, " game: k_replan = ", kk )
+    ax.x.title = string( parameters.strategy, " game: k_replan = ", kk )
 
     return fig 
 end 

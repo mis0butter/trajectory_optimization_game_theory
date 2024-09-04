@@ -1,8 +1,5 @@
 using LinearAlgebra 
 
-# radius of polygon circle!!!! 
-R_polygon = 6378.0 / 100 
-
 ## ============================================ ##
 
 function init_game( rng, strategy = "mixed" ) 
@@ -40,9 +37,12 @@ function init_game( rng, strategy = "mixed" )
 
     # save reference orbit 
     kep0_ref_E = copy( kep0_E ) 
+
+    # radius of polygon circle!!!! 
+    R_polygon = 6378.0 / 100 
     
     # game parameters 
-    params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E, T = T, strategy = strategy ) 
+    params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E, T = T, strategy = strategy, R_polygon = R_polygon ) 
     
     # save rv_ref from E to position for vertices of polygon 
     # rv_ref_E = rv_E_hist

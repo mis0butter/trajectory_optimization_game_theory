@@ -95,13 +95,15 @@ export axis_123
 
 "Compute vertices of polygon around given state vector"  
 function polygon_vertices( 
-    rv_vec,                 # [N,6] state vector 
-    dist = R_polygon,    # radius of polygon 
+    rv_state,                 # [N,6] state vector 
+    parameters,    # radius of polygon 
 ) 
 
+    dist = parameters.R_polygon 
+
     # center of polygon 
-    r_vec    = rv_vec[1:3] 
-    _, axis_2, axis_3 = axis_123( rv_vec ) 
+    r_vec    = rv_state[1:3] 
+    _, axis_2, axis_3 = axis_123( rv_state ) 
 
     # top vertex: move up from r_f along axis 3 
     r_top    = r_vec + axis_3 * dist 
@@ -136,9 +138,11 @@ export polygon_vertices
 "Generate uniformly distributed random point(s) within a circle of radius R"
 
 function unif_random_points_circle( 
-    R = R_polygon,  # radius of circle 
+    parameters,     # parameters struct 
     N = 1,          # number of points 
 ) 
+
+    R = parameters.R_polygon 
 
     θ = 2*pi*rand(N) 
     r = R * sqrt.(rand(N)) 
@@ -156,14 +160,16 @@ export unif_random_points_circle
 "Generate uniformly distributed random point(s) within a circle of radius R around given state vector" 
 
 function rand_IC( 
-    rv_vec,         # [N,6] state vector 
-    R = R_polygon,  # radius of circle 
-    N = 1,          # number of points 
+    rv_state,           # [N,6] state vector 
+    parameters,         # parameters struct 
+    N = 1,              # number of points 
 ) 
 
+    R = parameters.R_polygon 
+
     # center of polygon 
-    r_vec = rv_vec[1:3] 
-    _, axis_2, axis_3 = axis_123( rv_vec ) 
+    r_vec = rv_state[1:3] 
+    _, axis_2, axis_3 = axis_123( rv_state ) 
 
     # generate random points 
     x, y = unif_random_points_circle( R, N ) 
