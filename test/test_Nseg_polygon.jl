@@ -25,7 +25,7 @@ rv_E = vv2m(rv_E)
 rv_state = rv_E[end,:] 
 
 # get vertices of polygon 
-vertices = polygon_vertices( rv_state ) 
+vertices = polygon_vertices( rv_state, params ) 
 
 ## ============================================ ##
 

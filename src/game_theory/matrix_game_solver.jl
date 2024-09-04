@@ -135,7 +135,7 @@ function players_XU( params, game, players )
 
     # get vertices 
     rv_ref_polygon = game.rv_ref_E[ end ][ end,: ]  
-    vertices = polygon_vertices( rv_ref_polygon ) 
+    vertices = polygon_vertices( rv_ref_polygon, params ) 
 
     for ii in eachindex(players) 
 
@@ -303,7 +303,6 @@ function find_ref_orbit( game, params )
 
     t_ref_E_hist  = game.t_ref_E[ end ] 
     rv_ref_E_hist = game.rv_ref_E[ end ] 
-
     
     # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
     t_ref_E  = t_ref_E_hist[ params.k_tt_replan + 1, : ] 

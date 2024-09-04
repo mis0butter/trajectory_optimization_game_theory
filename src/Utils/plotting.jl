@@ -368,7 +368,7 @@ function plot_polygon(
 
     R_polygon = parameters.R_polygon 
 
-    vertices  = polygon_vertices( rv_state ) 
+    vertices  = polygon_vertices( rv_state, parameters ) 
     
     figure = plot_scatter3d( rv_state[1], rv_state[2], rv_state[3], figure ) 
     

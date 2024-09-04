@@ -7,6 +7,9 @@ function init_game( rng, strategy = "mixed" )
     # orbit params 
     mu  = 398600.4415   # gravitational parameter 
     r   = 6378.0        # Earth radius [km] 
+
+    # radius of polygon circle!!!! 
+    R_polygon = 6378.0 / 100 
     
     # orbital elements
     a      = r + 620.0  
@@ -14,7 +17,7 @@ function init_game( rng, strategy = "mixed" )
     rv_0_E = kep2cart(kep0_E, mu) 
 
     # initial conditions for pursuer 
-    r_0_P = rand_IC( rv_0_E ) 
+    r_0_P = rand_IC( rv_0_E, R_polygon ) 
     rv_0_P = [ r_0_P ; rv_0_E[4:6] ]
 
     # get period of orbit 
@@ -37,9 +40,6 @@ function init_game( rng, strategy = "mixed" )
 
     # save reference orbit 
     kep0_ref_E = copy( kep0_E ) 
-
-    # radius of polygon circle!!!! 
-    R_polygon = 6378.0 / 100 
     
     # game parameters 
     params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E, T = T, strategy = strategy, R_polygon = R_polygon ) 
