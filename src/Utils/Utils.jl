@@ -139,11 +139,12 @@ export polygon_vertices
 
 function unif_random_points_circle( 
     R,      # parameters struct 
+    rng,    # random number generator 
     N = 1,  # number of points 
 ) 
 
-    θ = 2*pi*rand(N) 
-    r = R * sqrt.(rand(N)) 
+    θ = 2*pi*rand(rng, N) 
+    r = R * sqrt.(rand(rng, N)) 
 
     x = r .* cos.(θ) 
     y = r .* sin.(θ) 
@@ -159,7 +160,8 @@ export unif_random_points_circle
 
 function rand_IC( 
     rv_reference,   # [N,6] state vector 
-    R_polygon,     # parameters struct 
+    R_polygon,      # parameters struct 
+    rng,            # random number generator 
     N = 1,          # number of points 
 ) 
 
@@ -168,13 +170,13 @@ function rand_IC(
     _, axis_2, axis_3 = axis_123( rv_reference ) 
 
     # generate random points 
-    x_random, y_random = unif_random_points_circle( R_polygon, N ) 
+    x_random, y_random = unif_random_points_circle( R_polygon, rng, N ) 
 
     random_vector = x_random[1] .* axis_2 + y_random[1] .* axis_3 
     r_IC          = r_reference + random_vector 
 
     return r_IC 
-end
+end 
 
 export rand_IC 
 

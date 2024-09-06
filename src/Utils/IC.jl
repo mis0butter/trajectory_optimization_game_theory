@@ -17,7 +17,7 @@ function init_game( rng, strategy = "mixed" )
     rv_0_E = kep2cart(kep0_E, mu) 
 
     # initial conditions for pursuer 
-    r_0_P = rand_IC( rv_0_E, R_polygon ) 
+    r_0_P = rand_IC( rv_0_E, R_polygon, rng ) 
     rv_0_P = [ r_0_P ; rv_0_E[4:6] ]
 
     # get period of orbit 
