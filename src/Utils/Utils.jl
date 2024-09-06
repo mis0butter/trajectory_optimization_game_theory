@@ -192,7 +192,14 @@ function U_norm( game, params )
     p2_U_hist = [] 
     for kk = 1 : k_max 
 
-        p1_chosen, p2_chosen = p_strategy( game, kk, params.strategy ) 
+        # why tf was I doing this 
+        # p1_chosen, p2_chosen = p_strategy( game, kk, parameters.strategy ) 
+
+        # propagate SC state forward 
+        p1 = game.p1_state[ kk ] 
+        p2 = game.p2_state[ kk ] 
+        p1_chosen = p1.chosen 
+        p2_chosen = p2.chosen 
 
         p1_U = game.p1_state[ kk ].U[ p1_chosen ][ 1 : k_tt_replan, : ] 
         p2_U = game.p2_state[ kk ].U[ p2_chosen ][ 1 : k_tt_replan, : ] 
@@ -226,7 +233,14 @@ function p_rv_ref_hist( game, params )
     rv_ref_hist = [] 
     for kk = 1 : k_max 
 
-        p1_chosen, p2_chosen = p_strategy( game, kk, params.strategy ) 
+        # why tf was I doing this 
+        # p1_chosen, p2_chosen = p_strategy( game, kk, parameters.strategy ) 
+
+        # propagate SC state forward 
+        p1 = game.p1_state[ kk ] 
+        p2 = game.p2_state[ kk ] 
+        p1_chosen = p1.chosen 
+        p2_chosen = p2.chosen 
     
         # get traveled trajectory 
         tt     = game.t_ref_E[ kk ][ 1 : k_tt_replan ] 

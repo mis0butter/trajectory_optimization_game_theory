@@ -233,7 +233,7 @@ export players_cost_matrices
 
 ## ============================================ ##
 
-function choose_mixed_weights( players, rng ) 
+function choose_mixed_weights( players, rng, params ) 
 
     # mixing weights - ZERO SUM GAME!!! 
     mixing_weights = let
@@ -243,8 +243,23 @@ function choose_mixed_weights( players, rng )
     players[1].weights = mixing_weights[1] 
     players[2].weights = mixing_weights[2] 
 
-    # sample from mixed nash 
-    chosen = [sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights] 
+    # now determine strategy 
+    p1_strategy = params.strategy 
+    if p1_strategy == "mixed" 
+        # p1_chosen = game.p1_state[kk].chosen 
+        # p2_chosen = game.p2_state[kk].chosen  
+        chosen = [ sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights ] 
+    elseif p1_strategy == "pure" 
+        chosen = [ argmax(weights) for weights in mixing_weights ] 
+        # p1_chosen = argmax( game.p1_state[kk].weights )  
+        # p2_chosen = argmax( game.p2_state[kk].weights ) 
+    else 
+        len = length( mixing_weights[1] ) 
+        # p1_chosen = rand(rng, 1:len) 
+        # p2_chosen = rand(rng, 1:len) 
+        chosen = [ rand(rng, 1:len) for weights in mixing_weights ]
+    end 
+
     players[1].chosen = chosen[1] 
     players[2].chosen = chosen[2] 
 
@@ -266,7 +281,7 @@ function players_states( params, game, players, rng )
     players = players_cost_matrices( players ) 
 
     # solve mixed nash 
-    players = choose_mixed_weights( players, rng )
+    players = choose_mixed_weights( players, rng, params )
 
     return players 
 end 
@@ -282,8 +297,11 @@ function rv_E_P_strategy( game, params )
     p1 = game.p1_state[ end ] 
     p2 = game.p2_state[ end ] 
 
+    p1_chosen = p1.chosen 
+    p2_chosen = p2.chosen 
+
     # choose the trajectory based on the strategy 
-    p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
+    # p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
 
     # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
     rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ] 
@@ -385,12 +403,12 @@ export prop_game_step
 
 ## ============================================ ##
 
-function p_strategy( game, kk, strategy = "mixed" ) 
+function p_strategy( game, kk, p1_strategy = "mixed" ) 
     
-    if strategy == "mixed" 
+    if p1_strategy == "mixed" 
         p1_chosen = game.p1_state[kk].chosen 
         p2_chosen = game.p2_state[kk].chosen  
-    elseif strategy == "pure" 
+    elseif p1_strategy == "pure" 
         p1_chosen = argmax( game.p1_state[kk].weights )  
         p2_chosen = argmax( game.p2_state[kk].weights ) 
     else 

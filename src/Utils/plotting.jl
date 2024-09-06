@@ -543,11 +543,15 @@ function plot_p1_p2_traj( game, parameters, kk )
     p1 = game.p1_state[ kk ] 
     p2 = game.p2_state[ kk ] 
 
-    player1_chosen, player2_chosen = p_strategy( game, kk, parameters.strategy ) 
+    # why tf was I doing this 
+    # player1_chosen, player2_chosen = p_strategy( game, kk, parameters.strategy ) 
+
+    p1_chosen = p1.chosen 
+    p2_chosen = p2.chosen 
 
     # get current state 
-    rv_E = p1.X[ player1_chosen ][ parameters.k_tt_replan + 1, : ]
-    rv_P = p2.X[ player2_chosen ][ parameters.k_tt_replan + 1, : ]
+    rv_E = p1.X[ p1_chosen ][ parameters.k_tt_replan + 1, : ]
+    rv_P = p2.X[ p2_chosen ][ parameters.k_tt_replan + 1, : ]
 
     # plot 
     fig = plot_axes3d(  ) 
