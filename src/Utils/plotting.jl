@@ -659,7 +659,7 @@ function plot_game_stats( game, params )
     p1_Unorm_sum = cumsum( p1_U_norm ) 
     p2_Unorm_sum = cumsum( p2_U_norm ) 
 
-    fig = Figure( size = (600, 800) )
+    fig = Figure( size = (600, 600) )
 
     title_string = string( params.strategy, " game \n norm of U vectors" ) 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
