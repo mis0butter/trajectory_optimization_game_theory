@@ -15,34 +15,45 @@ rng = MersenneTwister( 1 )
 # init params 
 
 rng = MersenneTwister( 1 ) 
-params, players, game = init_game( rng, "mixed" ) ; 
 
-# ----------------------- #
-# next game steps  
+function run_game( rng, N_replan = 10, strategy = "mixed" ) 
 
-N_replan = 10   
-for ii = 1 : N_replan - 1 
-    print( "step: ", ii, "\n" ) 
-    game = prop_game_step( game, params, rng ) 
+    params, players, game = init_game( rng, strategy )  
+    
+    # ----------------------- #
+    # next game steps  
+
+    for ii = 1 : N_replan - 1 
+        print( "step: ", ii, "\n" ) 
+        game = prop_game_step( game, params, rng ) 
+    end 
+
+    return game, params 
 end 
+
+game, params = run_game( rng ) 
 
 # ----------------------- #
 # plotting stuff 
 
 # k = 1 
-fig = plot_p1_p2_traj( game, params, N_replan )  
+# fig = plot_p1_p2_traj( game, params, N_replan )  
+fig = plot_game_stats( game, params ) 
 
 
-## ============================================ ##
-## ============================================ ##
+
+## ============================================ ## 
+## ============================================ ## 
 # run multiple games 
 
-N_games  = 100 
+N_games  = 10 
 N_replan = 10 
 
 games_vec = run_MC_games( rng, N_games, N_replan, "mixed" ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "pure" ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "random" ) 
+
+fig = plot_MC_stats( games_vec ) 
 
 
 ## ============================================ ##
