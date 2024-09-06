@@ -16,29 +16,25 @@ rng = MersenneTwister( 1 )
 
 rng = MersenneTwister( 1 ) 
 
-function run_game( rng, N_replan = 10, strategy = "mixed" ) 
+# run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
-    params, players, game = init_game( rng, strategy )  
-    
-    # ----------------------- #
-    # next game steps  
-
-    for ii = 1 : N_replan - 1 
-        print( "step: ", ii, "\n" ) 
-        game = prop_game_step( game, params, rng ) 
-    end 
-
-    return game, params 
-end 
-
-game, params = run_game( rng ) 
+N_replan = 2 
+p1_strategy = "mixed" 
+p2_strategy = "mixed" 
+game, params = run_game( rng, N_replan, p1_strategy, p2_strategy ) 
 
 # ----------------------- #
-# plotting stuff 
+# plotting stuff l
 
 # k = 1 
 # fig = plot_p1_p2_traj( game, params, N_replan )  
 fig = plot_game_stats( game, params ) 
+
+
+
+
+
+
 
 
 

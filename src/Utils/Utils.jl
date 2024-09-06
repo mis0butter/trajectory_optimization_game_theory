@@ -332,6 +332,23 @@ export load_games_vec
 
 ## ============================================ ##
 
+function run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
+
+    params, players, game = init_game( rng, p1_strategy )  
+
+    for ii = 1 : N_replan - 1 
+        print( "step: ", ii, "\n" ) 
+        game = prop_game_step( game, params, rng ) 
+    end 
+
+    return game, params 
+end 
+
+export run_game 
+
+
+## ============================================ ##
+
 function run_MC_games( rng, N_games, N_replan, strategy ) 
 
     games_vec = [] 
