@@ -404,24 +404,4 @@ end
 export prop_game_step 
 
 
-## ============================================ ##
-
-function p_strategy( game, kk, p1_strategy = "mixed" ) 
-    
-    if p1_strategy == "mixed" 
-        p1_chosen = game.p1_state[kk].chosen 
-        p2_chosen = game.p2_state[kk].chosen  
-    elseif p1_strategy == "pure" 
-        p1_chosen = argmax( game.p1_state[kk].weights )  
-        p2_chosen = argmax( game.p2_state[kk].weights ) 
-    else 
-        len = length( game.p1_state[kk].weights ) 
-        p1_chosen = rand(1:len) 
-        p2_chosen = rand(1:len) 
-    end 
-
-    return p1_chosen, p2_chosen 
-end 
-
-export p_strategy 
 

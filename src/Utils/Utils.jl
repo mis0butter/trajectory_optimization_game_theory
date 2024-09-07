@@ -192,9 +192,6 @@ function U_norm( game, params )
     p2_U_hist = [] 
     for kk = 1 : k_max 
 
-        # why tf was I doing this 
-        # p1_chosen, p2_chosen = p_strategy( game, kk, parameters.strategy ) 
-
         # propagate SC state forward 
         p1 = game.p1_state[ kk ] 
         p2 = game.p2_state[ kk ] 
@@ -232,9 +229,6 @@ function p_rv_ref_hist( game, params )
     p2_rv_hist  = [] 
     rv_ref_hist = [] 
     for kk = 1 : k_max 
-
-        # why tf was I doing this 
-        # p1_chosen, p2_chosen = p_strategy( game, kk, parameters.strategy ) 
 
         # propagate SC state forward 
         p1 = game.p1_state[ kk ] 
