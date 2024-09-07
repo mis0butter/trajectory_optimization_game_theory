@@ -233,7 +233,7 @@ export players_cost_matrices
 
 ## ============================================ ##
 
-function choose_mixed_weights( players, rng, params ) 
+function player_strategy( players, rng, params ) 
 
     # mixing weights - ZERO SUM GAME!!! 
     mixing_weights = let
@@ -273,7 +273,7 @@ function choose_mixed_weights( players, rng, params )
     return players 
 end 
 
-export choose_mixed_weights 
+export player_strategy 
 
 
 ## ============================================ ##
@@ -287,8 +287,8 @@ function players_states( params, game, players, rng )
     # compute cost matrices 
     players = players_cost_matrices( players ) 
 
-    # solve mixed nash 
-    players = choose_mixed_weights( players, rng, params )
+    # solve mixed nash and choose strategy 
+    players = player_strategy( players, rng, params )
 
     return players 
 end 
