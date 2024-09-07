@@ -2,7 +2,7 @@ using LinearAlgebra
 
 ## ============================================ ##
 
-function init_game( rng, strategy = "mixed" ) 
+function init_game( rng, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
     # orbit params 
     mu  = 398600.4415   # gravitational parameter 
@@ -42,7 +42,7 @@ function init_game( rng, strategy = "mixed" )
     kep0_ref_E = copy( kep0_E ) 
     
     # game parameters 
-    params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E, T = T, strategy = strategy, R_polygon = R_polygon ) 
+    params = ( mu = mu, r = r, N = N, tof = tof, k_tt_replan = k_tt_replan, tt_step = tt_step, kep0_ref_E = kep0_ref_E, T = T, strategy = p1_strategy, R_polygon = R_polygon ) 
     
     # save rv_ref from E to position for vertices of polygon 
     # rv_ref_E = rv_E_hist

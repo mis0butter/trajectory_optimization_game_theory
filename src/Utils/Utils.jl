@@ -350,7 +350,7 @@ export load_games_vec
 
 function run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
-    params, players, game = init_game( rng, p1_strategy )  
+    params, players, game = init_game( rng, p1_strategy, p2_strategy )  
 
     for ii = 1 : N_replan - 1 
         print( "step: ", ii, "\n" ) 
