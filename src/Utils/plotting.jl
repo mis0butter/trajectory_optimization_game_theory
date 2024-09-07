@@ -665,7 +665,9 @@ function plot_game_stats( game, params )
 
     fig = Figure( size = (600, 600) )
 
-    title_string = string( params.strategy, " game \n norm of U vectors" ) 
+    # title_string = string( params.strategy, " game \n norm of U vectors" ) 
+    title_string = string( "p1 strategy = ", params.strategy, ", p2 strategy = ", params.p2_strategy, "\n norm of U vectors" ) 
+
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     p1_ax1 = lines!( ax1, 1 : length(p1_U_norm), p1_U_norm, color = :blue ) 
     p2_ax1 = lines!( ax1, 1 : length(p2_U_norm), p2_U_norm, color = :red ) 
@@ -678,7 +680,7 @@ function plot_game_stats( game, params )
     lines!( ax2, 1 : length(p1_Unorm_sum), p1_Unorm_sum, color = :blue ) 
     lines!( ax2, 1 : length(p2_Unorm_sum), p2_Unorm_sum, color = :red ) 
 
-    ax3 = Axis( fig[3,1], xlabel = "time", title = "distance" ) 
+    ax3 = Axis( fig[3,1], xlabel = "time", title = "player distance" ) 
     lines!( ax3, 1 : length(r_norm), r_norm, color = :green )  
 
     @exfiltrate 
