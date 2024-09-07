@@ -598,7 +598,10 @@ function plot_p1_p2_traj( game, parameters, kk )
 
     # title 
     ax = fig.current_axis 
-    ax.x.title = string( parameters.strategy, " game: k_replan = ", kk )
+
+    # title_string = string( parameters.strategy, " game: k_replan = ", kk ) 
+    title_string = string( "p1 strategy = ", parameters.strategy, ", p2 strategy = ", parameters.p2_strategy, "\n k_replan = ", kk ) 
+    ax.x.title = title_string 
 
     return fig 
 end 
