@@ -243,14 +243,14 @@ function choose_mixed_weights( players, rng, params )
     players[1].weights = mixing_weights[1] 
     players[2].weights = mixing_weights[2] 
 
-    chosen_mixed = [ sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights ] 
     chosen = [ 0, 0 ]
 
     # now determine strategy 
     p1_strategy = params.strategy 
     p2_strategy = params.p2_strategy 
+
     if p1_strategy == "mixed" 
-        chosen[1] = chosen_mixed[1] 
+        chosen[1] = sample(rng, ProbabilityWeights( mixing_weights[1]) )
     elseif p1_strategy == "pure" 
         chosen[1] = argmax( mixing_weights[1] ) 
     else 
@@ -259,7 +259,7 @@ function choose_mixed_weights( players, rng, params )
     end 
 
     if p2_strategy == "mixed" 
-        chosen[2] = chosen_mixed[2] 
+        chosen[2] = sample(rng, ProbabilityWeights( mixing_weights[2]) )
     elseif p2_strategy == "pure" 
         chosen[2] = argmax( mixing_weights[2] ) 
     else 

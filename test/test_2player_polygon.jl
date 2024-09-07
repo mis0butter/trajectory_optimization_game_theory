@@ -20,8 +20,8 @@ rng = MersenneTwister( 1 )
 # run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
 N_replan = 2  
-p1_strategy  = "random" 
-p2_strategy  = "random" 
+p1_strategy  = "mixed" 
+p2_strategy  = "mixed" 
 game, params = run_game( rng, N_replan, p1_strategy, p2_strategy ) 
 
 # ----------------------- #
