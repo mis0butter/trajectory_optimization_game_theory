@@ -243,21 +243,18 @@ function choose_mixed_weights( players, rng, params )
     players[1].weights = mixing_weights[1] 
     players[2].weights = mixing_weights[2] 
 
+    chosen_mixed = [ sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights ] 
+
     # now determine strategy 
     p1_strategy = params.strategy 
+    p2_strategy = params.p2_strategy 
     if p1_strategy == "mixed" 
-        # p1_chosen = game.p1_state[kk].chosen 
-        # p2_chosen = game.p2_state[kk].chosen  
-        chosen = [ sample(rng, ProbabilityWeights(weights)) for weights in mixing_weights ] 
+        chosen = chosen_mixed 
     elseif p1_strategy == "pure" 
         chosen = [ argmax(weights) for weights in mixing_weights ] 
-        # p1_chosen = argmax( game.p1_state[kk].weights )  
-        # p2_chosen = argmax( game.p2_state[kk].weights ) 
     else 
         len = length( mixing_weights[1] ) 
-        # p1_chosen = rand(rng, 1:len) 
-        # p2_chosen = rand(rng, 1:len) 
-        chosen = [ rand(rng, 1:len) for weights in mixing_weights ]
+        chosen = [ rand(rng, 1:len) for weights in mixing_weights ] 
     end 
 
     players[1].chosen = chosen[1] 
@@ -328,8 +325,6 @@ function find_ref_orbit( game, params )
 
     kep_ref_E = cart2kep( rv_ref_E, params.mu ) 
 
-    @exfiltrate 
-
     return t_ref_E, rv_ref_E, kep_ref_E 
 end 
 
@@ -392,8 +387,6 @@ function prop_game_step( game, params, rng )
     # save player state in game 
     push!( game.p1_state, players[1] ) 
     push!( game.p2_state, players[2] ) 
-
-    @exfiltrate 
 
     return game 
 end 
