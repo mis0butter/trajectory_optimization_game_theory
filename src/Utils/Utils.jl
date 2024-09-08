@@ -377,7 +377,7 @@ function run_MC_games( rng, N_games, N_replan, p1_strategy = "mixed", p2_strateg
 
     end 
     
-    print_MC_stats( games_vec ) 
+    # print_MC_stats( games_vec ) 
     save_games_vec( games_vec )  
 
     return games_vec 

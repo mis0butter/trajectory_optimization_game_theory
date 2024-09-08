@@ -594,7 +594,7 @@ function plot_p1_p2_traj( game, parameters, kk )
     end 
     
     # plot all the weights 
-    fig = plot_Δv_weights( game, parameters, kk, fig )      
+    fig = plot_Δv_weights( game, parameters, kk, fig ) 
 
     # title 
     ax = fig.current_axis 
@@ -622,7 +622,8 @@ function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
     fig = Figure( size = (600, 600) ) 
 
     # axis 1 
-    title_string = string(params.strategy, " games = ", length(games_vec), "\n", "mean cumsum norm of U vectors \n", "p1 = ", sprintf_stats.p1_Unorm_mean_end, ", p2 = ", sprintf_stats.p2_Unorm_mean_end ) 
+    title_string = string( "p1 strategy = ", params.strategy, ", p2 strategy = ", params.p2_strategy, "\n", "mean cumsum norm of U vectors \n", "p1 = ", sprintf_stats.p1_Unorm_mean_end, ", p2 = ", sprintf_stats.p2_Unorm_mean_end )  
+
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
     tt = ( 0 : length(stats.p1_Unorm_sum_mean)-1 ) * T / length(stats.p1_Unorm_sum_mean)  
     p1_ax1 = lines!( ax1, tt, stats.p1_Unorm_sum_mean, color = :blue ) 
