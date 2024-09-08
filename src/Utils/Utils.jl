@@ -359,12 +359,12 @@ export run_game
 
 ## ============================================ ##
 
-function run_MC_games( rng, N_games, N_replan, strategy ) 
+function run_MC_games( rng, N_games, N_replan, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
     games_vec = [] 
     for jj = 1 : N_games 
 
-        params, players, game = init_game( rng, strategy ) 
+        params, players, game = init_game( rng, p1_strategy, p2_strategy ) 
 
         for ii = 1 : N_replan - 1 
             print( "game: ", jj, " step: ", ii, "\n" ) 

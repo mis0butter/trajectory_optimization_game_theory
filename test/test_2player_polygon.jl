@@ -19,28 +19,29 @@ rng = MersenneTwister( 1 )
 
 # run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
-N_replan = 2  
+N_replan = 10  
 p1_strategy  = "mixed" 
 p2_strategy  = "mixed" 
 game, params = run_game( rng, N_replan, p1_strategy, p2_strategy ) 
 
-# ----------------------- #
+# ----------------------- # 
 # plotting stuff 
 
 # k = 1 
-# fig = plot_p1_p2_traj( game, params, N_replan )  
+fig = plot_p1_p2_traj( game, params, N_replan )  
 fig = plot_game_stats( game, params ) 
-
 
 
 ## ============================================ ## 
 ## ============================================ ## 
 # run multiple games 
 
-N_games  = 10 
-N_replan = 10 
+N_games  = 2 
+N_replan = 2  
 
-games_vec = run_MC_games( rng, N_games, N_replan, "mixed" ) 
+p1_strategy  = "mixed" 
+p2_strategy  = "mixed" 
+games_vec = run_MC_games( rng, N_games, N_replan, p1_strategy, p2_strategy ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "pure" ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "random" ) 
 
