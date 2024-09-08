@@ -347,7 +347,7 @@ function run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mix
     params, players, game = init_game( rng, p1_strategy, p2_strategy )  
 
     for ii = 1 : N_replan - 1 
-        print( "step: ", ii, "\n" ) 
+        println( "step: ", ii + 1, "\n" ) 
         game = prop_game_step( game, params, rng ) 
     end 
 
@@ -367,7 +367,7 @@ function run_MC_games( rng, N_games, N_replan, p1_strategy = "mixed", p2_strateg
         params, players, game = init_game( rng, p1_strategy, p2_strategy ) 
 
         for ii = 1 : N_replan - 1 
-            print( "game: ", jj, " step: ", ii, "\n" ) 
+            println( "game: ", jj, " step: ", ii + 1, "\n" ) 
             game = prop_game_step( game, params, rng ) 
         end 
 
