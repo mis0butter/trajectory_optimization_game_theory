@@ -219,7 +219,8 @@ export U_norm
 
 ## ============================================ ##
 
-function p_rv_ref_hist( game, params ) 
+# tt_hist, p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params ) 
+function p_rv_ref_hist( game, params = game.params[1] ) 
 
     k_tt_replan = params.k_tt_replan 
     k_max       = game.k_replan[end] 
@@ -255,7 +256,7 @@ function p_rv_ref_hist( game, params )
 
     end 
     
-    tt_hist     = float.( mapreduce( permutedims, hcat, tt_hist )'     )
+    tt_hist     = float.( mapreduce( permutedims, hcat, tt_hist )'     )[:]
     p1_rv_hist  = float.( mapreduce( permutedims, hcat, p1_rv_hist )'  )
     p2_rv_hist  = float.( mapreduce( permutedims, hcat, p2_rv_hist )'  )
     rv_ref_hist = float.( mapreduce( permutedims, hcat, rv_ref_hist )' ) 

@@ -616,7 +616,9 @@ function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
     stats = MC_stats( games_vec, params ) 
     sprintf_stats = print_MC_stats( games_vec ) 
 
-    T = params.tof * params.k_tt_replan 
+    # T = params.tof * params.k_tt_replan 
+    # tt = ( 0 : length(stats.p1_Unorm_sum_mean)-1 ) * T / length(stats.p1_Unorm_sum_mean) 
+    tt, _, _, _ = p_rv_ref_hist( games_vec[1], params ) 
 
     # figure 
     fig = Figure( size = (600, 600) ) 
@@ -625,18 +627,17 @@ function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
     title_string = string( "p1 strategy = ", params.strategy, ", p2 strategy = ", params.p2_strategy, "\n", "mean cumsum norm of U vectors \n", "p1 = ", sprintf_stats.p1_Unorm_mean_end, ", p2 = ", sprintf_stats.p2_Unorm_mean_end )  
 
     ax1 = Axis( fig[1,1], xlabel = "time", title = title_string ) 
-    tt = ( 0 : length(stats.p1_Unorm_sum_mean)-1 ) * T / length(stats.p1_Unorm_sum_mean)  
-    p1_ax1 = lines!( ax1, tt, stats.p1_Unorm_sum_mean, color = :blue ) 
-    p2_ax1 = lines!( ax1, tt, stats.p2_Unorm_sum_mean, color = :red ) 
+    p1_ax1 = lines!( ax1, tt[1:end-1], stats.p1_Unorm_sum_mean, color = :blue ) 
+    p2_ax1 = lines!( ax1, tt[1:end-1], stats.p2_Unorm_sum_mean, color = :red ) 
     Legend( fig[1,2], [ p1_ax1, p2_ax1 ], ["p1", "p2"] ) 
     for ii in eachindex(games_vec)
-        lines!( ax1, tt, stats.p1_Unorm_sum_all[ii,:][:], color = :blue, alpha = 0.1 ) 
-        lines!( ax1, tt, stats.p2_Unorm_sum_all[ii,:][:], color = :red,  alpha = 0.1 ) 
+        lines!( ax1, tt[1:end-1], stats.p1_Unorm_sum_all[ii,:][:], color = :blue, alpha = 0.1 ) 
+        lines!( ax1, tt[1:end-1], stats.p2_Unorm_sum_all[ii,:][:], color = :red,  alpha = 0.1 ) 
     end 
 
     # axis 2 
     ax2 = Axis( fig[2,1], xlabel = "time (s)", title = string( "mean player distance: ", sprintf_stats.dist_norm_mean_mean ) )  
-    tt  = ( 0 : length(stats.dist_norm_mean)-1 ) * T / length(stats.dist_norm_mean)  
+    # tt  = ( 0 : length(stats.dist_norm_mean)-1 ) * T / length(stats.dist_norm_mean)  
     lines!( ax2, tt, stats.dist_norm_mean, color = :green ) 
     for ii in eachindex(games_vec)
         lines!( ax2, tt, stats.dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
@@ -645,7 +646,7 @@ function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
     # axis 3 
     title_string = string( "mean player distance from reference orbit: ", "p1 = ", sprintf_stats.p1_ref_norm_mean_mean, ", p2 = ", sprintf_stats.p2_ref_norm_mean_mean ) 
     ax3 = Axis( fig[3,1], xlabel = "time", title = title_string ) 
-    tt = ( 0 : length(stats.p1_ref_norm_mean)-1 ) * T / length(stats.p1_ref_norm_mean) 
+    # tt = ( 0 : length(stats.p1_ref_norm_mean)-1 ) * T / length(stats.p1_ref_norm_mean) 
     p1_ax3 = lines!( ax3, tt, stats.p1_ref_norm_mean, color = :blue ) 
     p2_ax3 = lines!( ax3, tt, stats.p2_ref_norm_mean, color = :red ) 
     for ii in eachindex(games_vec)
