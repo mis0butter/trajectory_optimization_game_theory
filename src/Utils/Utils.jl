@@ -307,7 +307,7 @@ using JLD2
 
 function save_games_vec( games_vec, params = games_vec[1].params[1] ) 
 
-    save_folder   = string( "test/results/", params.strategy, "/" ) 
+    # save_folder = string( "test/results/", params.strategy, "/" ) 
     save_folder = string( "test/results/", "p1_", params.strategy, "_p2_", params.p2_strategy, "/" )  
 
     if !isdir(save_folder)
@@ -458,8 +458,9 @@ export MC_stats
 
 ## ============================================ ##
 
-function print_MC_stats( games_vec, params = games_vec[1].params[1], print_stats = false ) 
+function print_MC_stats( games_vec, print_stats = true ) 
 
+    params = games_vec[1].params[1] 
     stats = MC_stats( games_vec, params ) 
     
     dist_norm_mean_mean   = @sprintf "%.3g" mean(stats.dist_norm_mean)  
@@ -476,7 +477,8 @@ function print_MC_stats( games_vec, params = games_vec[1].params[1], print_stats
 
     if print_stats == true 
 
-        println( params.strategy, " games = ", length(games_vec) )
+        println( "games = ", length(games_vec) )
+        println( "p1 strategy = ", params.strategy, ", p2 strategy = ", params.p2_strategy ) 
         println( "mean player distance: ", dist_norm_mean_mean ) 
         println( "mean cumsum norm of U vectors: p1 = ", p1_Unorm_mean_end, ", p2 = ", p2_Unorm_mean_end ) 
         println( "mean player distance from reference orbit: p1 = ", p1_ref_norm_mean_mean, ", p2 = ", p2_ref_norm_mean_mean )      
