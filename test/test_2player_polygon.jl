@@ -13,7 +13,7 @@ rng = MersenneTwister( 1 )
 
 
 ## ============================================ ##
-# init params 
+# run single game 
 
 rng = MersenneTwister( 1 ) 
 
@@ -34,7 +34,9 @@ fig = plot_game_stats( game, params )
 
 ## ============================================ ## 
 ## ============================================ ## 
-# run multiple games 
+# test running multiple games 
+
+rng = MersenneTwister( 1 ) 
 
 N_games  = 2 
 N_replan = 2  
@@ -48,6 +50,9 @@ games_vec = run_MC_games( rng, N_games, N_replan, p1_strategy, p2_strategy )
 fig = plot_MC_stats( games_vec ) 
 
 
+
+
+
 ## ============================================ ##
 # load and plot games_vec 
 
@@ -55,41 +60,6 @@ games_vec = load_games_vec( 100, "mixed" )
 fig = plot_MC_stats( games_vec ) 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## ============================================ ##
-## ============================================ ##
-# plot single game 
-
-ii   = 9 
-game = games_vec[ ii ] 
-fig  = plot_game_stats( game, params ) 
-
-
-
-
-## ============================================ ##
-# read CSV 
-
-ii = 1 
-game_folder = string(save_folder, "game_", ii,"/") 
-filename    = string(game_folder, "tt_hist.csv")
-
-tt_hist     = CSV.read( filename, DataFrame ) 
 
 
 
