@@ -308,6 +308,8 @@ using JLD2
 function save_games_vec( games_vec, params = games_vec[1].params[1] ) 
 
     save_folder   = string( "test/results/", params.strategy, "/" ) 
+    save_folder = string( "test/results/", "p1_", params.strategy, "_p2_", params.p2_strategy, "/" )  
+
     if !isdir(save_folder)
         mkdir(save_folder)
     end 
