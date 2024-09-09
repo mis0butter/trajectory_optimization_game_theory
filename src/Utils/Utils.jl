@@ -329,9 +329,11 @@ export save_games_vec
 
 ## ============================================ ##
 
-function load_games_vec( N_games, strategy = "mixed" ) 
+function load_games_vec( N_games, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
-    save_folder   = string( "test/results/", strategy, "/" ) 
+    # save_folder = string( "test/results/", p1_strategy, "/" ) 
+    save_folder = string( "test/results/", "p1_", p1_strategy, "_p2_", p2_strategy, "/" )  
+
     filename      = string( "games_", N_games, ".jld2" ) 
     full_filename = string( save_folder, filename ) 
 
@@ -397,7 +399,7 @@ function MC_stats( games_vec, params = games_vec[1].params[1] )
     p1_ref_norm_all  = [] 
     p2_ref_norm_all  = [] 
     
-    for ii in eachindex(games_vec)
+    for ii in eachindex( games_vec ) 
 
         game = games_vec[ii] 
 
@@ -409,11 +411,11 @@ function MC_stats( games_vec, params = games_vec[1].params[1] )
 
         p1_ref_norm, p2_ref_norm = dist_ref_norm( game, params ) 
 
-        push!( dist_rnorm_all, dist_rnorm ) 
-        push!( p1_Unorm_sum_all, p1_Unorm_sum ) 
-        push!( p2_Unorm_sum_all, p2_Unorm_sum ) 
-        push!( p1_ref_norm_all, p1_ref_norm ) 
-        push!( p2_ref_norm_all, p2_ref_norm ) 
+        push!( dist_rnorm_all,      dist_rnorm ) 
+        push!( p1_Unorm_sum_all,    p1_Unorm_sum ) 
+        push!( p2_Unorm_sum_all,    p2_Unorm_sum ) 
+        push!( p1_ref_norm_all,     p1_ref_norm ) 
+        push!( p2_ref_norm_all,     p2_ref_norm ) 
 
     end 
 
@@ -435,21 +437,21 @@ function MC_stats( games_vec, params = games_vec[1].params[1] )
     p1_ref_norm_std   = std( p1_ref_norm_all,   dims = 1 )[:] 
     p2_ref_norm_std   = std( p2_ref_norm_all,   dims = 1 )[:] 
 
-    stats = ( dist_rnorm_all = dist_rnorm_all, 
-              p1_Unorm_sum_all = p1_Unorm_sum_all, 
-              p2_Unorm_sum_all = p2_Unorm_sum_all, 
-              p1_ref_norm_all  = p1_ref_norm_all, 
-              p2_ref_norm_all  = p2_ref_norm_all, 
-              dist_norm_mean   = dist_norm_mean, 
+    stats = ( dist_rnorm_all    = dist_rnorm_all, 
+              p1_Unorm_sum_all  = p1_Unorm_sum_all, 
+              p2_Unorm_sum_all  = p2_Unorm_sum_all, 
+              p1_ref_norm_all   = p1_ref_norm_all, 
+              p2_ref_norm_all   = p2_ref_norm_all, 
+              dist_norm_mean    = dist_norm_mean, 
               p1_Unorm_sum_mean = p1_Unorm_sum_mean, 
               p2_Unorm_sum_mean = p2_Unorm_sum_mean, 
               p1_ref_norm_mean  = p1_ref_norm_mean, 
               p2_ref_norm_mean  = p2_ref_norm_mean, 
-              dist_norm_std    = dist_norm_std, 
-              p1_Unorm_sum_std = p1_Unorm_sum_std, 
-              p2_Unorm_sum_std = p2_Unorm_sum_std, 
-              p1_ref_norm_std  = p1_ref_norm_std, 
-              p2_ref_norm_std  = p2_ref_norm_std )  
+              dist_norm_std     = dist_norm_std, 
+              p1_Unorm_sum_std  = p1_Unorm_sum_std, 
+              p2_Unorm_sum_std  = p2_Unorm_sum_std, 
+              p1_ref_norm_std   = p1_ref_norm_std, 
+              p2_ref_norm_std   = p2_ref_norm_std )  
 
     return stats  
 end 
@@ -459,9 +461,12 @@ export MC_stats
 
 ## ============================================ ##
 
-function print_MC_stats( games_vec, print_stats = true ) 
+function print_MC_stats( 
+    games_vec, 
+    params      = games_vec[1].params[1], 
+    print_stats = true 
+) 
 
-    params = games_vec[1].params[1] 
     stats = MC_stats( games_vec, params ) 
     
     dist_norm_mean_mean   = @sprintf "%.3g" mean(stats.dist_norm_mean)  

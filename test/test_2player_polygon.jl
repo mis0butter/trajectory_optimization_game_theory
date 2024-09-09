@@ -38,12 +38,16 @@ fig = plot_game_stats( game, params )
 
 rng = MersenneTwister( 1 ) 
 
-N_games  = 2 
-N_replan = 2  
+N_games  = 100 
+N_replan = 10 
 
-p1_strategy  = "pure" 
-p2_strategy  = "mixed" 
-games_vec = run_MC_games( rng, N_games, N_replan, p1_strategy, p2_strategy ) 
+# p1_strategy  = "pure" 
+# p2_strategy  = "mixed" 
+
+# games_vec = run_MC_games( rng, N_games, N_replan, p1_strategy, p2_strategy ) 
+games_vec = run_MC_games(   rng, N_games, N_replan, "random",    "pure"    ) 
+games_vec = run_MC_games(   rng, N_games, N_replan, "random",    "mixed"   ) 
+games_vec = run_MC_games(   rng, N_games, N_replan, "mixed",     "pure"    ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "pure" ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "random" ) 
 
@@ -51,21 +55,34 @@ fig = plot_MC_stats( games_vec )
 
 
 ## ============================================ ##
-# LET IT RIP 
-
-games_vec = run_MC_games( rng, N_games, N_replan, "pure", "mixed" ) 
-
-
-
-
-## ============================================ ##
 # load and plot games_vec 
 
-games_vec = load_games_vec( 100, "mixed" ) 
+games_vec = load_games_vec( 100, "pure", "pure" ) 
 fig = plot_MC_stats( games_vec ) 
 
 
+## ============================================ ##
 
 
+temp1 = @sprintf "%.3g" mean(stats.p1_ref_norm_std) 
+temp2 = @sprintf "%.3g" mean(stats.p2_ref_norm_std) 
+
+title_string = string( 
+    "mean player distance from reference orbit: ", 
+    "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean, 
+    ", std = ", temp1, 
+    ", p2 mean = ",  sprintf_stats.p2_ref_norm_mean_mean, 
+    ", std = ", temp2  
+) 
+
+title_string = string(  
+    "mean player distance from reference orbit: ", 
+    "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean,
+    ", std = ", temp, 
+    # @sprintf "%.3g" mean(stats.p1_ref_norm_std), 
+    "four", 
+    "five", 
+    "six"
+) 
 
 
