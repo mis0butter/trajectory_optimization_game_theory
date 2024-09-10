@@ -698,11 +698,17 @@ function plot_player_distance( fig, x_fig, y_fig, games_vec )
     stats = MC_stats( games_vec ) 
     sprintf_stats = print_MC_stats( games_vec ) 
 
-    # get time vector 
+    # get time vector and params 
+    params = games_vec[1].params[1] 
     tt, _, _, _ = p_rv_ref_hist( games_vec[1] ) 
     
     # title string 
-    title_string = string( "mean player distance = ", sprintf_stats.dist_norm_mean_mean, ", mean std = ", @sprintf "%.3g" mean(stats.dist_norm_std) )
+    title_string = string( 
+        "p1 strategy = ",   params.strategy, 
+        ", p2 strategy = ", params.p2_strategy, 
+        "\n mean player distance = ", sprintf_stats.dist_norm_mean_mean, 
+        ", mean std = ", @sprintf "%.3g" mean(stats.dist_norm_std) 
+    )
 
     # create axis 
     ax2 = Axis( fig[x_fig, y_fig], xlabel = "time (s)", title = title_string )  
@@ -738,9 +744,7 @@ function plot_cumsum_U( fig, x_fig, y_fig, games_vec )
     
     # title string 
     title_string = string( 
-        "p1 strategy = ",   params.strategy, 
-        ", p2 strategy = ", params.p2_strategy, 
-        "\n mean cumsum norm of U vectors \n", 
+        "mean cumsum norm of U vectors \n", 
         "p1 = ",    sprintf_stats.p1_Unorm_mean_end, 
         ", p2 = ",  sprintf_stats.p2_Unorm_mean_end 
     )  
