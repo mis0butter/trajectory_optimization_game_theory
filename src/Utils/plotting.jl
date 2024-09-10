@@ -737,7 +737,13 @@ function plot_cumsum_U( fig, x_fig, y_fig, games_vec )
     tt, _, _, _ = p_rv_ref_hist( games_vec[1] ) 
     
     # title string 
-    title_string = string( "p1 strategy = ", params.strategy, ", p2 strategy = ", params.p2_strategy, "\n", "mean cumsum norm of U vectors \n", "p1 = ", sprintf_stats.p1_Unorm_mean_end, ", p2 = ", sprintf_stats.p2_Unorm_mean_end )  
+    title_string = string( 
+        "p1 strategy = ",   params.strategy, 
+        ", p2 strategy = ", params.p2_strategy, 
+        "\n mean cumsum norm of U vectors \n", 
+        "p1 = ",    sprintf_stats.p1_Unorm_mean_end, 
+        ", p2 = ",  sprintf_stats.p2_Unorm_mean_end 
+    )  
 
     # create axis 
     ax1 = Axis( fig[x_fig, y_fig], xlabel = "time (s)", title = title_string ) 
@@ -764,19 +770,19 @@ end
 function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
 
     # figure 
-    fig = Figure( size = (600, 600) ) 
+    fig = Figure( size = (1000, 600) ) 
 
-    # axis 1 
-    fig = plot_cumsum_U( fig, 1, 1, games_vec ) 
+    # top left 
+    fig = plot_player_distance( fig, 1, 1, games_vec )  
 
-    # axis 2 
-    fig = plot_player_distance( fig, 2, 1, games_vec )  
+    # top right 
+    fig = plot_cumsum_U( fig, 1, 2, games_vec ) 
 
-    # axis 3 
-    fig = plot_ref_stats( fig, 3, 1, games_vec ) 
+    # bottom left 
+    fig = plot_games_costs( fig, 2, 1, games_vec ) 
 
-    # axis 4 
-    fig = plot_games_costs( fig, 4, 1, games_vec ) 
+    # bottom right 
+    fig = plot_ref_stats( fig, 2, 2, games_vec ) 
 
     return fig 
 end 
