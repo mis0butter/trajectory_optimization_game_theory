@@ -241,7 +241,7 @@ export players_cost_matrices
 function stage_cost_games_fn( games_vec ) 
 
     stage_cost_games = [ ]
-    stage_cost_games_mean = [ ]
+    # stage_cost_games_mean = [ ]
     for ii in eachindex(  games_vec ) 
     
         game   = games_vec[ii] 
@@ -254,16 +254,18 @@ function stage_cost_games_fn( games_vec )
     
         # compute stage cost at each time step for each trajectory 
         stage_cost_game = [ stage_cost( x1[ii,:], x2[ii,:], u1[ii,:], u2[ii,:] ) for ii in 1:size(u1, 1) ]
-        stage_cost_game_mean = mean( stage_cost_game ) 
+        # stage_cost_game_mean = mean( stage_cost_game ) 
     
         push!( stage_cost_games, stage_cost_game ) 
-        push!( stage_cost_games_mean, stage_cost_game_mean ) 
+        # push!( stage_cost_games_mean, stage_cost_game_mean ) 
     
     end 
 
     stage_cost_games = mapreduce( permutedims, vcat, stage_cost_games ) 
+    stage_cost_games_mean = mean( stage_cost_games, dims = 1 )[:]
+    stage_cost_games_std  = std( stage_cost_games, dims = 1 )[:]  
 
-    return stage_cost_games, stage_cost_games_mean 
+    return stage_cost_games, stage_cost_games_mean, stage_cost_games_std 
 end 
 
 export stage_cost_games_fn 
