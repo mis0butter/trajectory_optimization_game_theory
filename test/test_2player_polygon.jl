@@ -60,29 +60,29 @@ fig = plot_MC_stats( games_vec )
 games_vec = load_games_vec( 100, "pure", "pure" ) 
 fig = plot_MC_stats( games_vec ) 
 
+# get costs 
+games_costs, games_costs_mean = stage_cost_games_fn( games_vec )
 
-## ============================================ ##
 
+## ============================================ ## 
+ 
+tt_hist, _, _, _ = p_rv_ref_hist( game, params ) 
 
-temp1 = @sprintf "%.3g" mean(stats.p1_ref_norm_std) 
-temp2 = @sprintf "%.3g" mean(stats.p2_ref_norm_std) 
+    # figure 
+    fig = Figure( size = (600, 600) ) 
 
-title_string = string( 
-    "mean player distance from reference orbit: ", 
-    "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean, 
-    ", std = ", temp1, 
-    ", p2 mean = ",  sprintf_stats.p2_ref_norm_mean_mean, 
-    ", std = ", temp2  
-) 
+    # axis 1 
+    # title_string = string( "p1 strategy = ", params.strategy, ", p2 strategy = ", params.p2_strategy, "\n", "mean cumsum norm of U vectors \n", "p1 = ", sprintf_stats.p1_Unorm_mean_end, ", p2 = ", sprintf_stats.p2_Unorm_mean_end )  
+    title_string = "test"
 
-title_string = string(  
-    "mean player distance from reference orbit: ", 
-    "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean,
-    ", std = ", temp, 
-    # @sprintf "%.3g" mean(stats.p1_ref_norm_std), 
-    "four", 
-    "five", 
-    "six"
-) 
+    ax1 = Axis( fig[1,1], xlabel = "time (s)", title = title_string ) 
+    # p1_ax1 = lines!( ax1, tt[ 1 : end - 1 ], stats.p1_Unorm_sum_mean, color = :blue ) 
+    # p2_ax1 = lines!( ax1, tt[ 1 : end - 1 ], stats.p2_Unorm_sum_mean, color = :red ) 
+    # Legend( fig[1,2], [ p1_ax1, p2_ax1 ], ["p1", "p2"] ) 
+    for ii in eachindex(games_vec)
+        lines!( ax1, tt[1:end-1], games_costs[ii,:][:], color = :blue, alpha = 0.1 ) 
+        # lines!( ax1, tt[1:end-1], stats.p2_Unorm_sum_all[ii,:][:], color = :red,  alpha = 0.1 ) 
+    end 
+
 
 

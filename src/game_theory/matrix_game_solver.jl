@@ -170,15 +170,20 @@ end
 export players_XU 
 
 
+## ============================================ ##
+
+# game cost 
+function stage_cost(x1, x2, u1, u2)
+    sqrt(norm(x1[1:3] - x2[1:3]) + 0.1) + 0.1 * (norm(u1) - norm(u2))
+end
+
+export stage_cost 
+
+
 ## ============================================ ## 
 # zero-sum game 
 
 function players_cost_matrices( players ) 
-
-    # game cost 
-    function stage_cost(x1, x2, u1, u2)
-        sqrt(norm(x1[1:3] - x2[1:3]) + 0.1) + 0.1 * (norm(u1) - norm(u2))
-    end
 
     # loop through time corresponding with control inputs 
     U_idx = eachindex( players[1].U[1][:,1] )
@@ -229,6 +234,39 @@ function players_cost_matrices( players )
 end 
 
 export players_cost_matrices 
+
+
+## ============================================ ##
+
+function stage_cost_games_fn( games_vec ) 
+
+    stage_cost_games = [ ]
+    stage_cost_games_mean = [ ]
+    for ii in eachindex(  games_vec ) 
+    
+        game   = games_vec[ii] 
+        params = game.params[1] 
+    
+        p1_U_hist, p2_U_hist = p1_p2_u_hist( game ) 
+        tt_hist, p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params ) 
+    
+        x1 = p1_rv_hist ; x2 = p2_rv_hist ; u1 = p1_U_hist ; u2 = p2_U_hist ; 
+    
+        # compute stage cost at each time step for each trajectory 
+        stage_cost_game = [ stage_cost( x1[ii,:], x2[ii,:], u1[ii,:], u2[ii,:] ) for ii in 1:size(u1, 1) ]
+        stage_cost_game_mean = mean( stage_cost_game ) 
+    
+        push!( stage_cost_games, stage_cost_game ) 
+        push!( stage_cost_games_mean, stage_cost_game_mean ) 
+    
+    end 
+
+    stage_cost_games = mapreduce( permutedims, vcat, stage_cost_games ) 
+
+    return stage_cost_games, stage_cost_games_mean 
+end 
+
+export stage_cost_games_fn 
 
 
 ## ============================================ ##
