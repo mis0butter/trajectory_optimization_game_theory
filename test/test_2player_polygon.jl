@@ -64,60 +64,46 @@ fig = plot_MC_stats( games_vec )
 ## ============================================ ## 
 
 
-    # figure 
-    fig = Figure( size = (600, 600) ) 
+# figure 
+fig = Figure( size = (600, 600) ) 
 
-    i_fig = 1 
+x_fig = 1 ; y_fig = 1 ; 
 
-    function plot_games_costs( fig, i_fig, games_vec ) 
+# ----------------------- #
 
-        # get costs 
-        games_costs, games_costs_mean, games_costs_std = stage_cost_games_fn( games_vec )
+# get stats 
+stats = MC_stats( games_vec ) 
+sprintf_stats = print_MC_stats( games_vec ) 
 
-        # mean and mean-std strings 
-        string_mean = @sprintf "%.3g" mean(games_costs_mean) 
-        string_std_mean  = @sprintf "%.3g" mean(games_costs_std) 
+# temp strings for title string  
+temp1 = @sprintf "%.3g" mean(stats.p1_ref_norm_std) 
+temp2 = @sprintf "%.3g" mean(stats.p2_ref_norm_std) 
 
-        # get time vector 
-        tt_hist, _, _, _ = p_rv_ref_hist( game ) 
+# axis title string 
+title_string = string( 
+    "mean player distance from reference orbit: ", 
+    "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean, 
+    ", std = ", temp1, 
+    "\n p2 mean = ",  sprintf_stats.p2_ref_norm_mean_mean, 
+    ", std = ", temp2  
+) 
 
-        # mean +/- std 
-        y_upper = games_costs_mean .+ games_costs_std 
-        y_lower = games_costs_mean .- games_costs_std 
+# create axis 
+ax3 = Axis( fig[x_fig, y_fig], xlabel = "time", title = title_string ) 
 
-        # axis title 
-        title_string = "stage costs (game value)"
-        title_string = string( "mean cost = ", string_mean, ", mean std = ", string_std_mean )  
+# plot reference norm mean 
+p1_ax3 = lines!( ax3, tt, stats.p1_ref_norm_mean, color = :blue ) 
+p2_ax3 = lines!( ax3, tt, stats.p2_ref_norm_mean, color = :red ) 
 
-        # create axis 
-        ax = Axis( fig[i_fig,1], xlabel = "time (s)", title = title_string )
+# plot individual games 
+for ii in eachindex(games_vec)
+    lines!( ax3, tt, stats.p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
+    lines!( ax3, tt, stats.p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
+end 
 
-        # plot mean 
-        lines!( ax, tt_hist[1:end-1], games_costs_mean, color = :green )   
-
-        # plot mean +/- std ribbons 
-        fill_between!(ax, tt_hist[1:end-1], y_lower, y_upper, color = :green, alpha = 0.25 ) 
-
-        # plot individual games 
-        for ii in eachindex(games_vec)
-            lines!( ax, tt_hist[1:end-1], games_costs[ii,:][:], color = :green, alpha = 0.1 ) 
-        end 
-
-        return fig 
-    end 
+# ----------------------- #
 
 fig 
 
-
-    # # axis 2 
-    # title_string = string( "mean player distance = ", sprintf_stats.dist_norm_mean_mean, ", mean std = ", @sprintf "%.3g" mean(stats.dist_norm_std) )
-    # ax2 = Axis( fig[2,1], xlabel = "time (s)", title = title_string )  
-    # y_upper = stats.dist_norm_mean .+ stats.dist_norm_std 
-    # y_lower = stats.dist_norm_mean .- stats.dist_norm_std 
-    # fill_between!(ax2, tt, y_lower, y_upper, color = :green, alpha = 0.25 )
-    # lines!( ax2, tt, stats.dist_norm_mean, color = :green ) 
-    # for ii in eachindex(games_vec)
-    #     lines!( ax2, tt, stats.dist_rnorm_all[ii,:][:], color = :green, alpha = 0.1 ) 
-    # end 
 
 

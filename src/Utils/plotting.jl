@@ -651,6 +651,47 @@ end
 
 ## ============================================ ##
 
+function plot_ref_stats( fig, x_fig, y_fig, games_vec ) 
+
+    # get stats 
+    stats = MC_stats( games_vec ) 
+    sprintf_stats = print_MC_stats( games_vec ) 
+
+    # get time vector 
+    tt, _, _, _ = p_rv_ref_hist( games_vec[1] ) 
+
+    # temp strings for title string  
+    temp1 = @sprintf "%.3g" mean(stats.p1_ref_norm_std) 
+    temp2 = @sprintf "%.3g" mean(stats.p2_ref_norm_std) 
+
+    # axis title string 
+    title_string = string( 
+        "mean player distance from ref orbit: ", 
+        "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean, 
+        ", std = ", temp1, 
+        "\n p2 mean = ",  sprintf_stats.p2_ref_norm_mean_mean, 
+        ", std = ", temp2  
+    ) 
+
+    # create axis 
+    ax3 = Axis( fig[x_fig, y_fig], xlabel = "time", title = title_string ) 
+
+    # plot reference norm mean 
+    p1_ax3 = lines!( ax3, tt, stats.p1_ref_norm_mean, color = :blue ) 
+    p2_ax3 = lines!( ax3, tt, stats.p2_ref_norm_mean, color = :red ) 
+
+    # plot individual games 
+    for ii in eachindex(games_vec)
+        lines!( ax3, tt, stats.p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
+        lines!( ax3, tt, stats.p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
+    end 
+
+    return fig 
+end 
+
+
+## ============================================ ##
+
 function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
 
     stats = MC_stats( games_vec, params ) 
@@ -687,25 +728,26 @@ function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
     end 
 
     # axis 3 
-    temp1 = @sprintf "%.3g" mean(stats.p1_ref_norm_std) 
-    temp2 = @sprintf "%.3g" mean(stats.p2_ref_norm_std) 
+    fig = plot_ref_stats( fig, 3, 1, games_vec ) 
+    # temp1 = @sprintf "%.3g" mean(stats.p1_ref_norm_std) 
+    # temp2 = @sprintf "%.3g" mean(stats.p2_ref_norm_std) 
 
-    title_string = string( 
-        "mean player distance from reference orbit: ", 
-        "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean, 
-        ", std = ", temp1, 
-        "\n p2 mean = ",  sprintf_stats.p2_ref_norm_mean_mean, 
-        ", std = ", temp2  
-    ) 
+    # title_string = string( 
+    #     "mean player distance from reference orbit: ", 
+    #     "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean, 
+    #     ", std = ", temp1, 
+    #     "\n p2 mean = ",  sprintf_stats.p2_ref_norm_mean_mean, 
+    #     ", std = ", temp2  
+    # ) 
 
-    ax3 = Axis( fig[3,1], xlabel = "time", title = title_string ) 
-    # tt = ( 0 : length(stats.p1_ref_norm_mean)-1 ) * T / length(stats.p1_ref_norm_mean) 
-    p1_ax3 = lines!( ax3, tt, stats.p1_ref_norm_mean, color = :blue ) 
-    p2_ax3 = lines!( ax3, tt, stats.p2_ref_norm_mean, color = :red ) 
-    for ii in eachindex(games_vec)
-        lines!( ax3, tt, stats.p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
-        lines!( ax3, tt, stats.p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
-    end 
+    # ax3 = Axis( fig[3,1], xlabel = "time", title = title_string ) 
+    # # tt = ( 0 : length(stats.p1_ref_norm_mean)-1 ) * T / length(stats.p1_ref_norm_mean) 
+    # p1_ax3 = lines!( ax3, tt, stats.p1_ref_norm_mean, color = :blue ) 
+    # p2_ax3 = lines!( ax3, tt, stats.p2_ref_norm_mean, color = :red ) 
+    # for ii in eachindex(games_vec)
+    #     lines!( ax3, tt, stats.p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
+    #     lines!( ax3, tt, stats.p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
+    # end 
 
     # axis 4 
     fig = plot_games_costs( fig, 4, 1, games_vec ) 
