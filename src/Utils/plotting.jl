@@ -611,6 +611,46 @@ export plot_p1_p2_traj
 
 ## ============================================ ##
 
+function plot_games_costs( fig, x_fig, y_fig, games_vec ) 
+
+    # get costs 
+    games_costs, games_costs_mean, games_costs_std = stage_cost_games_fn( games_vec )
+
+    # mean and mean-std strings 
+    string_mean = @sprintf "%.3g" mean(games_costs_mean) 
+    string_std_mean  = @sprintf "%.3g" mean(games_costs_std) 
+
+    # get time vector 
+    tt_hist, _, _, _ = p_rv_ref_hist( games_vec[1] ) 
+
+    # mean +/- std 
+    y_upper = games_costs_mean .+ games_costs_std 
+    y_lower = games_costs_mean .- games_costs_std 
+
+    # axis title 
+    title_string = "stage costs (game value)"
+    title_string = string( "mean cost = ", string_mean, ", mean std = ", string_std_mean )  
+
+    # create axis 
+    ax = Axis( fig[x_fig, y_fig], xlabel = "time (s)", title = title_string )
+
+    # plot mean 
+    lines!( ax, tt_hist[1:end-1], games_costs_mean, color = :green )   
+
+    # plot mean +/- std ribbons 
+    fill_between!(ax, tt_hist[1:end-1], y_lower, y_upper, color = :green, alpha = 0.25 ) 
+
+    # plot individual games 
+    for ii in eachindex(games_vec)
+        lines!( ax, tt_hist[1:end-1], games_costs[ii,:][:], color = :green, alpha = 0.1 ) 
+    end 
+
+    return fig 
+end 
+
+
+## ============================================ ##
+
 function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
 
     stats = MC_stats( games_vec, params ) 
@@ -665,7 +705,10 @@ function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
     for ii in eachindex(games_vec)
         lines!( ax3, tt, stats.p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
         lines!( ax3, tt, stats.p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
-    end
+    end 
+
+    # axis 4 
+    fig = plot_games_costs( fig, 4, 1, games_vec ) 
 
     return fig 
 end 
