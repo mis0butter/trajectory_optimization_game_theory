@@ -11,7 +11,7 @@ using ForwardDiff           # think I only use gradient
 using Optim                 # think i only use ... some functions 
 
 # Modeling
-using LazySets              # don't think I use this 
+# using LazySets              # don't think I use this 
 using JuMP: JuMP, @variable, @constraint, @objective
 using OSQP: OSQP 
 

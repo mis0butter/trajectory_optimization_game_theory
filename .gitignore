@@ -1,4 +1,7 @@
 test/results/ 
 *.jld 
 *.jld2 
+*.cursor 
+*.plan.md 
+*.DS_Store 
 /Manifest.toml

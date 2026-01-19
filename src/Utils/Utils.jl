@@ -401,6 +401,7 @@ export run_game
 function run_MC_games( rng, N_games, N_replan, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
     games_vec = [] 
+    
     for jj = 1 : N_games 
 
         params, players, game = init_game( rng, p1_strategy, p2_strategy ) 
@@ -422,6 +423,39 @@ end
 
 export run_MC_games 
 
+# ==================================================================== 
+
+using Base.Threads
+
+function run_MC_games_parallel( rng, N_games, N_replan, p1_strategy = "mixed", p2_strategy = "mixed" )
+
+    # Create thread-safe storage
+    games_vec = Vector{Any}(undef, N_games)
+    
+    # Create independent RNGs for each game (thread-safe)
+    seeds = rand(rng, UInt, N_games)
+    
+    Threads.@threads for jj = 1:N_games
+        local_rng = MersenneTwister(seeds[jj])
+        
+        params, players, game = init_game(local_rng, p1_strategy, p2_strategy)
+
+        for ii = 1:N_replan - 1
+            println("game: ", jj, " step: ", ii + 1)
+            game = prop_game_step(game, params, local_rng)
+        end
+
+        games_vec[jj] = game
+    end
+
+    save_games_vec(games_vec)
+
+    return games_vec
+end
+
+export run_MC_games_parallel 
+
+# ==================================================================== 
 
 ## ============================================ ##
 

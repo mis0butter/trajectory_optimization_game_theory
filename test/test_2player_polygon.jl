@@ -45,23 +45,25 @@ N_replan = 10
 # p2_strategy  = "mixed" 
 
 # games_vec = run_MC_games( rng, N_games, N_replan, p1_strategy, p2_strategy ) 
-games_vec = run_MC_games(   rng, N_games, N_replan, "random",    "pure"    ) 
-games_vec = run_MC_games(   rng, N_games, N_replan, "random",    "mixed"   ) 
-games_vec = run_MC_games(   rng, N_games, N_replan, "mixed",     "pure"    ) 
+# games_vec = run_MC_games(   rng, N_games, N_replan, "random",    "pure"    ) 
+# games_vec = run_MC_games(   rng, N_games, N_replan, "random",    "mixed"   ) 
+# games_vec = run_MC_games(   rng, N_games, N_replan, "mixed",     "pure"    ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "pure" ) 
 # games_vec = run_MC_games( rng, N_games, N_replan, "random" ) 
 
+games_vec = run_MC_games_parallel( rng, N_games, N_replan, p1_strategy, p2_strategy ) 
+
 fig = plot_MC_stats( games_vec ) 
 
 
-## ============================================ ##
-# load and plot games_vec 
+# ## ============================================ ##
+# # load and plot games_vec 
 
-games_vec = load_games_vec( 100, "pure", "pure" ) 
+# games_vec = load_games_vec( 100, "pure", "pure" ) 
 fig = plot_MC_stats( games_vec ) 
 
 
-## ============================================ ## 
+# ## ============================================ ## 
 
 
 # figure 
