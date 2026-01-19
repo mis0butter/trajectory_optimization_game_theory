@@ -5,7 +5,8 @@ using LinearAlgebra
 using Optim 
 
 ## ====================================================================
-# init params 
+## init params 
+## ==================================================================== 
 
 mu = 398600.4415
 r  = 6378.0
@@ -28,7 +29,8 @@ fig = plot_orbit( rv_P, fig )
 fig = plot_orbit( rv_E, fig ) 
 
 ## ====================================================================
-# break up into N segments, see what happens 
+## break up into N segments, see what happens 
+## ==================================================================== 
 
 # define init and target vectors for pursuer 
 rv_f = rv_E[end,:] 
@@ -39,8 +41,9 @@ N = 30
 Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 # Δv_sol = max_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 
-# ---------------------------------- 
- 
+## ==================================================================== 
+## plot results 
+## ==================================================================== 
 
 # create fig 
 fig = plot_axes3d( )
