@@ -13,7 +13,8 @@ rng = MersenneTwister( 1 )
 
 
 ## ====================================================================
-# run single game 
+## run single game 
+## ====================================================================
 
 rng = MersenneTwister( 1 ) 
 
@@ -24,7 +25,7 @@ p1_strategy  = "mixed"
 p2_strategy  = "mixed" 
 game, params = run_game( rng, N_replan, p1_strategy, p2_strategy ) 
 
-# ----------------------- # 
+# ---------------------------------- 
 # plotting stuff 
 
 # k = 1 
@@ -33,8 +34,8 @@ fig = plot_game_stats( game, params )
 
 
 ## ==================================================================== 
+## test running multiple games 
 ## ==================================================================== 
-# test running multiple games 
 
 rng = MersenneTwister( 1 ) 
 
@@ -55,57 +56,6 @@ games_vec = run_MC_games_parallel( rng, N_games, N_replan, p1_strategy, p2_strat
 
 fig = plot_MC_stats( games_vec ) 
 
-
-# ## ====================================================================
-# # load and plot games_vec 
-
-# games_vec = load_games_vec( 100, "pure", "pure" ) 
-fig = plot_MC_stats( games_vec ) 
-
-
-# ## ==================================================================== 
-
-
-# figure 
-fig = Figure( size = (600, 600) ) 
-
-x_fig = 1 ; y_fig = 1 ; 
-
-# ----------------------- #
-
-# get stats 
-stats = MC_stats( games_vec ) 
-sprintf_stats = print_MC_stats( games_vec ) 
-
-# temp strings for title string  
-temp1 = @sprintf "%.3g" mean(stats.p1_ref_norm_std) 
-temp2 = @sprintf "%.3g" mean(stats.p2_ref_norm_std) 
-
-# axis title string 
-title_string = string( 
-    "mean player distance from reference orbit: ", 
-    "\n p1 mean = ",  sprintf_stats.p1_ref_norm_mean_mean, 
-    ", std = ", temp1, 
-    "\n p2 mean = ",  sprintf_stats.p2_ref_norm_mean_mean, 
-    ", std = ", temp2  
-) 
-
-# create axis 
-ax3 = Axis( fig[x_fig, y_fig], xlabel = "time", title = title_string ) 
-
-# plot reference norm mean 
-p1_ax3 = lines!( ax3, tt, stats.p1_ref_norm_mean, color = :blue ) 
-p2_ax3 = lines!( ax3, tt, stats.p2_ref_norm_mean, color = :red ) 
-
-# plot individual games 
-for ii in eachindex(games_vec)
-    lines!( ax3, tt, stats.p1_ref_norm_all[ii,:][:], color = :blue, alpha = 0.1 ) 
-    lines!( ax3, tt, stats.p2_ref_norm_all[ii,:][:], color = :red, alpha = 0.1 ) 
-end 
-
-# ----------------------- #
-
 fig 
-
 
 

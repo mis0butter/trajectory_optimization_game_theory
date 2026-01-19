@@ -1,7 +1,7 @@
 ## ====================================================================
 # plot Cartesian axes 
 
-"Plot x, y, and z Cartesian axes using GLMakie "
+"Plot x, y, and z Cartesian axes with GLMakie  "
 function plot_axes3d( 
     r   = 6378.0 / 3,   # radius of axes 
     fig = nothing,      # figure handle 
@@ -28,7 +28,7 @@ export plot_axes3d
 ## ==================================================================== 
 
 """ 
-Plot a 3D line using GLMakie 
+Plot a 3D line with GLMakie  
 
 Example usage: 
 
@@ -67,7 +67,7 @@ export plot_line3d
 ## ==================================================================== 
 
 """ 
-Plot an orbit using GLMakie 
+Plot an orbit with GLMakie  
 
 Example usage: 
 
@@ -124,7 +124,7 @@ export plot_orbit
 #   diverging_tritanopic_cwr_75_98_c20_n256 <-- this one 
 
 """
-Plot a surface with a colorbar using GLMakie 
+Plot a surface with a colorbar with GLMakie  
 
 Example usage: 
 
@@ -164,7 +164,7 @@ export plot_surface
 ## ====================================================================
 
 """
-Plot scatter using GLMakie
+Plot scatter with GLMakie 
 
 Example usage: 
 
@@ -213,7 +213,7 @@ export plot_scatter3d
 ## ====================================================================
 
 """ 
-Plot a contour with a colorbar using GLMakie
+Plot a contour with a colorbar with GLMakie 
 
 Example usage: 
 
@@ -251,7 +251,7 @@ export plot_contour3d
 ## ====================================================================
 
 """
-Plot vector using GLMakie. 
+Plot vector with GLMakie . 
 
 Example usage: 
 
@@ -312,7 +312,7 @@ export plot_vector3d
 
 ## ====================================================================
 
-"Plot propagated orbit with delta v using GLMakie "
+"Plot propagated orbit with delta v with GLMakie  "
 function plot_prop_Δv(  
     rv_0,               # initial state vector 
     Δv_sol,             # [N,3] Δv vector 
@@ -435,7 +435,7 @@ export plot_polygon
 ## ==================================================================== 
 
 """ 
-Plot a candidate trajectory using GLMakie 
+Plot a candidate trajectory with GLMakie  
 
 Example usage: 
 
@@ -474,7 +474,7 @@ export plot_traj_cand
 
 ## ====================================================================
 
-"Plot propagated orbit with delta v using GLMakie "
+"Plot propagated orbit with delta v with GLMakie  "
 function plot_Δv_weights(  
     game,               # game struct 
     params,             # struct of parameters 
@@ -499,7 +499,8 @@ function plot_Δv_weights(
 
     for i in 1 : n_vertices  
         
-        # ----------------------- #
+        # ---------------------------------- 
+
         # propagate 2 body and plot 
 
         rv_0   = game.p1_state[k].rv_0_hist[1,:] 
@@ -512,7 +513,8 @@ function plot_Δv_weights(
             fig = plot_traj_cand( rv_2Body, p1_color, weight, :dot, 2, fig ) 
         end 
         
-        # ----------------------- #
+        # ---------------------------------- 
+
         # propagate 2 body and plot 
 
         rv_0   = game.p2_state[k].rv_0_hist[1,:] 

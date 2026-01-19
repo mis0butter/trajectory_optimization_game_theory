@@ -25,7 +25,8 @@ rv_f = [ r_f ; v_f ]
 x_P = vv2m(x_P) ;   
 x_E = vv2m(x_E) ;   
 
-# ----------------------- # 
+# ---------------------------------- 
+ 
 # test lambert soln 
 
 # lambert solution 
@@ -93,7 +94,8 @@ x_min  = min_aug_L( obj_fn, x_0, c_fn, h_fn )
 Δv_sol    = reshape( x_min[2:end], N, 3 ) 
 tof_N_sol = x_min[1] 
 
-# ----------------------- #
+# ---------------------------------- 
+
 
 # create fig 
 fig = plot_axes3d( )

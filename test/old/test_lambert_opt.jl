@@ -30,7 +30,8 @@ fig = plot_axes3d()
 fig = plot_orbit( x_P, fig ) 
 fig = plot_orbit( x_E, fig ) 
 
-# ----------------------- #
+# ---------------------------------- 
+
 # lambert solution 
 
 dm  = "pro" 

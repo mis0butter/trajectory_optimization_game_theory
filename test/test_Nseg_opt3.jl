@@ -39,7 +39,8 @@ N = 30
 Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 # Δv_sol = max_Δv_dist( rv_0, rv_f, tof, N, mu ) 
 
-# ----------------------- # 
+# ---------------------------------- 
+ 
 
 # create fig 
 fig = plot_axes3d( )

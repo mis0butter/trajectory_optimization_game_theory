@@ -74,7 +74,8 @@ p_0 = 10.0 * ones(N_h)
 # define tol 
 tol = 1e-6 
 
-# ----------------------- #
+# ---------------------------------- 
+
 
 # step 0: initialize 
 λ_k = copy( λ_0 )
@@ -151,7 +152,8 @@ obj_fn(x) = sum_Δv_flat( x, N )
 c_fn(x) = miss_tof_Δv_flat( rv_0, x, N, rv_f, mu ) 
 N_c     = length( c_fn(x_0) ) 
 
-# ----------------------- #
+# ---------------------------------- 
+
 # augmented Lagrangian method (equality-constrained) 
 
 # step 0: initialize 
