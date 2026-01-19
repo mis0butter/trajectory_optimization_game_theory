@@ -5,7 +5,8 @@ using LinearAlgebra
 using Optim 
 
 ## ====================================================================
-# init params 
+## init params 
+## ====================================================================
 
 mu = 398600.4415
 r  = 6378.0
@@ -27,8 +28,10 @@ rv_E = vv2m(rv_E)
 rv_state = rv_E[end,:] 
 
 # get vertices of polygon 
-vertices = polygon_vertices( rv_state, params ) 
+vertices = polygon_vertices( rv_state, parameters ) 
 
+## ====================================================================
+## plot axes, orbit, and polygon, and delta-V vectors 
 ## ====================================================================
 
 # plot 
@@ -48,7 +51,7 @@ v_f  = rv_E[end,4:6]
 for i in eachindex(vertices)  
 
     println(i) 
-    rv_f = [ vertices[i] ; v_f ]  
+    rv_f   = [ vertices[i] ; v_f ]  
     Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
     fig    = plot_prop_Δv( rv_0, Δv_sol, N, tof / N, mu, fig )     
 
