@@ -16,7 +16,7 @@ rv_0_P = kep2cart(kep0_P, mu)
 kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
-params = ( R_polygon = 6378.0 / 10 , ) 
+parameters = (R_polygon = 6378.0 / 10 , ) 
 
 # tof for pursuer to catch up to evader 
 tof = 2000 
@@ -28,14 +28,18 @@ rv_E = vv2m(rv_E)
 
 
 ## ==================================================================== 
-## test functions!! plot_polygon 
+## test functions!! plot_polygon, plot_orbit, and axes 1-2-3 
 ## ==================================================================== 
 
-rv_vec = rv_E[end,:] 
+fig = plot_polygon( rv_state, params ) 
+fig = plot_orbit( rv_E, fig ) 
 
-vertices = polygon_vertices( rv_vec, params ) 
+axis_1, axis_2, axis_3 = axis_123( rv_state ) 
+r_f = rv_state[1:3] 
+fig = plot_vector3d( [ r_f ] , [ axis_1 * r ] , fig, r/100, :black, "1" ) 
+fig = plot_vector3d( [ r_f ] , [ axis_2 * r ] , fig, r/100, :black, "2" ) 
+fig = plot_vector3d( [ r_f ] , [ axis_3 * r ] , fig, r/100, :black, "3" ) 
 
-plot_polygon( rv_vec, params ) 
 
 ## ==================================================================== 
 ## working development innards of plot_polygon along with orbit  
@@ -46,11 +50,11 @@ fig = plot_axes3d( )
 fig = plot_orbit( rv_E, fig ) 
 
 # let's propagate the evader SC 
-rv_vec = rv_E[end,:] 
+rv_state = rv_E[end,:] 
 
 # center of polygon 
-r_f = rv_vec[1:3]   
-v_f = rv_vec[4:6]  
+r_f = rv_state[1:3]   
+v_f = rv_state[4:6]  
 axis_1 = v_f / norm(v_f)   
 axis_2 = -r_f / norm(r_f)
 
