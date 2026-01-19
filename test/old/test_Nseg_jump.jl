@@ -3,6 +3,8 @@ using ForwardDiff
 using FiniteDifferences 
 using LinearAlgebra 
 using Optim 
+using JuMP 
+using Ipopt 
 
 ## ====================================================================
 # init params 
@@ -35,14 +37,32 @@ rv_f = rv_E[end,:]
 rv_0 = rv_0_P 
 
 N = 20 
+dm = "pro"  # direction of motion
 
 tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm ) 
 x_0 = reshape( Δv_vec, N*3, 1 ) 
 
+# JuMP-compatible miss distance function (uses sum of squares instead of norm)
+# This avoids the norm() issue with JuMP variables
+function miss_distance_prop2Body_jump(rv_0, x, N, rv_f, tof_N, mu)
+    # Reshape x from (N*3,) vector to (N, 3) matrix
+    Δv_vec = reshape(x, N, 3)
+    
+    # Propagate using 2-body (avoids kepler propagation which uses norm in cart2kep)
+    t, rv_hist = prop_2Body_tof_Nseg(rv_0, Δv_vec, N, tof_N, mu)
+    
+    # Extract final state
+    rv_f_prop = rv_hist[end, :]
+    
+    # Use sum of squares instead of norm (equivalent for minimization)
+    Δrv_f_squared = sum((rv_f_prop[1:3] - rv_f[1:3]).^2)
+    
+    return Δrv_f_squared
+end
 
 # define objective function 
-obj_fn(x) = + sum_norm_Δv( x, N ) + 
-            miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
+obj_fn(x) = sum_norm_Δv(x, N) + 
+            miss_distance_prop2Body_jump(rv_0, x, N, rv_f, tof_N, mu)
 
 # set model 
 model = Model(Ipopt.Optimizer)
@@ -57,10 +77,14 @@ set_silent(model)
 # optimize 
 optimize!(model)
 
+# Extract solution
+x_sol = value.(x)  # Get optimized variable values
+Δv_sol = reshape(x_sol, N, 3)  # Reshape to (N, 3) matrix format
 
+# Alternative methods (commented out):
 # Δv_sol = min_Δv( rv_0, rv_f, tof, N, mu ) 
 # Δv_sol = min_Δv_dist( rv_0, rv_f, tof, N, mu ) 
-# Δv_sol = max_Δv_dist( rv_0, rv_f, tof, N, mu ) 
+# Δv_sol = max_Δv_dist( rv_0, rv_f, tof, N, mu )
 
 ## ====================================================================
 
