@@ -14,6 +14,8 @@ rv_0_P = kep2cart(kep0_P, mu)
 kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 180.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
 
+params = ( R_polygon = 6378.0 / 10 , ) 
+
 # tof for pursuer to catch up to evader 
 tof = 1000 
 
@@ -33,7 +35,6 @@ vertices = polygon_vertices( rv_state, params )
 fig = plot_axes3d( )
 # fig = plot_orbit( rv_P, fig ) 
 fig = plot_orbit( rv_E, fig ) 
-params = ( R_polygon = 6378.0 / 100 )
 fig = plot_polygon( rv_state, params, fig ) 
 
 # segments 

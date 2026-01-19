@@ -4,8 +4,10 @@ using FiniteDifferences
 using LinearAlgebra 
 using Optim 
 
-## ============================================ ##
-# init params 
+## ==================================================================== 
+## init params 
+## ==================================================================== 
+
 
 mu = 398600.4415
 r  = 6378.0
@@ -13,6 +15,8 @@ kep0_P = [ r+400.0, 0.1, -20*pi/180, 10.0*pi/180, 20.0*pi/180, 30.0*pi/180 ]
 rv_0_P = kep2cart(kep0_P, mu) 
 kep0_E = [ r+450.0, 0.2, 10.6*pi/180, 40.0*pi/180, 0.0, 120.0*pi/180 ]
 rv_0_E = kep2cart(kep0_E, mu) 
+
+params = ( R_polygon = 6378.0 / 10 , ) 
 
 # tof for pursuer to catch up to evader 
 tof = 2000 
@@ -23,17 +27,19 @@ rv_P = vv2m(rv_P)
 rv_E = vv2m(rv_E) 
 
 
-## ============================================ ## 
-# test functions 
+## ==================================================================== 
+## test functions!! plot_polygon 
+## ==================================================================== 
 
 rv_vec = rv_E[end,:] 
 
 vertices = polygon_vertices( rv_vec, params ) 
 
-params = ( R_polygon = 6378.0 / 100 ) 
 plot_polygon( rv_vec, params ) 
 
-## ============================================ ##
+## ==================================================================== 
+## working development innards of plot_polygon along with orbit  
+## ==================================================================== 
 
 # plot 
 fig = plot_axes3d( )
@@ -43,8 +49,10 @@ fig = plot_orbit( rv_E, fig )
 rv_vec = rv_E[end,:] 
 
 # center of polygon 
-r_f = rv_vec[1:3]  ; axis_1 = v_f / norm(v_f)   
-v_f = rv_vec[4:6]  ; axis_2 = -r_f / norm(r_f)
+r_f = rv_vec[1:3]   
+v_f = rv_vec[4:6]  
+axis_1 = v_f / norm(v_f)   
+axis_2 = -r_f / norm(r_f)
 
 # define vector normal to orbit plane 
 axis_3 = cross( axis_1, axis_2 )  ; axis_3 = axis_3 / norm(axis_3) 

@@ -41,8 +41,8 @@ rng = MersenneTwister( 1 )
 N_games  = 100 
 N_replan = 10 
 
-# p1_strategy  = "pure" 
-# p2_strategy  = "mixed" 
+p1_strategy  = "pure" 
+p2_strategy  = "mixed" 
 
 # games_vec = run_MC_games( rng, N_games, N_replan, p1_strategy, p2_strategy ) 
 # games_vec = run_MC_games(   rng, N_games, N_replan, "random",    "pure"    ) 
