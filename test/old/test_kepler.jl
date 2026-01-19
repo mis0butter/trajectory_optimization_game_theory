@@ -4,7 +4,7 @@ using FiniteDifferences
 using LinearAlgebra 
 
 
-## ============================================ ##
+## ====================================================================
 # init 
 
 mu = 398600.4415
@@ -28,7 +28,7 @@ fig = plot_orbit( x_P, fig )
 fig = plot_orbit( x_E, fig ) 
 
 
-## ============================================ ##
+## ====================================================================
 # lambert solution 
 
 dm = "pro" 
@@ -53,7 +53,7 @@ fig = plot_scatter3d( xf_E[1], xf_E[2], xf_E[3], fig )
 fig = plot_scatter3d( rv_f_kepler[1], rv_f_kepler[2], rv_f_kepler[3], fig, :utriangle, :green ) 
 
 
-## ============================================ ##
+## ====================================================================
 # what is the true change in true anomaly? 
 
 oe0_lambert = cart2kep( x0_lambert, mu ) 
@@ -77,7 +77,7 @@ E_f = nu2E( ν_f, e )
 ΔE  = E_f - E_0 
 
 
-## ============================================ ##
+## ====================================================================
 # let's figure out what's going on 
 
 rv_0 = x0_lambert 

@@ -2,7 +2,7 @@ using trajectory_optimization_game_theory
 using ForwardDiff 
 using LinearAlgebra 
 
-## ============================================ ##
+## ====================================================================
 # BFGS 
 
 using LinearAlgebra 
@@ -86,7 +86,7 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
 
 end 
 
-## ============================================ ##
+## ====================================================================
 
 function fn_xy( x,y )
     return fn( [x,y] )

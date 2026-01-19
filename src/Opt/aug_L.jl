@@ -2,7 +2,7 @@ using LinearAlgebra
 using Optim 
 using ForwardDiff 
 
-## ============================================ ##
+## ====================================================================
 
 """
 Construct Augmented Lagrangian function 
@@ -29,7 +29,7 @@ end
 
 export aug_L_fn 
 
-## ============================================ ##
+## ====================================================================
 
 """
 Construct inequality-constrained Augmented Lagrangian function 
@@ -63,7 +63,7 @@ export aug_L_ineq_fn
 
 
 
-## ============================================ ##
+## ====================================================================
 
 """
 Construct equality and inequality-constrained Augmented Lagrangian function 
@@ -105,7 +105,7 @@ end
 
 export aug_L_eq_ineq_fn 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimize equality-constrained Augmented Lagrangian"
 function min_aug_L_eq( 
@@ -156,7 +156,7 @@ end
 
 export min_aug_L_eq 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimize inequality-constrained Augmented Lagrangian" 
 function min_aug_L_ineq( 
@@ -209,7 +209,7 @@ end
 
 export min_aug_L_ineq 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimize equality and inequality-constrained Augmented Lagrangian"
 function min_aug_L_eq_ineq(  
@@ -272,7 +272,7 @@ end
 
 export min_aug_L_eq_ineq 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimize equality and inequality-constrained Augmented Lagrangian"
 function min_aug_L(  
@@ -306,7 +306,7 @@ end
 
 export min_aug_L
 
-## ============================================ ##
+## ====================================================================
 
 "Update Lagrange multipliers and penalty parameters for inequality constraints"
 function update_λ_p_ineq( 
@@ -340,7 +340,7 @@ end
 
 export update_λ_p_ineq 
 
-## ============================================ ##
+## ====================================================================
 
 "Update Lagrange multipliers and penalty parameters for equality constraints"
 function update_λ_p_eq( 

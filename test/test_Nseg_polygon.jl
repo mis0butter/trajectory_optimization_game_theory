@@ -4,7 +4,7 @@ using FiniteDifferences
 using LinearAlgebra 
 using Optim 
 
-## ============================================ ##
+## ====================================================================
 # init params 
 
 mu = 398600.4415
@@ -29,7 +29,7 @@ rv_state = rv_E[end,:]
 # get vertices of polygon 
 vertices = polygon_vertices( rv_state, params ) 
 
-## ============================================ ##
+## ====================================================================
 
 # plot 
 fig = plot_axes3d( )

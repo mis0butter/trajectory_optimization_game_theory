@@ -2,7 +2,7 @@ using trajectory_optimization_game_theory
 using LinearAlgebra, StaticArrays
 
 
-## ============================================ ##
+## ====================================================================
 
 
 mu = 398600.4415
@@ -25,12 +25,12 @@ sf  = sims_flanagan_transfer(x₀_P, x₀_E, 100, t0, mu)
 fig = plot_sims_flanagan!(x0, sf.xf, sf.Δτ, sf.Δv⃗, mu) 
 
 
-## ============================================ ##
+## ====================================================================
 
 # Infiltrator.clear_disabled!()
 # Infiltrator.toggle_async_check(false) 
 
-## ============================================ ##
+## ====================================================================
 
 # Importing Project Constants
 C  = import_constants()

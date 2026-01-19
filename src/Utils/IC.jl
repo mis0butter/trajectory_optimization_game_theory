@@ -1,6 +1,6 @@
 using LinearAlgebra 
 
-## ============================================ ##
+## ====================================================================
 
 function init_game( 
     rng,
@@ -95,7 +95,7 @@ end
 export init_game 
 
 
-## ============================================ ##
+## ====================================================================
 
 "Create dummy IC for lambert transfer and then breaking up into smaller Δv. for testing purposes only!!!"
 function lambert_IC() 

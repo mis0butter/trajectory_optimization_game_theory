@@ -1,7 +1,7 @@
 using JuMP 
 using Ipopt 
 
-## ============================================ ##
+## ====================================================================
 
 " Minimize objective function using JuMP "
 function min_ipopt( obj_fn, N ) 

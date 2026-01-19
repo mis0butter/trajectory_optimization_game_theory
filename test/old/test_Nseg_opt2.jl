@@ -4,7 +4,7 @@ using FiniteDifferences
 using LinearAlgebra 
 using Optim 
 
-## ============================================ ##
+## ====================================================================
 # init 
 
 mu = 398600.4415
@@ -40,7 +40,7 @@ fig = plot_orbit( x_E, fig )
 fig = plot_orbit( rv_prop_lb, fig ) 
 fig = plot_vector3d( [ rv_0[1:3] ], 500 * [ Δv ], fig ) 
 
-## ============================================ ##
+## ====================================================================
 # vary tof for lambert, get min Δv 
 
 T_P = orbitPeriod(kep0_P, mu) 
@@ -55,7 +55,7 @@ end
 i_min = get_index( Δv_norm, minimum(Δv_norm) ) 
 tof   = T_P_vec[i_min]
 
-## ============================================ ##
+## ====================================================================
 # break up into 2 segments, see what happens 
 
 # first compute lambert 

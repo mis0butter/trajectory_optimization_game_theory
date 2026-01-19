@@ -4,7 +4,7 @@ using FiniteDifferences
 using LinearAlgebra 
 using Optim 
 
-## ============================================ ##
+## ====================================================================
 # init params 
 
 mu = 398600.4415
@@ -27,7 +27,7 @@ fig = plot_axes3d( )
 fig = plot_orbit( rv_P, fig ) 
 fig = plot_orbit( rv_E, fig ) 
 
-## ============================================ ##
+## ====================================================================
 # break up into N segments, see what happens 
 
 # define init and target vectors for pursuer 
@@ -41,7 +41,7 @@ tof_N = tof / N
 
 t, rv_kepler = prop_kepler_tof_Nseg( rv_0, Δv_sol, N, tof / N, mu ) 
 
-## ============================================ ##
+## ====================================================================
 # MPC 
 
 # init 
@@ -106,7 +106,7 @@ for t_sim = dt_sim : dt_sim : dt_sim * 4
 end 
 
 
-## ============================================ ##
+## ====================================================================
 # create animation 
 
 using Plots 

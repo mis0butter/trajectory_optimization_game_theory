@@ -5,7 +5,7 @@ using LinearAlgebra, StaticArrays
 # Infiltrator.toggle_async_check(false) 
 
 
-## ============================================ ##
+## ====================================================================
 
 # Importing Project Constants
 C  = import_constants()
@@ -34,7 +34,7 @@ xfₒ  = convert(Vector, xfₒ) # QUICK FIX
 sf  = solve_transfer(x0, 100, xfₒ, t0, μ)
 fig = plot_solution!(x0, sf.xf, sf.Δτ, sf.Δv⃗, μ) 
 
-## ============================================ ## 
+## ==================================================================== 
 
 
 mi = C.Io 

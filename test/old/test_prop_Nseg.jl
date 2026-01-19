@@ -1,7 +1,7 @@
 using trajectory_optimization_game_theory
 using LinearAlgebra 
 
-## ============================================ ## 
+## ==================================================================== 
 # define IC, target state, and lambert solve 
 
 r1      = [20.0e6, 20.0e6, 0]   # [m] 
@@ -11,7 +11,7 @@ mu      = 398600.4418e9         # [m^3/s^2]
 dm      = "pro" 
 Dtsec   = tof 
 
-## ============================================ ##
+## ====================================================================
 # solve and propagate lambert orbit 
 
 v1, v2 = lambertbattin( r1, r2, mu, dm, tof ) 
@@ -20,7 +20,7 @@ rv0 = [ r1; v1 ]
 t_lambert, rv_lambert = propagate_2Body( rv0, tof, mu, 1.0 ) 
 rv_lambert = mapreduce( permutedims, vcat, rv_lambert ) 
 
-## ============================================ ##
+## ====================================================================
 # break up delta v into smaller segments 
 
 # initial position has all z velocity 
@@ -37,7 +37,7 @@ for i = 1 : N
 end 
 dv_vec = mapreduce( permutedims, vcat, dv_vec ) 
 
-## ============================================ ##
+## ====================================================================
 # prop_2Body_tof_Nseg 
 
 # Creating Iteration Variables
@@ -67,17 +67,17 @@ i = 1
 # end 
 X_hist = mapreduce( permutedims, vcat, X_hist ) 
 
-## ============================================ ##
+## ====================================================================
 # propagate each segment 
 
 X, t = prop_2Body_tof_Nseg( [r1; vz], dv_vec, N, tof_N, mu )  
 
-## ============================================ ##
+## ====================================================================
 # compute miss distance 
 
 dx_miss = miss_distance_prop2Body( x0, dv_vec, N, r2, tof_N, mu ) 
 
-## ============================================ ##
+## ====================================================================
 # plot 
 
 using GLMakie 

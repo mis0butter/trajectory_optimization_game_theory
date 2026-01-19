@@ -1,7 +1,7 @@
 using LinearAlgebra
 using ForwardDiff
 
-## ============================================ ##
+## ====================================================================
 # set-up 
 
 # initial guess 
@@ -18,7 +18,7 @@ dxmin   = 1e-6     # minimum allowed perturbation
 beta    = 0.707    # backtracking line search parameter 
 c       = 1e-4     # backtracking line search parameter 
 
-## ============================================ ##
+## ====================================================================
 
 function update_Hk( x_k, x_kp1, H_k, dfn ) 
 
@@ -48,7 +48,7 @@ function update_Qk( x_k, x_kp1, Q_k, dfn )
     return Q_kp1 
 end 
 
-## ============================================ ##
+## ====================================================================
 # BFGS 
 
 # init step size 

@@ -4,7 +4,7 @@ using FiniteDifferences
 using LinearAlgebra 
 using Optim 
 
-## ============================================ ##
+## ====================================================================
 # init 
 
 mu = 398600.4415
@@ -24,7 +24,7 @@ rv_f = [ r_f ; v_f ]
 x_P = vv2m(x_P) ;   
 x_E = vv2m(x_E) ;   
 
-## ============================================ ##
+## ====================================================================
 # test lambert soln 
 
 # lambert solution 
@@ -40,7 +40,7 @@ fig = plot_orbit( rv_prop_lb, fig )
 fig = plot_vector3d( [ x0_P[1:3] ], 500 * [ Δv ], fig ) 
 
 
-## ============================================ ##
+## ====================================================================
 # break up into 2 segments, see what happens 
 
 tof_N = tof / 2
@@ -59,7 +59,7 @@ t, rv_prop_2 = propagate_2Body( rv_2, tof_N, mu )
 rv_prop_1 = vv2m( rv_prop_1 )
 rv_prop_2 = vv2m( rv_prop_2 )  
 
-## ============================================ ##
+## ====================================================================
 # now vary segments 
 
 N       = 2 
@@ -71,7 +71,7 @@ miss_kepler = miss_distance_prop_kepler_Nseg(
     rv_0, Δv_vec, N, rv_f, tof_N, mu ) 
 
     
-## ============================================ ##
+## ====================================================================
 # can I use Optim? ... looks like YES 
 
 x_0 = reshape( 1.1 * Δv_vec, N*3, 1 ) 
@@ -85,7 +85,7 @@ fn(x_min)
 Δv_vec = reshape( x_min, N, 3 ) 
 t, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
-## ============================================ ##
+## ====================================================================
 # ok, now let's try minimizing the miss distance for N segments 
 
 # init stuff 

@@ -27,7 +27,7 @@ using Printf
 using JLD2 
 
 
-## ============================================ ##
+## ====================================================================
 
 # Junette and Sofia Dyn 
 include("Dyn/Dyn.jl") 
@@ -36,7 +36,7 @@ include("Utils/Utils.jl")
 include("Lambert/Lambert.jl") 
 include("game_theory/matrix_game_solver.jl")
 
-## ============================================ ##
+## ====================================================================
 #  Sub-Module Includes
 
 # include("old/Dynamics/Dynamics.jl")

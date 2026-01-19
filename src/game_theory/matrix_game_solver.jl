@@ -1,11 +1,11 @@
 abstract type FiniteGameSolver end
 
-## ============================================ ##
+## ====================================================================
 
 abstract type AbstractTrajectoryGenerator end
 export AbstractTrajectoryGenerator 
 
-## ============================================ ##
+## ====================================================================
 
 struct FiniteTrajectoryGameSolver{TG,TT<:AbstractTrajectoryGenerator,TH,TR,TF<:FiniteGameSolver}
     "Underlying trajectory game to be solved."
@@ -20,7 +20,7 @@ struct FiniteTrajectoryGameSolver{TG,TT<:AbstractTrajectoryGenerator,TH,TR,TF<:F
     finite_game_solver::TF
 end
 
-## ============================================ ##
+## ====================================================================
 
 """
     solve_mixed_nash(solver, A)
@@ -60,7 +60,7 @@ end
 
 export solve_mixed_nash 
 
-## ============================================ ##
+## ====================================================================
 
 function solve_mixed_security_strategy(player_cost_matrix)
 
@@ -95,7 +95,7 @@ end
 
 export solve_mixed_security_strategy 
 
-## ============================================ ##
+## ====================================================================
 
 function solve_simplex_lp(A)
 
@@ -128,7 +128,7 @@ end
 
 export solve_simplex_lp 
 
-## ============================================ ##
+## ====================================================================
 
 # compute X, U, and t for a player (optimization) 
 function players_XU( params, game, players ) 
@@ -170,7 +170,7 @@ end
 export players_XU 
 
 
-## ============================================ ##
+## ====================================================================
 
 # game cost 
 function stage_cost(x1, x2, u1, u2)
@@ -180,7 +180,7 @@ end
 export stage_cost 
 
 
-## ============================================ ## 
+## ==================================================================== 
 # zero-sum game 
 
 function players_cost_matrices( players ) 
@@ -236,7 +236,7 @@ end
 export players_cost_matrices 
 
 
-## ============================================ ##
+## ====================================================================
 
 function stage_cost_games_fn( games_vec ) 
 
@@ -271,7 +271,7 @@ end
 export stage_cost_games_fn 
 
 
-## ============================================ ##
+## ====================================================================
 
 function player_strategy( players, rng, params ) 
 
@@ -316,7 +316,7 @@ end
 export player_strategy 
 
 
-## ============================================ ##
+## ====================================================================
 
 # compute X, U, and t for a player 
 function players_states( params, game, players, rng ) 
@@ -336,7 +336,7 @@ end
 export players_states 
 
 
-## ============================================ ##
+## ====================================================================
 
 function rv_E_P_strategy( game, params ) 
 
@@ -360,7 +360,7 @@ end
 export rv_E_P_strategy 
 
 
-## ============================================ ##
+## ====================================================================
 
 function find_ref_orbit( game, params ) 
 
@@ -381,7 +381,7 @@ end
 export find_ref_orbit 
 
 
-## ============================================ ##
+## ====================================================================
 
 function prop_rv_ref( kep_ref_E, params ) 
 
@@ -401,7 +401,7 @@ end
 export prop_rv_ref 
 
 
-## ============================================ ##
+## ====================================================================
 
 function prop_game_step( game, params, rng ) 
 

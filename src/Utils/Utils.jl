@@ -2,7 +2,7 @@ include("plotting.jl")
 include("IC.jl") 
 include("structs.jl")
 
-## ============================================ ##
+## ====================================================================
 
 "Convert vector of vectors into matrix"
 function vv2m( vec_vec ) 
@@ -14,7 +14,7 @@ end
 
 export vv2m 
 
-## ============================================ ##
+## ====================================================================
 
 "Return index that matches val"
 function get_index( 
@@ -29,7 +29,7 @@ end
 
 export get_index 
 
-## ============================================ ##
+## ====================================================================
 
 "Convert matrix into vector of vectors" 
 function m2vv( M )
@@ -45,7 +45,7 @@ end
 
 export m2vv 
 
-## ============================================ ##
+## ====================================================================
 
 "Compute Δv from desired inclination change" 
 function computeInclinationChange(
@@ -69,7 +69,7 @@ end
 
 export computeInclinationChange
 
-## ============================================ ##
+## ====================================================================
 
 """ 
 Get orthogonal axes of local frame at given state vector: 
@@ -91,7 +91,7 @@ end
 
 export axis_123 
 
-## ============================================ ##
+## ====================================================================
 
 "Compute vertices of polygon around given state vector"  
 function polygon_vertices( 
@@ -133,7 +133,7 @@ end
 
 export polygon_vertices 
 
-## ============================================ ##
+## ====================================================================
 
 "Generate uniformly distributed random point(s) within a circle of radius R"
 
@@ -154,7 +154,7 @@ end
 
 export unif_random_points_circle 
 
-## ============================================ ##
+## ====================================================================
 
 "Generate uniformly distributed random point(s) within a circle of radius R around given state vector" 
 
@@ -180,7 +180,7 @@ end
 
 export rand_IC 
 
-## ============================================ ##
+## ====================================================================
 
 "Compute norm of U vectors for both players"
 function p1_p2_u_hist( game, params = game.params[1] ) 
@@ -214,7 +214,7 @@ end
 export p1_p2_u_hist 
 
 
-## ============================================ ##
+## ====================================================================
 
 "Compute norm of U vectors for both players"
 function U_norm( game, params = game.params[1] ) 
@@ -251,7 +251,7 @@ end
 export U_norm 
 
 
-## ============================================ ##
+## ====================================================================
 
 # tt_hist, p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params ) 
 function p_rv_ref_hist( game, params = game.params[1] ) 
@@ -303,7 +303,7 @@ end
 export p_rv_ref_hist 
 
 
-## ============================================ ## 
+## ==================================================================== 
 
 function dist_ref_norm( game, params ) 
 
@@ -321,7 +321,7 @@ end
 export dist_ref_norm 
 
 
-## ============================================ ## 
+## ==================================================================== 
 
 function dist_norm( game, params ) 
 
@@ -336,7 +336,7 @@ end
 export dist_norm 
 
 
-## ============================================ ##
+## ====================================================================
 
 using JLD2 
 
@@ -361,7 +361,7 @@ end
 export save_games_vec 
 
 
-## ============================================ ##
+## ====================================================================
 
 function load_games_vec( N_games, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
@@ -379,7 +379,7 @@ end
 export load_games_vec 
 
 
-## ============================================ ##
+## ====================================================================
 
 function run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
@@ -396,7 +396,7 @@ end
 export run_game 
 
 
-## ============================================ ##
+## ====================================================================
 
 function run_MC_games( rng, N_games, N_replan, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
@@ -457,7 +457,7 @@ export run_MC_games_parallel
 
 # ==================================================================== 
 
-## ============================================ ##
+## ====================================================================
 
 function MC_stats( games_vec, params = games_vec[1].params[1] ) 
 
@@ -527,7 +527,7 @@ end
 export MC_stats 
 
 
-## ============================================ ##
+## ====================================================================
 
 function print_MC_stats( 
     games_vec, 

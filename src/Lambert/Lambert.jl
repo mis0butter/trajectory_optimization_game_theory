@@ -7,7 +7,7 @@ include("seebattk.jl")
 # Exports
 export lambertbattin, seebatt, seebattk 
 
-## ============================================ ##
+## ====================================================================
 
 "Propagate Keplerian orbit using Lambert solution"
 function prop_lambert_soln(  
@@ -38,7 +38,7 @@ end
 
 export prop_lambert_soln 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimizing Δv for Lambert solution using crappy grid search"
 function crappy_min_lambert( 
@@ -69,7 +69,7 @@ end
 
 export crappy_min_lambert 
 
-## ============================================ ##
+## ====================================================================
 
 "Set initial guess for optimization using lambert solution"
 function lambert_init_guess( 

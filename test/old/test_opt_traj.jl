@@ -2,7 +2,7 @@ using trajectory_optimization_game_theory
 using ForwardDiff 
 using LinearAlgebra 
 
-## ============================================ ##
+## ====================================================================
 # test miss distance (min_bfgs exploded) 
 
 r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
@@ -36,7 +36,7 @@ dfn = Δv_vec_flat -> ForwardDiff.gradient(
     fn, Δv_vec_flat ) 
 dfn( Δv_vec_flat ) 
 
-## ============================================ ##
+## ====================================================================
 # BFGS 
     
 # initial guess 
@@ -116,7 +116,7 @@ while norm(g) >= tol && niter <= maxiter && dx >= dxmin
 
 end 
 
-## ============================================ ##
+## ====================================================================
 # get solution 
 
 # tof_N = tof / N / 2.4 
@@ -144,7 +144,7 @@ t_kep, rv_kep = prop_kepler_tof_Nseg(
 
 fig = plot_orbit( rv_kep ) 
 
-## ============================================ ##
+## ====================================================================
 # test tof gradient 
 
 function miss_Δv_flat( 
@@ -183,7 +183,7 @@ dfn = tof_N -> ForwardDiff.gradient(
     fn, Δv_vec_flat  ) 
 dfn( tof_N ) 
 
-## ============================================ ##
+## ====================================================================
 # test miss distance with minimizing tof 
 
 tof_Δv = [ tof_N ; Δv_vec_flat ] 
@@ -218,7 +218,7 @@ dfn = tof_Δv -> ForwardDiff.gradient(
     
 dfn( tof_Δv ) 
 
-## ============================================ ##
+## ====================================================================
 # test forwarddiff gradient with finite differencing 
 
 # define objective fn 

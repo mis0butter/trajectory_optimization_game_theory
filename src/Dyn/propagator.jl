@@ -3,7 +3,7 @@ using LinearAlgebra
 using Debugger 
 
 
-## ============================================ ##
+## ====================================================================
 
 function prop_rv_E_P( rv_E, rv_P, params ) 
 
@@ -21,7 +21,7 @@ end
 export prop_rv_E_P 
 
 
-## ============================================ ##
+## ====================================================================
 
 "propagate orbit based on given initial conditions, time, and gravitational parameter" 
 function propagate_2Body(x0, t, mu = 1.0, dt = nothing)
@@ -42,7 +42,7 @@ end
 
 export propagate_2Body
 
-## ============================================ ##
+## ====================================================================
 
 export eom_2Body! 
 function eom_2Body!(dx, x, mu, t)
@@ -60,7 +60,7 @@ function eom_2Body!(dx, x, mu, t)
     dx[6] = mu_div_r3 * x3
 end
 
-## ============================================ ##
+## ====================================================================
 
 export kep2cart 
 function kep2cart(kep, mu)
@@ -90,7 +90,7 @@ function kep2cart(kep, mu)
     return cart
 end
 
-## ============================================ ##
+## ====================================================================
 
 function R3(angle)
     R = [cos(angle) sin(angle) 0.0;
@@ -99,7 +99,7 @@ function R3(angle)
     return R
 end
 
-## ============================================ ##
+## ====================================================================
 
 function R1(angle)
     R = [1.0 0.0 0.0;
@@ -108,7 +108,7 @@ function R1(angle)
     return R
 end 
 
-## ============================================ ##
+## ====================================================================
 
 export cart2kep  
 function cart2kep( rv, mu )
@@ -184,7 +184,7 @@ function cart2kep( rv, mu )
 end
 
 
-## ============================================ ##
+## ====================================================================
 
 # export cart2kep
 # function cart2kep(cart, mu, tol=1e-20)
@@ -275,7 +275,7 @@ end
 #     return kepState
 # end
 
-## ============================================ ##
+## ====================================================================
 
 export orbitPeriod 
 function orbitPeriod(kep, mu)
@@ -283,7 +283,7 @@ function orbitPeriod(kep, mu)
     return T
 end
 
-## ============================================ ##
+## ====================================================================
 
 "Non-dimensionalize position and velocity vectors"
 function nondim_rv(

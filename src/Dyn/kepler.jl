@@ -1,6 +1,6 @@
 using LinearAlgebra 
 
-## ============================================ ##
+## ====================================================================
 
 "Convert true anomaly to eccentric anomaly"
 function nu2E( 
@@ -30,7 +30,7 @@ end
 
 export nu2E 
 
-## ============================================ ##
+## ====================================================================
 
 "Convert eccentric anomaly to true anomaly" 
 function E2nu( 
@@ -58,7 +58,7 @@ end
 
 export E2nu 
 
-## ============================================ ##
+## ====================================================================
 
 "Solve Kepler's equation M = e*sinh(H) - H" 
 function kepler_H( 
@@ -84,7 +84,7 @@ end
 export kepler_H 
 # H = kepler_H( M, e )
 
-## ============================================ ## 
+## ==================================================================== 
 
 "Solve Kepler's equation M = E-e*sin(E)" 
 function kepler_E( 
@@ -110,7 +110,7 @@ end
 export kepler_E 
 # E = kepler_E( M, e )
 
-## ============================================ ## 
+## ==================================================================== 
 
 # Resource: BMW 
 
@@ -150,7 +150,7 @@ export prop_kepler_tof
 # rv_f = prop_keper_tof( rv_0, tof, mu ) 
 
 
-## ============================================ ## 
+## ==================================================================== 
 
 "Propagate an initial state through a vector of N trajectory segments using Kepler's equations" 
 function prop_kepler_tof_Nseg(
@@ -188,7 +188,7 @@ export prop_kepler_tof_Nseg
 # t_kep, rv_kep = prop_kepler_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu ) 
 
 
-## ============================================ ##
+## ====================================================================
 
 "Compute true anomaly from eccentric anomaly"
 function nu_tof(  
@@ -221,7 +221,7 @@ export nu_tof
 
 # nu_f = elliptic_nu( e, n, nu_0, tof ) 
 
-## ============================================ ##
+## ====================================================================
 
 "Compute true anomaly from eccentric anomaly for elliptic orbits"
 function elliptic_nu(  
@@ -252,7 +252,7 @@ export elliptic_nu
 
 # nu_f = elliptic_nu( e, n, nu_0, tof ) 
 
-## ============================================ ## 
+## ==================================================================== 
 
 "Compute true anomaly from hyperbolic anomaly for hyperbolic orbits"
 function hyperbolic_nu(  

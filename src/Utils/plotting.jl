@@ -1,4 +1,4 @@
-## ============================================ ##
+## ====================================================================
 # plot Cartesian axes 
 
 "Plot x, y, and z Cartesian axes using GLMakie "
@@ -25,7 +25,7 @@ end
 
 export plot_axes3d 
 
-## ============================================ ## 
+## ==================================================================== 
 
 """ 
 Plot a 3D line using GLMakie 
@@ -64,7 +64,7 @@ end
     
 export plot_line3d  
 
-## ============================================ ## 
+## ==================================================================== 
 
 """ 
 Plot an orbit using GLMakie 
@@ -116,7 +116,7 @@ end
     
 export plot_orbit 
 
-## ============================================ ## 
+## ==================================================================== 
 
 # colormap options: 
 #   jblue 
@@ -161,7 +161,7 @@ end
 
 export plot_surface 
 
-## ============================================ ##
+## ====================================================================
 
 """
 Plot scatter using GLMakie
@@ -210,7 +210,7 @@ end
 
 export plot_scatter3d 
 
-## ============================================ ##
+## ====================================================================
 
 """ 
 Plot a contour with a colorbar using GLMakie
@@ -248,7 +248,7 @@ end
 
 export plot_contour3d 
 
-## ============================================ ##
+## ====================================================================
 
 """
 Plot vector using GLMakie. 
@@ -264,91 +264,53 @@ Example usage:
     fig = plot_vector3d( [ xyz[3] ] , [ uvw[3] ], fig, r/100, :green ) 
 """
 
-"""
-    plot_vector3d(origin, direction; fig, width, color, text)
-
-Plot 3D vector arrow(s) from origin point(s) in given direction(s).
-
-# Arguments
-- `origin`: Single point [x,y,z] or multiple points [[x1,y1,z1], [x2,y2,z2], ...]
-- `direction`: Single vector [u,v,w] or multiple vectors [[u1,v1,w1], ...]
-- `fig`: Existing figure handle (creates new if nothing)
-- `width`: Arrow line width 
-- `color`: Arrow color
-- `text`: Optional label (only for single vector)
-"""
 function plot_vector3d( 
-    origin,                     
-    direction,                  
-    fig    = nothing,           
-    width  = nothing,           
-    color  = :black,            
-    text   = nothing,           
+    xyz,                        # [N] vector of (x,y,z) origin points 
+    uvw,                        # [N] vector of (u,v,w) vector directions 
+    fig    = nothing,           # figure handle 
+    width  = norm(uvw[1])/100,  # arrow width 
+    color  = :black,            # marker color 
+    text   = nothing,           # text to add to plot 
 ) 
-    # normalize inputs to vectors of SVectors
-    origins    = _to_point_list(origin)
-    directions = _to_point_list(direction)
-    
-    # default width based on direction magnitude
-    if isnothing(width)
-        width = norm(directions[1]) / 50
-    end
 
-    # convert to Makie types
-    ps = [Point3f(p...) for p in origins]
-    ns = [Vec3f(d...)   for d in directions]
+    # check type --> must be vectors of vectors 
+    if xyz isa AbstractMatrix 
+        xyz = m2vv(xyz)
+    end 
+    if uvw isa AbstractMatrix 
+        uvw = m2vv(uvw)
+    end 
 
-    # create figure if needed
+    # convert to Points3f and Vec3f for arrows function 
+    ps  = [ Point3f(x,y,z) for (x,y,z) in xyz ] 
+    ns  = [ Vec3f(x,y,z) for (x,y,z) in uvw ] 
+
     if isnothing(fig) 
         fig = Figure() 
-        Axis3(fig[1, 1], aspect = :data) 
+        Axis3(fig[1, 1]) 
     end 
 
     arrows!(  
-        ps, ns, 
-        fxaa = true,
+        ps, ns, fxaa = true, # turn on anti-aliasing
         linecolor = color, arrowcolor = color,
-        linewidth = width, arrowsize = Vec3f(3*width, 3*width, 4*width),
+        linewidth = width, arrowsize = 2 * width .* Vec3f(1, 1, 1),
         align = :origin, 
     )
 
     if !isnothing(text) 
-        length(origins) == 1 || error("Can only label one vector at a time.")
-        tip = origins[1] .+ directions[1]
-        text!(tip[1], tip[2], tip[3]; text = text, color = :black, offset = (0, 15), align = (:center, :bottom)) 
+        if size(xyz, 1) > 1 
+            error("Can only label one vector at time.")
+        end 
+        x = xyz[1][1] ; y = xyz[1][2] ; z = xyz[1][3] 
+        text!( x, y, z; text = text, color = :black, offset = (0,15), align = (:center, :bottom) ) 
     end
 
     return fig 
-end
-
-# Helper: convert various input formats to Vector of SVectors
-function _to_point_list(input)
-    # single point as tuple or SVector: (x,y,z) or SVector(x,y,z)
-    if input isa Tuple || input isa StaticVector
-        return [SVector{3}(input...)]
-    end
-    
-    # single point as 1D vector: [x, y, z]
-    if input isa AbstractVector && eltype(input) <: Number
-        return [SVector{3}(input...)]
-    end
-    
-    # matrix: each row is a point (N×3)
-    if input isa AbstractMatrix
-        return [SVector{3}(input[i, :]...) for i in 1:size(input, 1)]
-    end
-    
-    # already a list of points: [[x1,y1,z1], [x2,y2,z2], ...]
-    if input isa AbstractVector
-        return [SVector{3}(p...) for p in input]
-    end
-    
-    error("Unsupported input format for plot_vector3d")
 end 
 
 export plot_vector3d 
 
-## ============================================ ##
+## ====================================================================
 
 "Plot propagated orbit with delta v using GLMakie "
 function plot_prop_Δv(  
@@ -392,7 +354,7 @@ end
 
 export plot_prop_Δv 
 
-## ============================================ ##
+## ====================================================================
 
 "Plot lines of polygon at rv input"
 function plot_polygon( 
@@ -470,7 +432,7 @@ end
 
 export plot_polygon 
 
-## ============================================ ## 
+## ==================================================================== 
 
 """ 
 Plot a candidate trajectory using GLMakie 
@@ -510,7 +472,7 @@ end
     
 export plot_traj_cand 
 
-## ============================================ ##
+## ====================================================================
 
 "Plot propagated orbit with delta v using GLMakie "
 function plot_Δv_weights(  
@@ -570,7 +532,7 @@ end
 
 export plot_Δv_weights 
 
-## ============================================ ##
+## ====================================================================
 
 function plot_p1_p2_traj( game, parameters, kk ) 
 
@@ -644,7 +606,7 @@ end
 export plot_p1_p2_traj 
 
 
-## ============================================ ##
+## ====================================================================
 
 function plot_games_costs( fig, x_fig, y_fig, games_vec ) 
 
@@ -684,7 +646,7 @@ function plot_games_costs( fig, x_fig, y_fig, games_vec )
 end 
 
 
-## ============================================ ##
+## ====================================================================
 
 function plot_ref_stats( fig, x_fig, y_fig, games_vec ) 
 
@@ -725,7 +687,7 @@ function plot_ref_stats( fig, x_fig, y_fig, games_vec )
 end 
 
 
-## ============================================ ##
+## ====================================================================
 
 function plot_player_distance( fig, x_fig, y_fig, games_vec ) 
 
@@ -765,7 +727,7 @@ function plot_player_distance( fig, x_fig, y_fig, games_vec )
 end 
 
 
-## ============================================ ##
+## ====================================================================
 
 function plot_cumsum_U( fig, x_fig, y_fig, games_vec ) 
 
@@ -804,7 +766,7 @@ function plot_cumsum_U( fig, x_fig, y_fig, games_vec )
 end 
 
 
-## ============================================ ##
+## ====================================================================
 
 function plot_MC_stats( games_vec, params = games_vec[1].params[1] )
 
@@ -828,7 +790,7 @@ end
 
 export plot_MC_stats 
 
-## ============================================ ## 
+## ==================================================================== 
 
 function plot_game_stats( game, params ) 
 

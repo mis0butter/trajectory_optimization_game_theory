@@ -3,7 +3,7 @@ using ForwardDiff
 using FiniteDifferences
 using LinearAlgebra 
 
-## ============================================ ##
+## ====================================================================
 # test miss distance (min_bfgs exploded) 
 
 r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
@@ -51,7 +51,7 @@ t_kep, rv_kep_fdm = prop_kepler_tof_Nseg( rv_0, Δv_sol_fdm, N, tof_N, mu )
 fig = plot_orbit( rv_kep_fd ) 
 fig = plot_orbit( rv_kep_fdm, fig )  
 
-## ============================================ ##
+## ====================================================================
 # test miss distance with tof_N part of obj fn 
 
 tof_Δv = [ tof_N ; Δv_vec_flat ] 
@@ -99,8 +99,8 @@ tof_N_fd  = x_min_fd[1]
 t_kep, rv_kep_fd = prop_kepler_tof_Nseg( rv_0, Δv_sol_fd, N, tof_N, mu ) 
 fig = plot_orbit( rv_kep_fd ) 
 
-## ============================================ ##
-## ============================================ ##
+## ====================================================================
+## ====================================================================
 # now test miss distance while changing obj fn 
 
 tof_Δv = [ tof_N ; Δv_vec_flat ] 

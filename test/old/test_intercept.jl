@@ -3,7 +3,7 @@ using LinearAlgebra
 using ForwardDiff 
 using GLMakie 
 
-## ============================================ ##
+## ====================================================================
 
 # define IC and target state 
 
@@ -19,7 +19,7 @@ x0_P_OG = x_P[1]
 x0_E_OG = x_E[1] 
 xf_E_OG = x_E[end] 
 
-## ============================================ ##
+## ====================================================================
 
 x0_P = copy(x0_P_OG)
 x0_E = copy(x0_E_OG)  
@@ -92,7 +92,7 @@ end
 # fig = plot_scatter3d( x_P_dtsim_hist[1,1], x_P_dtsim_hist[1,2], x_P_dtsim_hist[1,3], fig ) 
 # fig = plot_scatter3d( x_E_dtsim_hist[1,1], x_E_dtsim_hist[1,2], x_E_dtsim_hist[1,3], fig ) 
 
-## ============================================ ##
+## ====================================================================
 # create animation 
 
 using Plots 
@@ -206,7 +206,7 @@ end
 g = gif(a, fps = 2.0)
 display(g)  
 
-## ============================================ ##
+## ====================================================================
 
 
 function sphere(r, C)   # r: radius; C: center [cx,cy,cz]

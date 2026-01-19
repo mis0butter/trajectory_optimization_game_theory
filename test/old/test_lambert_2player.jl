@@ -1,6 +1,6 @@
 using trajectory_optimization_game_theory 
 
-## ============================================ ## 
+## ==================================================================== 
 # define IC and target state 
 
 mu = 398600.4415    # km 
@@ -23,7 +23,7 @@ x₀_P = x_P[1]
 x₀_E = x_E[1] 
 xf_E = x_E[end] 
 
-## ============================================ ##
+## ====================================================================
 # lambert solve 
 
 r1 = x₀_P[1:3] 
@@ -38,7 +38,7 @@ v1, v2  = lambertbattin(r1, r2, mu, dm, tof)
 x₀_P_lambert   = [r1; v1] 
 prop_P_lambert = propagate_2Body( x₀_P_lambert, tof, mu )
 
-## ============================================ ##
+## ====================================================================
 # propagate lambert orbit 
 
 x_P = prop_P.u 
@@ -50,7 +50,7 @@ x_E = mapreduce( permutedims, vcat, x_E )
 x_P_lambert = prop_P_lambert.u 
 x_P_lambert = mapreduce( permutedims, vcat, x_P_lambert ) 
 
-## ============================================ ##
+## ====================================================================
 # plot 
 
 using GLMakie 

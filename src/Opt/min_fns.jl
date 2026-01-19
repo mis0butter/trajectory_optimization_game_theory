@@ -1,4 +1,4 @@
-## ============================================ ##
+## ====================================================================
 
 "Minimize Δv for trajectory with N segments "
 function min_Δv(  
@@ -34,7 +34,7 @@ end
 
 export min_Δv 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimize Δv for trajectory with N segments "
 function min_Δv_dist(  
@@ -69,7 +69,7 @@ end
 
 export min_Δv_dist 
 
-## ============================================ ##
+## ====================================================================
 
 "Maximize Δv for trajectory with N segments (seems to be not working)"
 function max_Δv_dist(  
@@ -103,7 +103,7 @@ end
 
 export max_Δv_dist 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimize function using Optim"
 function min_optim(  
@@ -125,7 +125,7 @@ end
 
 export min_optim 
 
-## ============================================ ##
+## ====================================================================
 
 "Minimize a function using BFGS method"
 function min_bfgs(  
@@ -206,7 +206,7 @@ end
 
 export min_bfgs 
 
-## ============================================ ##
+## ====================================================================
 
 function min_golden_ratio(
     x, 
@@ -267,7 +267,7 @@ function min_golden_ratio(
 end
 
 
-## ============================================ ##
+## ====================================================================
 
 "Update approximate Hessian Hk via BFGS secant equation (Nocedal)"
 function update_Hk( x_k, x_kp1, H_k, dfn ) 
@@ -285,7 +285,7 @@ end
 
 export update_Hk 
 
-## ============================================ ##
+## ====================================================================
 
 "Update approximate Hessian Hk via BFGS secant equation (Russell)"
 function update_Qk( x_k, x_kp1, Q_k, dfn ) 

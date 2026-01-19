@@ -1,7 +1,7 @@
 using trajectory_optimization_game_theory
 using LinearAlgebra 
 
-## ============================================ ## 
+## ==================================================================== 
 # IC, target state, and lambert solve 
 
 r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC() 
@@ -9,7 +9,7 @@ r_0, r_f, v_0, v_f, rv_lambert, Δv_vec, tof, N, mu = lambert_IC()
 # plot 
 fig = plot_orbit( rv_lambert ) 
 
-## ============================================ ##
+## ====================================================================
 # check Kepler TOF eqns --> given rv_0 and rv_f, TOF match 
 
 tof_N = tof / N 
@@ -50,7 +50,7 @@ TOF  = sqrt( a^3 / mu ) * ( E_f - e * sin(E_f) - E_dv + e * sin(E_dv) )
 # println( "t   = ", t[end] ) 
 println( "TOF - t = ", TOF - t[end] ) 
 
-## ============================================ ##
+## ====================================================================
 # check Kepler TOF eqns --> given rv_0 and TOF, rv_f match 
 
 tof_N = tof / N 
@@ -123,7 +123,7 @@ rv_f = prop_kepler_tof( rv_0, tof, mu )
 # println( "kep prop TOF check: rv_f_check = ", rv_f_check )  
 println( "err norm = ", norm( rv[end] - rv_f ) ) 
 
-## ============================================ ##
+## ====================================================================
 # use Kepler TOF equations to propagate each segment 
 
 tof_N = tof / N 
@@ -149,7 +149,7 @@ for i = 1 : N
 end 
 rv_hist = mapreduce( permutedims, vcat, rv_hist ) 
 
-## ============================================ ##
+## ====================================================================
 # test N segment propagation
 
 t_2Body, rv_2Body = prop_2Body_tof_Nseg( rv_0, Δv_vec, N, tof_N, mu )  
@@ -159,7 +159,7 @@ println( "final err norm = ", norm( rv_2Body[end,:] - rv_kep[end,:] ) )
 
 plot_orbit( rv_2Body ) 
 
-## ============================================ ##
+## ====================================================================
 # test miss distance 
 
 rv_f = [r_f ; v_f]
@@ -170,6 +170,6 @@ miss_2Body = miss_distance_prop2Body(
 miss_kepler = miss_distance_prop_kepler_Nseg( 
 rv_0, Δv_vec, N, rv_f, tof_N, mu)
 
-## ============================================ ##
+## ====================================================================
 # now try ... minimizing delta v 
 

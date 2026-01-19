@@ -44,7 +44,7 @@ function prop_opt_Nseg(
     return tof_N_sol, Δv_sol 
 end 
 
-## ============================================ ##
+## ====================================================================
 
 "Propagates an initial state through a vector of N trajectory segments using dynamics integration" 
 function prop_2Body_tof_Nseg(
@@ -86,7 +86,7 @@ end
 export prop_2Body_tof_Nseg 
 
 
-## ============================================ ##
+## ====================================================================
 
 "Adds Δv to a state vector's velocity" 
 function apply_Δv(

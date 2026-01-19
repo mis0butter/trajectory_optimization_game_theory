@@ -1,6 +1,6 @@
 using LinearAlgebra 
 
-## ============================================ ##
+## ====================================================================
 
 "Calculate miss distance between trajectories using 2 body propagation" 
 function miss_distance_prop2Body( 
@@ -26,7 +26,7 @@ end
 
 export miss_distance_prop2Body 
 
-## ============================================ ##
+## ====================================================================
 
 "Sum of Δv vector norms"
 function sum_Δv_flat( tof_N_Δv_vec_flat, N )
@@ -41,7 +41,7 @@ end
 
 export sum_Δv_flat 
 
-# ## ============================================ ##
+# ## ====================================================================
 
 "Compute miss distance between trajectories using kepler propagation and tof_N as part of the objective function with decision variable as [ tof_n ; Δv_flat ]"
 function miss_tof_Δv_flat( 
@@ -64,7 +64,7 @@ end
 
 export miss_tof_Δv_flat 
 
-## ============================================ ##
+## ====================================================================
 
 "Compute sum of miss distance and magnitude of state vector"
 function miss_mag_tof_Δv_flat( 
@@ -90,7 +90,7 @@ end
 
 export miss_mag_tof_Δv_flat 
 
-## ============================================ ##
+## ====================================================================
 
 "Calculate miss distance between trajectories using kepler propagation"
 function miss_distance_prop_kepler( 
@@ -117,7 +117,7 @@ function miss_distance_prop_kepler(
     return Δrv_f
 end 
 
-## ============================================ ##
+## ====================================================================
 
 "Calculate miss distance between trajectories with N segments using kepler propagation" 
 function miss_distance_prop_kepler_Nseg( 
@@ -154,7 +154,7 @@ export miss_distance_prop_kepler_Nseg
 # miss_kepler = miss_distance_prop_kepler_Nseg( 
     # rv_0, Δv_vec, N, rv_f, tof_N, mu )
 
-## ============================================ ##
+## ====================================================================
     
 "Calculate sum of Δv vector norms"
 function sum_norm_Δv( x, N ) 
@@ -172,7 +172,7 @@ end
 
 export sum_norm_Δv 
 
-## ============================================ ##
+## ====================================================================
 
 "Inequality constraint: Δv vector norm <= Δv_max "
 function constrain_Δv( 

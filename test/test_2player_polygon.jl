@@ -12,7 +12,7 @@ using Infiltrator
 rng = MersenneTwister( 1 ) 
 
 
-## ============================================ ##
+## ====================================================================
 # run single game 
 
 rng = MersenneTwister( 1 ) 
@@ -32,8 +32,8 @@ fig = plot_p1_p2_traj( game, params, N_replan )
 fig = plot_game_stats( game, params ) 
 
 
-## ============================================ ## 
-## ============================================ ## 
+## ==================================================================== 
+## ==================================================================== 
 # test running multiple games 
 
 rng = MersenneTwister( 1 ) 
@@ -56,14 +56,14 @@ games_vec = run_MC_games_parallel( rng, N_games, N_replan, p1_strategy, p2_strat
 fig = plot_MC_stats( games_vec ) 
 
 
-# ## ============================================ ##
+# ## ====================================================================
 # # load and plot games_vec 
 
 # games_vec = load_games_vec( 100, "pure", "pure" ) 
 fig = plot_MC_stats( games_vec ) 
 
 
-# ## ============================================ ## 
+# ## ==================================================================== 
 
 
 # figure 
