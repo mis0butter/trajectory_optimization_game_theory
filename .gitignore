@@ -4,4 +4,3 @@ test/results/
 *.cursor 
 *.plan.md 
 *.DS_Store 
-/Manifest.toml
