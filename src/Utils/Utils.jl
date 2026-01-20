@@ -434,18 +434,22 @@ function run_MC_games_parallel( rng, N_games, N_replan, p1_strategy = "mixed", p
     
     # Create independent RNGs for each game (thread-safe)
     seeds = rand(rng, UInt, N_games)
-    
-    Threads.@threads for jj = 1:N_games
-        local_rng = MersenneTwister(seeds[jj])
+
+    # run games in parallel
+    Threads.@threads for i_game = 1:N_games
+
+        local_rng = MersenneTwister(seeds[i_game])
         
         params, players, game = init_game(local_rng, p1_strategy, p2_strategy)
 
-        for ii = 1:N_replan - 1
-            println("game: ", jj, " step: ", ii + 1)
+        # propogate each game forward one step at a time 
+        for i_step = 1 : N_replan - 1
+            println("game: ", i_game, " step: ", i_step + 1)
             game = prop_game_step(game, params, local_rng)
         end
 
-        games_vec[jj] = game
+        games_vec[i_game] = game
+
     end
 
     save_games_vec(games_vec)
@@ -455,7 +459,6 @@ end
 
 export run_MC_games_parallel 
 
-# ==================================================================== 
 
 ## ====================================================================
 

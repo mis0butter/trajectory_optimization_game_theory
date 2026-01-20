@@ -25,23 +25,32 @@ fig
 
 ## ================================== 
 
-r   = 6378.0 
-# r   = 1 
+# r   = 6378.0 
+r   = 1
 xyz = [ zeros(3) for i in 1:3 ] 
 uvw = r .* [ [1,0,0] , [0,1,0] , [0,0,1] ] 
 
 ps = [ Point3f(x,y,z) for (x,y,z) in xyz ] 
 ns = [ Vec3f(u,v,w) for (u,v,w) in uvw ] 
 
-width = r/10
+width = r/100
 
 fig = Figure() 
 ax = Axis3(fig[1,1])
 arrows!(
     ps, ns, fxaa = true, 
     linewidth = width, 
-    align = :origin
-)
+    align = :origin, 
+) 
+# :origin, :head, :lineend, :tailend, :headstart or :center  
+
+c = 3.0 
+xlims!(ax, -c*r, c*r) 
+ylims!(ax, -c*r, c*r) 
+zlims!(ax, -c*r, c*r) 
+
+ax.azimuth = rand() * 2pi 
+ax.elevation = rand() * 2pi 
 
 fig 
 

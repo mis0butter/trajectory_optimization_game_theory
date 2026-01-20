@@ -79,11 +79,11 @@ t, rv_kepler = prop_kepler_tof_Nseg(rv_0, Δv_sol, N, tof / N, mu)
 
 ## ====================================================================
 ## 3. MODEL PREDICTIVE CONTROL (MPC) SIMULATION
+## ====================================================================
 ## Simulate the pursuit-evasion game using MPC:
 ## - At each step, pursuer replans trajectory based on current evader prediction
 ## - Executes first portion of planned trajectory
 ## - Repeats with updated positions
-## ====================================================================
 
 # Reset to initial conditions
 rv_0_E = copy(rv_0_E_OG)
@@ -269,7 +269,7 @@ for i = 2 : k_sim
     # ---------------------------------- 
     # Plot Evader trajectories
     # ---------------------------------- 
-
+    
     # Actual executed trajectory (solid red line)
     plot3d!(
         rv_E_dtsim[:, 1], rv_E_dtsim[:, 2], rv_E_dtsim[:, 3],

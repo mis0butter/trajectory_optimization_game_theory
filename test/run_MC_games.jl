@@ -54,8 +54,8 @@ p2_strategy  = "mixed"
 
 games_vec = run_MC_games_parallel( rng, N_games, N_replan, p1_strategy, p2_strategy ) 
 
-fig = plot_MC_stats( games_vec ) 
+## ==================================================================== 
 
-fig 
+fig = plot_MC_stats( games_vec ) 
 
 
