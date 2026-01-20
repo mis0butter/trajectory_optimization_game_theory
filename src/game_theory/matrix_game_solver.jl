@@ -289,22 +289,51 @@ function player_strategy( players, rng, params )
     p1_strategy = params.strategy 
     p2_strategy = params.p2_strategy 
 
+
     if p1_strategy == "mixed" 
         chosen[1] = sample(rng, ProbabilityWeights( mixing_weights[1]) )
-    elseif p1_strategy == "pure" 
+    elseif p1_strategy == "greedy" 
         chosen[1] = argmax( mixing_weights[1] ) 
-    else 
+    elseif p1_strategy == "random" 
         len = length( mixing_weights[1] ) 
         chosen[1] = rand(rng, 1:len) 
+    elseif p1_strategy == 1 
+        chosen[1] = 1 
+    elseif p1_strategy == 2 
+        chosen[1] = 2 
+    elseif p1_strategy == 3 
+        chosen[1] = 3 
+    elseif p1_strategy == 4 
+        chosen[1] = 4 
+    elseif p1_strategy == 5 
+        chosen[1] = 5 
+    elseif p1_strategy == 6 
+        chosen[1] = 6 
+    else
+        error("Invalid p1 strategy: $p1_strategy")
     end 
 
     if p2_strategy == "mixed" 
         chosen[2] = sample(rng, ProbabilityWeights( mixing_weights[2]) )
-    elseif p2_strategy == "pure" 
+    elseif p2_strategy == "greedy" 
         chosen[2] = argmax( mixing_weights[2] ) 
-    else 
+    elseif p2_strategy == "random" 
         len = length( mixing_weights[2] ) 
         chosen[2] = rand(rng, 1:len) 
+    elseif p2_strategy == 1 
+        chosen[2] = 1 
+    elseif p2_strategy == 2 
+        chosen[2] = 2 
+    elseif p2_strategy == 3 
+        chosen[2] = 3 
+    elseif p2_strategy == 4 
+        chosen[2] = 4 
+    elseif p2_strategy == 5 
+        chosen[2] = 5 
+    elseif p2_strategy == 6 
+        chosen[2] = 6 
+    else
+        error("Invalid p2 strategy: $p2_strategy")
     end 
 
     players[1].chosen = chosen[1] 
@@ -443,5 +472,48 @@ end
 
 export prop_game_step 
 
+## ====================================================================
+
+function run_game( rng, N_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
+
+    params, players, game = init_game( rng, p1_strategy, p2_strategy )  
+
+    for ii = 1 : N_replan - 1 
+        println( "step: ", ii + 1, "\n" ) 
+        game = prop_game_step( game, params, rng ) 
+    end 
+
+    return game, params 
+end 
+
+export run_game 
+
+
+## ====================================================================
+
+function run_MC_games( rng, N_games, N_replan, p1_strategy = "mixed", p2_strategy = "mixed" ) 
+
+    games_vec = [] 
+    
+    for jj = 1 : N_games 
+
+        params, players, game = init_game( rng, p1_strategy, p2_strategy ) 
+
+        for ii = 1 : N_replan - 1 
+            println( "game: ", jj, " step: ", ii + 1, "\n" ) 
+            game = prop_game_step( game, params, rng ) 
+        end 
+
+        push!( games_vec, game ) 
+
+    end 
+    
+    # print_MC_stats( games_vec ) 
+    save_games_vec( games_vec )  
+
+    return games_vec 
+end 
+
+export run_MC_games 
 
 

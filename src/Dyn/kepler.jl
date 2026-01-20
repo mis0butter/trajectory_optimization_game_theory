@@ -156,7 +156,7 @@ export prop_kepler_tof
 function prop_kepler_tof_Nseg(
     rv_0,           # initial state vector of form [r; v] 
     Δv_vec,         # [N,3] matrix of Δv vectors, Δv_i at [i,:] 
-    N,              # number of segments 
+    N_seg,          # number of segments 
     tof_N,          # tof for each segment 
     mu = 1.0        # gravitational parameter 
 ) 
@@ -167,7 +167,7 @@ function prop_kepler_tof_Nseg(
 
     # propagate Through Each Segment 
     rv_k = copy(rv_0)
-    for i = 1 : N 
+    for i = 1 : N_seg
 
         # apply dv and propagate 
         rv_k_dv = apply_Δv( rv_k, Δv_vec[i,:] ) 
