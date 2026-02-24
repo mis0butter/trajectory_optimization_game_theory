@@ -5,7 +5,11 @@ using Debugger
 
 ## ====================================================================
 
+using Infiltrator 
+
 function prop_rv_E_P( rv_E, rv_P, params ) 
+
+    # @infiltrate 
 
     t_E, rv_E_hist = prop_kepler_tof_Nseg( rv_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu ) 
     t_P, rv_P_hist = prop_kepler_tof_Nseg( rv_P, zeros(params.N, 3), params.N, params.tof / params.N, params.mu ) 

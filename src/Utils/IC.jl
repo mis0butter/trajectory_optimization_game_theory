@@ -21,8 +21,10 @@ function init_game(
     rv_0_E = kep2cart(kep0_E, mu) 
 
     # initial conditions for pursuer 
-    r_0_P = rand_IC( rv_0_E, R_polygon, rng ) 
-    rv_0_P = [ r_0_P ; rv_0_E[4:6] ]
+    # r_0_P = rand_IC( rv_0_E, R_polygon, rng ) 
+    # rv_0_P = [ r_0_P ; rv_0_E[4:6] ]
+    kep0_P = [ a*1.005, 0.01, 20*pi/180, 10.0*pi/180, 20.0*pi/180, 25.0*pi/180 ]
+    rv_0_P = kep2cart(kep0_P, mu) 
 
     # get period of orbit 
     T = 2*pi*sqrt( a^3 / mu ) 
@@ -65,7 +67,7 @@ function init_game(
     t_ref_E, rv_ref_E = prop_kepler_tof_Nseg( rv_0_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu )  
     
     # save player state and control hists 
-    p = player_struct( [], [], [], [], [], [], [] ) 
+    p = player_struct( [], [], [], [], [], [], [], [], [], [] ) 
     players = [ p, deepcopy(p) ]  
     
     players[1].rv_0_hist = rv_E_hist 

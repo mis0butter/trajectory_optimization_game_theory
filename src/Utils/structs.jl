@@ -7,6 +7,9 @@ mutable struct player_struct
     weights     # weights for each vertex 
     chosen      # chosen vertex 
     rv_0_hist   # initial trajectory 
+    t_chosen    # chosen time 
+    rv_chosen   # chosen trajectory 
+    U_chosen    # chosen control input 
 end 
 
 export player_struct 
