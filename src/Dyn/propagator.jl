@@ -1,60 +1,60 @@
-using DifferentialEquations 
-using LinearAlgebra 
-using Debugger 
+using DifferentialEquations
+using LinearAlgebra
+using Debugger
 
 
 ## ====================================================================
 
-using Infiltrator 
+using Infiltrator
 
-function prop_rv_E_P( rv_E, rv_P, params ) 
+function prop_chosen_rv(rv_E, rv_P, params)
 
     # @infiltrate 
 
-    t_E, rv_E_hist = prop_kepler_tof_Nseg( rv_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu ) 
-    t_P, rv_P_hist = prop_kepler_tof_Nseg( rv_P, zeros(params.N, 3), params.N, params.tof / params.N, params.mu ) 
+    t_E, rv_E_hist = prop_kepler_tof_Nseg(rv_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
+    t_P, rv_P_hist = prop_kepler_tof_Nseg(rv_P, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
 
     # t_E, rv_E_hist = propagate_2Body(rv_E, params.tof, params.mu, 1.0) 
     # t_P, rv_P_hist = propagate_2Body(rv_P, params.tof, params.mu, 1.0) 
     # rv_P_hist = vv2m(rv_P_hist) 
     # rv_E_hist = vv2m(rv_E_hist) 
 
-    return t_E, rv_E_hist, t_P, rv_P_hist 
-end 
+    return t_E, rv_E_hist, t_P, rv_P_hist
+end
 
-export prop_rv_E_P 
+export prop_chosen_rv
 
 
 ## ====================================================================
 
-"propagate orbit based on given initial conditions, time, and gravitational parameter" 
-function propagate_2Body(x0, t, mu = 1.0, dt = nothing)
+"propagate orbit based on given initial conditions, time, and gravitational parameter"
+function propagate_2Body(x0, t, mu=1.0, dt=nothing)
 
     prob = ODEProblem(eom_2Body!, x0, t, mu)
 
-    if isnothing(dt) 
+    if isnothing(dt)
         sol = solve(prob)
-    else 
-        sol = solve(prob, saveat = dt)
+    else
+        sol = solve(prob, saveat=dt)
     end
 
-    t = sol.t 
-    x = sol.u 
+    t = sol.t
+    x = sol.u
 
-    return t, x  
+    return t, x
 end
 
 export propagate_2Body
 
 ## ====================================================================
 
-export eom_2Body! 
+export eom_2Body!
 function eom_2Body!(dx, x, mu, t)
     x1 = x[1]
     x2 = x[2]
     x3 = x[3]
 
-    mu_div_r3 = -mu/sqrt(x1^2 + x2^2 + x3^2) ^ 3
+    mu_div_r3 = -mu / sqrt(x1^2 + x2^2 + x3^2)^3
 
     dx[1] = x[4]
     dx[2] = x[5]
@@ -66,7 +66,7 @@ end
 
 ## ====================================================================
 
-export kep2cart 
+export kep2cart
 function kep2cart(kep, mu)
 
     sma = kep[1]
@@ -81,7 +81,7 @@ function kep2cart(kep, mu)
     ry_pqw = rcoeff * sin(theta)
     r_pqw = [rx_pqw, ry_pqw, 0]
 
-    vcoeff = sqrt(mu / (sma * (1.0 - ecc^2))) 
+    vcoeff = sqrt(mu / (sma * (1.0 - ecc^2)))
     vx_pqw = vcoeff * (-sin(theta))
     vy_pqw = vcoeff * (ecc + cos(theta))
     v_pqw = [vx_pqw, vy_pqw, 0]
@@ -98,8 +98,8 @@ end
 
 function R3(angle)
     R = [cos(angle) sin(angle) 0.0;
-         -sin(angle) cos(angle) 0.0;
-         0.0 0.0 1.0]
+        -sin(angle) cos(angle) 0.0;
+        0.0 0.0 1.0]
     return R
 end
 
@@ -107,18 +107,18 @@ end
 
 function R1(angle)
     R = [1.0 0.0 0.0;
-         0.0 cos(angle) sin(angle);
-         0.0 -sin(angle) cos(angle)]
+        0.0 cos(angle) sin(angle);
+        0.0 -sin(angle) cos(angle)]
     return R
-end 
+end
 
 ## ====================================================================
 
-export cart2kep  
-function cart2kep( rv, mu )
+export cart2kep
+function cart2kep(rv, mu)
 
-    r = rv[1:3] 
-    v = rv[4:6] 
+    r = rv[1:3]
+    v = rv[4:6]
 
     pi2 = 2.0 * π
 
@@ -145,12 +145,12 @@ function cart2kep( rv, mu )
     const1 = 1.0 / (1.0 + p^2 + q^2)
 
     fhat = [const1 * (1.0 - p^2 + q^2),
-            const1 * 2.0 * p * q,
-            -const1 * 2.0 * p]
+        const1 * 2.0 * p * q,
+        -const1 * 2.0 * p]
 
     ghat = [const1 * 2.0 * p * q,
-            const1 * (1.0 + p^2 - q^2),
-            const1 * 2.0 * q]
+        const1 * (1.0 + p^2 - q^2),
+        const1 * 2.0 * q]
 
     h = dot(ecc, ghat)
     xk = dot(ecc, fhat)
@@ -180,8 +180,8 @@ function cart2kep( rv, mu )
     oe[1] = sma
     oe[2] = eccm
     oe[3] = inc
-    oe[4] = raan 
-    oe[5] = argper 
+    oe[4] = raan
+    oe[5] = argper
     oe[6] = tanom
 
     return oe
@@ -281,7 +281,7 @@ end
 
 ## ====================================================================
 
-export orbitPeriod 
+export orbitPeriod
 function orbitPeriod(kep, mu)
     T = 2.0 * pi * sqrt(kep[1]^3 / mu)
     return T
@@ -295,21 +295,21 @@ function nondim_rv(
     v_vec,      # velocity vector 
     mu,         # gravitational parameter 
     R,          # Earth radius 
-) 
+)
 
     # Distance unit DU is defined by the Earth radius 
     DU = R
 
     # Time unit TU is defined by Earth mu
-    TU = sqrt( DU^3 / mu ) 
+    TU = sqrt(DU^3 / mu)
 
     # Converting Units
     r̄_vec = r_vec / DU
-    v̄_vec = v_vec / (DU/TU)
+    v̄_vec = v_vec / (DU / TU)
 
     # Outputting
     return r̄_vec, v̄_vec, DU, TU
 end
 
-export nondim_rv 
+export nondim_rv
 

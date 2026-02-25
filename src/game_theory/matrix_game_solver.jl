@@ -131,7 +131,7 @@ export solve_simplex_lp
 ## ====================================================================
 
 # compute X, U, and t for a player (optimization) 
-function players_XU(params, game, players)
+function compute_players_XU(params, game, players)
 
     # get vertices 
     rv_ref_polygon = game.rv_ref_E[end][end, :]
@@ -169,7 +169,7 @@ function players_XU(params, game, players)
     return players
 end
 
-export players_XU
+export compute_players_XU
 
 
 ## ====================================================================
@@ -179,7 +179,7 @@ function stage_cost(x1, x2, u1, u2)
 
     # sqrt( norm(x1[1:3] - x2[1:3]) + 0.1 ) + 0.1 * (norm(u1) - norm(u2))
     dist = norm(x1[1:3] - x2[1:3])
-    cost = sqrt(dist + 0.1) + 0.1 * (norm(u1) - norm(u2))
+    cost = 1.0 * sqrt(dist + 0.1) + 0.0 * (norm(u1 - u2))
 
     # if dist < capture_threshold
     #     cost -= 50.0
@@ -194,7 +194,7 @@ export stage_cost
 ## ==================================================================== 
 # zero-sum game 
 
-function players_cost_matrices(players)
+function compute_cost_matrices(players)
 
     # loop through time corresponding with control inputs 
     U_idx = eachindex(players[1].U[1][:, 1])
@@ -244,7 +244,7 @@ function players_cost_matrices(players)
     return players
 end
 
-export players_cost_matrices
+export compute_cost_matrices
 
 
 ## ====================================================================
@@ -289,8 +289,7 @@ export stage_cost_games_fn
 
 using Infiltrator
 
-function player_strategy(players, rng, params)
-
+function compute_mixing_weights!(players)
     # mixing weights - ZERO SUM GAME!!! 
     mixing_weights = let
         sol = solve_mixed_nash(players[1].cost)
@@ -299,6 +298,10 @@ function player_strategy(players, rng, params)
     players[1].weights = mixing_weights[1]
     players[2].weights = mixing_weights[2]
 
+    return mixing_weights
+end
+
+function choose_strategies!(players, mixing_weights, rng, params)
     # now determine strategy 
     p1_strategy = params.strategy
     p2_strategy = params.p2_strategy
@@ -317,18 +320,8 @@ function player_strategy(players, rng, params)
     elseif p1_strategy == "random"
         len = length(mixing_weights[1])
         chosen[1] = rand(rng, 1:len)
-    elseif p1_strategy == 1
-        chosen[1] = 1
-    elseif p1_strategy == 2
-        chosen[1] = 2
-    elseif p1_strategy == 3
-        chosen[1] = 3
-    elseif p1_strategy == 4
-        chosen[1] = 4
-    elseif p1_strategy == 5
-        chosen[1] = 5
-    elseif p1_strategy == 6
-        chosen[1] = 6
+    elseif p1_strategy isa Int
+        chosen[1] = p1_strategy
     else
         error("Invalid p1 strategy: $p1_strategy")
     end
@@ -344,97 +337,86 @@ function player_strategy(players, rng, params)
     elseif p2_strategy == "random"
         len = length(mixing_weights[2])
         chosen[2] = rand(rng, 1:len)
-    elseif p2_strategy == 1
-        chosen[2] = 1
-    elseif p2_strategy == 2
-        chosen[2] = 2
-    elseif p2_strategy == 3
-        chosen[2] = 3
-    elseif p2_strategy == 4
-        chosen[2] = 4
-    elseif p2_strategy == 5
-        chosen[2] = 5
-    elseif p2_strategy == 6
-        chosen[2] = 6
+    elseif p2_strategy isa Int
+        chosen[2] = p2_strategy
     else
         error("Invalid p2 strategy: $p2_strategy")
     end
 
     # ---------------------------------- 
-    # save chosen vertex and rv_chosen 
+    # save chosen vertex 
     # ---------------------------------- 
 
     players[1].chosen = chosen[1]
     players[2].chosen = chosen[2]
 
-    # @infiltrate 
+    return chosen
+end
 
-    players[1].t_chosen = players[1].t[chosen[1]][1:params.k_tt_replan+1]
-    players[2].t_chosen = players[2].t[chosen[2]][1:params.k_tt_replan+1]
-
-    players[1].rv_chosen = players[1].X[chosen[1]][1:params.k_tt_replan+1, :]
-    players[2].rv_chosen = players[2].X[chosen[2]][1:params.k_tt_replan+1, :]
-
-    # @infiltrate 
-
-    players[1].U_chosen = players[1].U[chosen[1]][1:params.k_tt_replan+1, :]
-    players[2].U_chosen = players[2].U[chosen[2]][1:params.k_tt_replan+1, :]
-
+function update_chosen_trajectories!(players, params)
+    for i in 1:2
+        idx = players[i].chosen
+        players[i].t_chosen = players[i].t[idx][1:params.k_tt_replan+1]
+        players[i].rv_chosen = players[i].X[idx][1:params.k_tt_replan+1, :]
+        players[i].U_chosen = players[i].U[idx][1:params.k_tt_replan+1, :]
+    end
     return players
 end
 
-export player_strategy
+export compute_mixing_weights!, choose_strategies!, update_chosen_trajectories!
 
 
 ## ====================================================================
 
 # compute X, U, and t for a player 
-function players_states(params, game, players, rng)
+function compute_states_nash(params, game, players, rng)
 
     # compute X, U, and t for both players (optimization)   
-    players = players_XU(params, game, players)
+    players = compute_players_XU(params, game, players)
 
     # compute cost matrices 
-    players = players_cost_matrices(players)
+    players = compute_cost_matrices(players)
 
     # solve mixed nash and choose strategy 
-    players = player_strategy(players, rng, params)
+    mixing_weights = compute_mixing_weights!(players)
+    choose_strategies!(players, mixing_weights, rng, params)
+    players = update_chosen_trajectories!(players, params)
 
     return players
 end
 
-export players_states
+export compute_states_nash
 
 
 ## ====================================================================
 
-using Infiltrator
+# using Infiltrator
 
-function rv_E_P_strategy(game, params)
+# function rv_E_P_strategy(game, params)
 
-    # get most recent player states 
-    p1 = game.p1_state[end]
-    p2 = game.p2_state[end]
+#     # get most recent player states 
+#     p1 = game.p1_state[end]
+#     p2 = game.p2_state[end]
 
-    # p1_chosen = p1.chosen 
-    # p2_chosen = p2.chosen 
+#     # p1_chosen = p1.chosen 
+#     # p2_chosen = p2.chosen 
 
-    # choose the trajectory based on the strategy 
-    # p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
+#     # choose the trajectory based on the strategy 
+#     # p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
 
-    # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
-    # rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ] 
-    # rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ] 
+#     # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
+#     # rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ] 
+#     # rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ] 
 
-    # @infiltrate 
+#     # @infiltrate 
 
-    rv_E = p1.rv_chosen[end, :]
-    rv_P = p2.rv_chosen[end, :]
+#     rv_E = p1.rv_chosen[end, :]
+#     rv_P = p2.rv_chosen[end, :]
 
-    return rv_E, rv_P
-end
+#     return rv_E, rv_P
+# end
 
-export rv_E_P_strategy
+# export rv_E_P_strategy
 
 
 ## ====================================================================
@@ -482,8 +464,9 @@ export prop_rv_ref
 
 function prop_game_step(game, params, rng)
 
-    # get most recent player states  
-    rv_E, rv_P = rv_E_P_strategy(game, params)
+    # get the current player states 
+    rv_E = game.p1_state[end].rv_chosen[end, :]
+    rv_P = game.p2_state[end].rv_chosen[end, :]
 
     # return reference orbit for most recent step 
     t_ref_E, rv_ref_E, kep_ref_E = find_ref_orbit(game, params)
@@ -499,7 +482,8 @@ function prop_game_step(game, params, rng)
     push!(game.t_ref_E, t_ref_E .+ t_ref_E_hist)
     push!(game.rv_ref_E, rv_ref_E_hist)
 
-    t_E_hist, rv_E_hist, t_P_hist, rv_P_hist = prop_rv_E_P(rv_E, rv_P, params)
+    # propagate chosen trajectories for evader and pursuer 
+    t_E_hist, rv_E_hist, t_P_hist, rv_P_hist = prop_chosen_rv(rv_E, rv_P, params)
 
     # save player state and control hists 
     p = player_struct([], [], [], [], [], [], [], [], [], [])
@@ -508,8 +492,8 @@ function prop_game_step(game, params, rng)
     players[1].rv_0_hist = rv_E_hist
     players[2].rv_0_hist = rv_P_hist
 
-    # compute all possible Δv solutions 
-    players = players_states(params, game, players, rng)
+    # compute all possible Δv solutions - 
+    players = compute_states_nash(params, game, players, rng)
 
     # save player state in game 
     push!(game.p1_state, players[1])
