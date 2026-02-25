@@ -30,7 +30,7 @@ function init_game(
     T = 2 * pi * sqrt(a^3 / mu)
 
     # orbit parameters of pursuer and evader 
-    k_tt_replan = 5       # replan every 5 * tof/N (100) seconds!!! 
+    k_tt_replan = 10       # replan every 5 * tof/N (100) seconds!!! 
     tof = T / k_tt_replan # tof for pursuer to catch up to evader  
     N = 10              # segments 
 

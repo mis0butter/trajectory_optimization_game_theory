@@ -67,6 +67,7 @@ function solve_mixed_security_strategy(player_cost_matrix)
     # TODO: transform the game to ensure that the cost matrix is entrywise positive
     r = size(player_cost_matrix, 1)
     p = size(player_cost_matrix, 2)
+
     min_value = 0
     for i in 1:r
         for j in 1:p
@@ -88,6 +89,8 @@ function solve_mixed_security_strategy(player_cost_matrix)
     # TODO: transform the solution into the probability simplex
     x_star = x_tilde * (1 / V_tilde)
     V_star = (1 / V_tilde) - c
+
+    # @infiltrate
 
     # TODO: return a named tuple of (; x, V) where x is the strategy and V is the value
     (; x=x_star, v=V_star)
@@ -117,8 +120,6 @@ function solve_simplex_lp(A)
     end
 
     JuMP.optimize!(model)
-
-    @exfiltrate
 
     (JuMP.termination_status(model) == JuMP.MOI.OPTIMAL) ||
     # error("OSQP did not find an optimal solution to this matrix game.")
@@ -214,6 +215,7 @@ function compute_cost_matrices(players)
             # loop through time 
             player1_cost_tt = []
             player2_cost_tt = []
+
             for ii in U_idx
 
                 x1 = players[1].X[i_vert][ii, :]
@@ -228,8 +230,13 @@ function compute_cost_matrices(players)
                 push!(player2_cost_tt, cost2)
 
             end
-            player1_cost = mean(player1_cost_tt)
-            player2_cost = mean(player2_cost_tt)
+
+            # @infiltrate
+
+            # player1_cost = mean(player1_cost_tt)
+            # player2_cost = mean(player2_cost_tt)
+            player1_cost = player1_cost_tt[end]
+            player2_cost = player2_cost_tt[end]
 
             # save cost in matrix 
             player1_cost_matrix[i_vert, j_vert] = player1_cost
@@ -317,6 +324,9 @@ function choose_strategies!(players, mixing_weights, rng, params)
         chosen[1] = sample(rng, ProbabilityWeights(mixing_weights[1]))
     elseif p1_strategy == "greedy"
         chosen[1] = argmax(mixing_weights[1])
+        # DEBUGGING 
+        chosen[1] = argmax(players[1].cost[:, 5])
+        # @infiltrate
     elseif p1_strategy == "random"
         len = length(mixing_weights[1])
         chosen[1] = rand(rng, 1:len)
@@ -354,12 +364,14 @@ function choose_strategies!(players, mixing_weights, rng, params)
 end
 
 function update_chosen_trajectories!(players, params)
+
     for i in 1:2
         idx = players[i].chosen
         players[i].t_chosen = players[i].t[idx][1:params.k_tt_replan+1]
         players[i].rv_chosen = players[i].X[idx][1:params.k_tt_replan+1, :]
-        players[i].U_chosen = players[i].U[idx][1:params.k_tt_replan+1, :]
+        players[i].U_chosen = players[i].U[idx][1:params.k_tt_replan, :]
     end
+
     return players
 end
 
