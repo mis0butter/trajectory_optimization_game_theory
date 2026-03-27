@@ -30,7 +30,7 @@ function init_game(
     T = 2 * pi * sqrt(a^3 / mu)
 
     # orbit parameters of pursuer and evader 
-    k_tt_replan = 10       # replan every 5 * tof/N (100) seconds!!! 
+    k_tt_replan = 5       # determines time of flight to catch up  
     tof = T / k_tt_replan # tof for pursuer to catch up to evader  
     N = 10              # segments 
 
@@ -67,7 +67,9 @@ function init_game(
     t_ref_E, rv_ref_E = prop_kepler_tof_Nseg(rv_0_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
 
     # save player state and control hists 
-    p = player_struct([], [], [], [], [], [], [], [], [], [])
+    tracked_strategies = ["mixed", "greedy", "random", 1, 2, 3, 4, 5, 6]
+    strategy_belief = ones(length(tracked_strategies)) / length(tracked_strategies)
+    p = player_struct([], [], [], [], [], [], [], [], [], [], ones(6), strategy_belief, tracked_strategies)
     players = [p, deepcopy(p)]
 
     players[1].rv_0_hist = rv_E_hist

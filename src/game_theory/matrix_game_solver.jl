@@ -180,7 +180,7 @@ function stage_cost(x1, x2, u1, u2)
 
     # sqrt( norm(x1[1:3] - x2[1:3]) + 0.1 ) + 0.1 * (norm(u1) - norm(u2))
     dist = norm(x1[1:3] - x2[1:3])
-    cost = 1.0 * sqrt(dist + 0.1) + 0.0 * (norm(u1 - u2))
+    cost = 1.0 * sqrt(dist + 0.1) + 0.1 * (norm(u1 - u2))
 
     # if dist < capture_threshold
     #     cost -= 50.0
@@ -297,6 +297,7 @@ export stage_cost_games_fn
 using Infiltrator
 
 function compute_mixing_weights!(players)
+
     # mixing weights - ZERO SUM GAME!!! 
     mixing_weights = let
         sol = solve_mixed_nash(players[1].cost)
@@ -308,7 +309,8 @@ function compute_mixing_weights!(players)
     return mixing_weights
 end
 
-function choose_strategies!(players, mixing_weights, rng, params)
+function choose_strategies!(players, mixing_weights, rng, params, game)
+
     # now determine strategy 
     p1_strategy = params.strategy
     p2_strategy = params.p2_strategy
@@ -320,16 +322,37 @@ function choose_strategies!(players, mixing_weights, rng, params)
     # determine strategy for player 1 
     # ---------------------------------- 
 
+    # for FP strategies 
+    q_belief = players[1].fp_belief
+    q_prob = q_belief / sum(q_belief)
+    expected_costs = players[1].cost * q_prob
+
     if p1_strategy == "mixed"
         chosen[1] = sample(rng, ProbabilityWeights(mixing_weights[1]))
     elseif p1_strategy == "greedy"
         chosen[1] = argmax(mixing_weights[1])
         # DEBUGGING 
-        chosen[1] = argmax(players[1].cost[:, 5])
+        # chosen[1] = argmax(players[1].cost[:, 5])
         # @infiltrate
     elseif p1_strategy == "random"
         len = length(mixing_weights[1])
         chosen[1] = rand(rng, 1:len)
+    elseif p1_strategy == "FP_greedy"
+        # P1's belief about P2's moves → best response 
+        chosen[1] = argmax(expected_costs)
+    elseif p1_strategy == "FP_mixed"
+        # convert to weights and ensure positive 
+        w = expected_costs .- minimum(expected_costs) .+ 1e-6
+        chosen[1] = sample(rng, ProbabilityWeights(w))
+    elseif p1_strategy == "Meta_greedy"
+        predicted_v_probs = predict_opponent_vertices(players[1], players[2])
+        expected_costs = players[1].cost * predicted_v_probs
+        chosen[1] = argmax(expected_costs)
+    elseif p1_strategy == "Meta_mixed"
+        predicted_v_probs = predict_opponent_vertices(players[1], players[2])
+        meta_expected_costs = players[1].cost * predicted_v_probs
+        w = meta_expected_costs .- minimum(meta_expected_costs) .+ 1e-6
+        chosen[1] = sample(rng, ProbabilityWeights(w))
     elseif p1_strategy isa Int
         chosen[1] = p1_strategy
     else
@@ -340,6 +363,11 @@ function choose_strategies!(players, mixing_weights, rng, params)
     # determine strategy for player 2 
     # ---------------------------------- 
 
+    # for FP strategies 
+    q_belief = players[2].fp_belief
+    q_prob = q_belief / sum(q_belief)
+    expected_costs = players[2].cost' * q_prob
+
     if p2_strategy == "mixed"
         chosen[2] = sample(rng, ProbabilityWeights(mixing_weights[2]))
     elseif p2_strategy == "greedy"
@@ -347,6 +375,23 @@ function choose_strategies!(players, mixing_weights, rng, params)
     elseif p2_strategy == "random"
         len = length(mixing_weights[2])
         chosen[2] = rand(rng, 1:len)
+    elseif p2_strategy == "FP_greedy"
+        chosen[2] = argmax(expected_costs)
+    elseif p2_strategy == "FP_mixed"
+        # convert to weights and ensure positive 
+        w = expected_costs .- minimum(expected_costs) .+ 1e-6
+        chosen[2] = sample(rng, ProbabilityWeights(w))
+    elseif p2_strategy == "Meta_greedy"
+        predicted_v_probs = predict_opponent_vertices(players[2], players[1])
+        expected_costs = players[2].cost * predicted_v_probs
+        # player 2 minimizes so we take argmin 
+        chosen[2] = argmin(expected_costs)
+    elseif p2_strategy == "Meta_mixed"
+        predicted_v_probs = predict_opponent_vertices(players[2], players[1])
+        meta_expected_costs = players[2].cost * predicted_v_probs
+        # for player 2 we negate or max over negative Expected Costs
+        w = maximum(meta_expected_costs) .- meta_expected_costs .+ 1e-6
+        chosen[2] = sample(rng, ProbabilityWeights(w))
     elseif p2_strategy isa Int
         chosen[2] = p2_strategy
     else
@@ -375,7 +420,73 @@ function update_chosen_trajectories!(players, params)
     return players
 end
 
-export compute_mixing_weights!, choose_strategies!, update_chosen_trajectories!
+"""
+Update fictitious play belief based on the opponent's chosen vertex.
+Increments the count for the vertex the opponent actually chose.
+"""
+function update_beliefs!(game, players)
+    # P1 observes P2's choice → update P1's belief about P2
+    players[1].fp_belief[players[2].chosen] += 1
+    # P2 observes P1's choice → update P2's belief about P1
+    players[2].fp_belief[players[1].chosen] += 1
+
+    # Bayesian update of meta-strategy belief
+    update_strategy_belief!(players[1], players[2])
+    update_strategy_belief!(players[2], players[1])
+end
+
+function update_strategy_belief!(p_self, p_opponent)
+    likelihoods = zeros(length(p_self.tracked_strategies))
+    for (i, s) in enumerate(p_self.tracked_strategies)
+        if s == "mixed"
+            likelihoods[i] = p_opponent.weights[p_opponent.chosen]
+        elseif s == "greedy"
+            likelihoods[i] = (p_opponent.chosen == argmax(p_opponent.weights)) ? 1.0 : 0.0
+        elseif s == "random"
+            likelihoods[i] = 1.0 / length(p_opponent.weights)
+        elseif s isa Int
+            likelihoods[i] = (p_opponent.chosen == s) ? 1.0 : 0.0
+        else
+            likelihoods[i] = 1.0 / length(p_opponent.weights) # fallback
+        end
+    end
+    
+    # Add small epsilon so we never permanently rule out a strategy if they switch
+    likelihoods = max.(likelihoods, 1e-4)
+    
+    # Bayes rule: P(S | v) \\propto P(v | S) P(S)
+    p_self.strategy_belief .*= likelihoods
+    p_self.strategy_belief ./= sum(p_self.strategy_belief)
+end
+
+function predict_opponent_vertices(p_self, p_opponent)
+    n_v = length(p_opponent.weights)
+    predicted_v_probs = zeros(n_v)
+    
+    for (i, s) in enumerate(p_self.tracked_strategies)
+        prob_s = p_self.strategy_belief[i]
+        
+        v_probs = zeros(n_v)
+        if s == "mixed"
+            v_probs .= p_opponent.weights
+        elseif s == "greedy"
+            v_probs[argmax(p_opponent.weights)] = 1.0
+        elseif s == "random"
+            v_probs .= 1.0 / n_v
+        elseif s isa Int
+            if s >= 1 && s <= n_v
+                v_probs[s] = 1.0
+            end
+        else
+            v_probs .= 1.0 / n_v # fallback
+        end
+        predicted_v_probs .+= prob_s .* v_probs
+    end
+    
+    return predicted_v_probs / sum(predicted_v_probs)
+end
+
+export compute_mixing_weights!, choose_strategies!, update_chosen_trajectories!, update_beliefs!, predict_opponent_vertices
 
 
 ## ====================================================================
@@ -391,7 +502,8 @@ function compute_states_nash(params, game, players, rng)
 
     # solve mixed nash and choose strategy 
     mixing_weights = compute_mixing_weights!(players)
-    choose_strategies!(players, mixing_weights, rng, params)
+    choose_strategies!(players, mixing_weights, rng, params, game)
+    update_beliefs!(game, players)
     players = update_chosen_trajectories!(players, params)
 
     return players
@@ -497,12 +609,10 @@ function prop_game_step(game, params, rng)
     # propagate chosen trajectories for evader and pursuer 
     t_E_hist, rv_E_hist, t_P_hist, rv_P_hist = prop_chosen_rv(rv_E, rv_P, params)
 
-    # save player state and control hists 
-    p = player_struct([], [], [], [], [], [], [], [], [], [])
-    players = [p, deepcopy(p)]
-
-    players[1].rv_0_hist = rv_E_hist
-    players[2].rv_0_hist = rv_P_hist
+    # save player state and control hists (carry forward beliefs from previous step)
+    p1 = player_struct([], [], [], [], [], [], rv_E_hist, [], [], [], deepcopy(game.p1_state[end].fp_belief), deepcopy(game.p1_state[end].strategy_belief), deepcopy(game.p1_state[end].tracked_strategies))
+    p2 = player_struct([], [], [], [], [], [], rv_P_hist, [], [], [], deepcopy(game.p2_state[end].fp_belief), deepcopy(game.p2_state[end].strategy_belief), deepcopy(game.p2_state[end].tracked_strategies))
+    players = [p1, p2]
 
     # compute all possible Δv solutions - 
     players = compute_states_nash(params, game, players, rng)

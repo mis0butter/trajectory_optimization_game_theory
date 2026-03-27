@@ -19,8 +19,8 @@ rng = MersenneTwister(1)
 # run_game( rng, k_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
 k_replan = 10
-p1_strategy = "greedy"
-p2_strategy = 3
+p1_strategy = 1
+p2_strategy = "FP_mixed"
 game, params = run_game(rng, k_replan, p1_strategy, p2_strategy)
 
 # ---------------------------------- 
@@ -40,8 +40,8 @@ rng = MersenneTwister(1)
 N_games = 100
 k_replan = 10
 
-p1_strategy = 1
-p2_strategy = "greedy"
+p1_strategy = "FP_mixed"
+p2_strategy = "FP_mixed"
 
 # games_vec = run_MC_games( rng, N_games, k_replan, p1_strategy, p2_strategy ) 
 # games_vec = run_MC_games(   rng, N_games, k_replan, "random",    "greedy"    ) 
