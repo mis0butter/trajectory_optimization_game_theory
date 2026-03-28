@@ -1,0 +1,106 @@
+Consider a system consisting of two autonomous spacecraft in orbit. The evolution of the state $\boldsymbol{x}_i \in \mathbb{R}^n$ for each agent is characterized by its equations of motion, $F$, and its control input, $\boldsymbol{u}_i \in \mathbb{R}^m$ 
+% 
+\begin{equation} 
+    \boldsymbol{x}_i(t_{ k+1 }) = F\big( ( \boldsymbol{x}_i (t_k), \boldsymbol{u}_i(t_k) \big). 
+\end{equation} 
+% 
+We define the state $\boldsymbol{x}_i$ as the Cartesian position and velocity with respect to an Earth-centered inertial frame at discrete timestep $t_k$.
+For the dynamics $F$, we use Kepler’s laws to predict the future orbital position of each spacecraft given its current state $\boldsymbol{x}_i$ and time of flight from $t_k$ to $t_{k+1}$ \cite{sims1997preliminary}. 
+% and $\Delta$V change.
+The control input $\boldsymbol{u}_i$ is the instantaneous velocity change at the beginning of a propagation arc due to an impulsive thrust maneuver, commonly known as a $\Delta$V maneuver.
+% This approach is known as the Sims Flanagan model for orbit trajectory optimization \red{cite}.
+The objective of one spacecraft, the evader, is to stay within the orbital bandwidth of a reference trajectory while avoiding interception.
+The other spacecraft, the pursuer, seeks to intercept the evader. 
+% At this stage, we do not factor in sensor uncertainty and estimation, and we assume that each agent has perfect knowledge of the state of the other agent and thus can incorporate open-loop information structures.
+
+We use model-predictive control (MPC) to formulate a finite-horizon trajectory problem for each agent that also considers the strategic behavior of the other agent.
+MPC finds the optimal set of control commands and trajectories based on the system model and objective function over a finite time window, repeating the computation process with a shifting horizon. 
+In game-theoretic MPC, the Nash equilibrium solution characterizes optimal trajectories for each agent. Each agent follows its optimal trajectory before the equilibrium is re-computed, repeating the process with a shifting time horizon. 
+
+
+The pursuit evasion finite-horizon trajectory optimization problem can be modeled as a zero-sum differential game
+% 
+\begin{subequations}
+    \begin{alignat}{2}
+    &\!\min_{ \boldsymbol{u}_1 } & \qquad & J( \boldsymbol{u}_1, \boldsymbol{u}_2 ) \label{eq:} \\
+    &\text{s.t.}                 &        & \boldsymbol{x}_1( t_{k+1} ) = F\big( ( \boldsymbol{x}_1 (t_k), \boldsymbol{u}_1(t_k) \big) \label{eq:} \\
+    &                            &        & \boldsymbol{x}_1 \in \mathcal{F} \label{eq:}
+    \end{alignat}
+\end{subequations}
+% 
+\begin{subequations}
+    \begin{alignat}{2}
+    &\!\max_{ \boldsymbol{u}_2 } & \qquad & J( \boldsymbol{u}_1, \boldsymbol{u}_2 ) \label{eq:} \\
+    &\text{s.t.}                 &        & \boldsymbol{x}_2( t_{k+1} ) = F\big( ( \boldsymbol{x}_2 (t_k), \boldsymbol{u}_2(t_k) \big) \label{eq:} \\
+    &                            &        & \boldsymbol{x}_2 \in \mathcal{F} \label{eq:}
+    \end{alignat}
+\end{subequations} 
+% 
+where $ J $ is the objective cost function and $ \mathcal{F} $ is the set of feasible trajectories within the orbit bandwidth. 
+We seek a saddle point solution to the differential game; at a saddle point each agent will worsen its outcome if it modifies its strategy. If the pursuer is minimizing, a saddle point or Nash equilibrium solution will be found when 
+
+\begin{equation}
+    J( \boldsymbol{u}_1, \boldsymbol{u}_2^* ) \leq J( \boldsymbol{u}_1^*, \boldsymbol{u}_2^* ) \leq J( \boldsymbol{u}_1^*, \boldsymbol{u}_2 ). 
+\end{equation}
+
+
+However, a Nash equilibrium solution to the differential game may not exist, and deterministic strategies may still be exploited by an opponent. 
+Worse, non-uniqueness implies that even if an agent finds an equilibrium, the opponent’s predicted Nash trajectory may not be representative of its true strategy.
+ 
+
+
+
+% Consider a system characterized by unknown dynamics 
+% % 
+% \begin{align}
+%     \label{eq:prob}
+%     \dot{\boldsymbol{x}}(t) &= f( \boldsymbol{x}(t), \boldsymbol{u}(t) ), 
+% \end{align} 
+% %
+% where $t \in \mathbb{R}$, $\boldsymbol{x}(t) \in \mathbb{R}^n$ denotes the state of the system at time $t$, 
+% and $\boldsymbol{u}(t) \in \mathbb{R}^m$ the control input. 
+% % 
+% We presume that $f : \mathbb{R}^{n} \times \mathbb{R}^{m} \to \mathbb{R}^{n}$ in \eqref{eq:prob} is unknown, meaning we have no prior knowledge of the system dynamics. 
+% % 
+% In many systems, $f$ is a \textit{simple} function in that only a sparse set of quantities, e.g. damping or inertial forces, contribute to the dynamics \cite{wentz_derivative-based_2023}.
+% % 
+% We assume that we have access to a dataset $\boldsymbol{X}$ consisting of a sequence of $r \in \mathbb{N}$ state measurements corrupted by noise and control inputs $\boldsymbol{U}$ 
+% % 
+% taken at discrete times 
+% $t_{1}, t_{2}, \ldots, t_{r}$,
+% % 
+% given by
+% \begin{equation}
+% \label{eq:dataset}
+%     \begin{split}
+%         \boldsymbol{X} & = \lbrace \boldsymbol{x}(t_1) + \boldsymbol{\epsilon}_{1}, \boldsymbol{x}(t_2) + \boldsymbol{\epsilon}_{2}, \ldots, \boldsymbol{x}(t_r) + \boldsymbol{\epsilon}_{r} \rbrace \\ 
+%         \boldsymbol{U} & =  \lbrace \boldsymbol{u}(t_{1}), \boldsymbol{u}(t_2), \ldots, \boldsymbol{u}(t_r) \rbrace , 
+%     \end{split}
+% \end{equation} 
+% where $\boldsymbol{\epsilon}_{i} \sim \mathcal{N}(0, \delta^2 I)$.
+
+% We formulate our problem as a zero-sum differential game played between two spacecraft over time where each agent is subject to orbital dynamics constraints. The objective of the evading spacecraft is to stay within the orbital bandwidth of a reference trajectory while avoiding interception by the pursuing agent, while the pursuer seeks to intercept the evader. 
+
+% We model each agent's motion as the temporal evolution of its state $ \boldsymbol{x}_i(t) \in \mathbb{R}^n $ and control input $ \boldsymbol{u}_i(t) \in \mathbb{R}^m $ over discrete time-steps $ \boldsymbol{t} \in \{ 1, \ldots , T \} $.  
+
+% The objective for the pursuer is to minimize the final miss distance between the two spacecraft 
+
+% \begin{align}
+%     \min_{ \Delta \boldsymbol{v}_1 } \;      & |\boldsymbol{r}^P_2( \boldsymbol{u}_2^P ) - \boldsymbol{r}^E_2( \boldsymbol{u}_1^E )| \label{eq:min_active_evader_prob} \\ 
+%     \text{ subject to }             & \dot{\boldsymbol{x}}^P = [\boldsymbol{v}^P, -\frac{\mu \boldsymbol{r}^P}{|\boldsymbol{r}^P|^3}]^T \\
+%         & \dot{\boldsymbol{x}}^E = [\boldsymbol{v}^E, -\frac{\mu \boldsymbol{r}^E}{|\boldsymbol{r}}^E|^3]^T \\
+%         & \Delta \boldsymbol{v}_1 = |\boldsymbol{v}^P_1 - \boldsymbol{v}_1| 
+% \end{align} 
+
+% whereas the objective of the evader is to maximize the final miss distance. We seek a saddle point solution to the differential game; at a saddle point each agent will worsen its outcome if it modifies its strategy. If the pursuer is minimizing, a saddle point or Nash equilibrium solution will be found when 
+
+% \begin{equation}
+%     J( \boldsymbol{u}_1, \boldsymbol{u}_2^* ) \leq J( \boldsymbol{u}_1^*, \boldsymbol{u}_2^* ) \leq J( \boldsymbol{u}_1^*, \boldsymbol{u}_2 ). 
+% \end{equation}
+
+% % The finite-horizon 
+
+
+
+
+
