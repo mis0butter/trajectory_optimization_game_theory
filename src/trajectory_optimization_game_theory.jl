@@ -1,7 +1,7 @@
 module trajectory_optimization_game_theory
 
 # Math
-using LinearAlgebra: norm 
+using LinearAlgebra: norm
 using StaticArrays          # don't think I use this 
 using Rotations: AngleAxis, RotZ, RotZXZ
 
@@ -13,28 +13,28 @@ using Optim                 # think i only use ... some functions
 # Modeling
 # using LazySets              # don't think I use this 
 using JuMP: JuMP, @variable, @constraint, @objective
-using OSQP: OSQP 
+using OSQP: OSQP
 
 using StatsBase: ProbabilityWeights, sample
-using Statistics: mean, var, std 
+using Statistics: mean, var, std
 using Random: MersenneTwister
 
 # Tools
 using CSV
-using Infiltrator 
-using GLMakie 
-using Printf 
-using JLD2 
+using Infiltrator
+using GLMakie
+using Printf
+using JLD2
 
 
 ## ====================================================================
 
 # Junette and Sofia Dyn 
-include("Dyn/Dyn.jl") 
-include("Opt/Opt.jl") 
+include("Dyn/Dyn.jl")
+include("Opt/Opt.jl")
 include("Utils/Utils.jl")
-include("Lambert/Lambert.jl") 
-include("game_theory/matrix_game_solver.jl")
+include("Lambert/Lambert.jl")
+include("game_theory/game_theory.jl")
 
 ## ====================================================================
 #  Sub-Module Includes

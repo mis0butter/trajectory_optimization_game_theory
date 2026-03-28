@@ -233,10 +233,10 @@ function compute_cost_matrices(players)
 
             # @infiltrate
 
-            # player1_cost = mean(player1_cost_tt)
-            # player2_cost = mean(player2_cost_tt)
-            player1_cost = player1_cost_tt[end]
-            player2_cost = player2_cost_tt[end]
+            player1_cost = mean(player1_cost_tt)
+            player2_cost = mean(player2_cost_tt)
+            # player1_cost = player1_cost_tt[end]
+            # player2_cost = player2_cost_tt[end]
 
             # save cost in matrix 
             player1_cost_matrix[i_vert, j_vert] = player1_cost
@@ -294,7 +294,7 @@ export stage_cost_games_fn
 
 ## ==================================================================== 
 
-using Infiltrator
+# using Infiltrator
 
 function compute_mixing_weights!(players)
 
@@ -309,6 +309,8 @@ function compute_mixing_weights!(players)
     return mixing_weights
 end
 
+## ====================================================================
+
 function choose_strategies!(players, mixing_weights, rng, params, game)
 
     # now determine strategy 
@@ -322,39 +324,43 @@ function choose_strategies!(players, mixing_weights, rng, params, game)
     # determine strategy for player 1 
     # ---------------------------------- 
 
-    # for FP strategies 
-    q_belief = players[1].fp_belief
-    q_prob = q_belief / sum(q_belief)
-    expected_costs = players[1].cost * q_prob
-
     if p1_strategy == "mixed"
         chosen[1] = sample(rng, ProbabilityWeights(mixing_weights[1]))
+
     elseif p1_strategy == "greedy"
         chosen[1] = argmax(mixing_weights[1])
-        # DEBUGGING 
-        # chosen[1] = argmax(players[1].cost[:, 5])
-        # @infiltrate
+
     elseif p1_strategy == "random"
         len = length(mixing_weights[1])
         chosen[1] = rand(rng, 1:len)
+
     elseif p1_strategy == "FP_greedy"
         # P1's belief about P2's moves → best response 
+        q_prob = players[1].fp_belief ./ sum(players[1].fp_belief)
+        expected_costs = players[1].cost * q_prob
         chosen[1] = argmax(expected_costs)
+
     elseif p1_strategy == "FP_mixed"
         # convert to weights and ensure positive 
+        q_prob = players[1].fp_belief ./ sum(players[1].fp_belief)
+        expected_costs = players[1].cost * q_prob
         w = expected_costs .- minimum(expected_costs) .+ 1e-6
         chosen[1] = sample(rng, ProbabilityWeights(w))
+
     elseif p1_strategy == "Meta_greedy"
         predicted_v_probs = predict_opponent_vertices(players[1], players[2])
         expected_costs = players[1].cost * predicted_v_probs
         chosen[1] = argmax(expected_costs)
+
     elseif p1_strategy == "Meta_mixed"
         predicted_v_probs = predict_opponent_vertices(players[1], players[2])
         meta_expected_costs = players[1].cost * predicted_v_probs
         w = meta_expected_costs .- minimum(meta_expected_costs) .+ 1e-6
         chosen[1] = sample(rng, ProbabilityWeights(w))
+
     elseif p1_strategy isa Int
         chosen[1] = p1_strategy
+
     else
         error("Invalid p1 strategy: $p1_strategy")
     end
@@ -363,37 +369,44 @@ function choose_strategies!(players, mixing_weights, rng, params, game)
     # determine strategy for player 2 
     # ---------------------------------- 
 
-    # for FP strategies 
-    q_belief = players[2].fp_belief
-    q_prob = q_belief / sum(q_belief)
-    expected_costs = players[2].cost' * q_prob
-
     if p2_strategy == "mixed"
         chosen[2] = sample(rng, ProbabilityWeights(mixing_weights[2]))
+
     elseif p2_strategy == "greedy"
         chosen[2] = argmax(mixing_weights[2])
+
     elseif p2_strategy == "random"
         len = length(mixing_weights[2])
         chosen[2] = rand(rng, 1:len)
+
     elseif p2_strategy == "FP_greedy"
+        q_prob = players[2].fp_belief / sum(players[2].fp_belief)
+        expected_costs = players[2].cost' * q_prob
         chosen[2] = argmax(expected_costs)
+
     elseif p2_strategy == "FP_mixed"
         # convert to weights and ensure positive 
+        q_prob = players[2].fp_belief / sum(players[2].fp_belief)
+        expected_costs = players[2].cost' * q_prob
         w = expected_costs .- minimum(expected_costs) .+ 1e-6
         chosen[2] = sample(rng, ProbabilityWeights(w))
+
     elseif p2_strategy == "Meta_greedy"
         predicted_v_probs = predict_opponent_vertices(players[2], players[1])
         expected_costs = players[2].cost * predicted_v_probs
         # player 2 minimizes so we take argmin 
         chosen[2] = argmin(expected_costs)
+
     elseif p2_strategy == "Meta_mixed"
         predicted_v_probs = predict_opponent_vertices(players[2], players[1])
         meta_expected_costs = players[2].cost * predicted_v_probs
         # for player 2 we negate or max over negative Expected Costs
         w = maximum(meta_expected_costs) .- meta_expected_costs .+ 1e-6
         chosen[2] = sample(rng, ProbabilityWeights(w))
+
     elseif p2_strategy isa Int
         chosen[2] = p2_strategy
+
     else
         error("Invalid p2 strategy: $p2_strategy")
     end
@@ -408,6 +421,8 @@ function choose_strategies!(players, mixing_weights, rng, params, game)
     return chosen
 end
 
+## ====================================================================
+
 function update_chosen_trajectories!(players, params)
 
     for i in 1:2
@@ -419,6 +434,8 @@ function update_chosen_trajectories!(players, params)
 
     return players
 end
+
+## ====================================================================
 
 """
 Update fictitious play belief based on the opponent's chosen vertex.
@@ -435,7 +452,10 @@ function update_beliefs!(game, players)
     update_strategy_belief!(players[2], players[1])
 end
 
+## ====================================================================
+
 function update_strategy_belief!(p_self, p_opponent)
+
     likelihoods = zeros(length(p_self.tracked_strategies))
     for (i, s) in enumerate(p_self.tracked_strategies)
         if s == "mixed"
@@ -450,22 +470,26 @@ function update_strategy_belief!(p_self, p_opponent)
             likelihoods[i] = 1.0 / length(p_opponent.weights) # fallback
         end
     end
-    
+
     # Add small epsilon so we never permanently rule out a strategy if they switch
     likelihoods = max.(likelihoods, 1e-4)
-    
+
     # Bayes rule: P(S | v) \\propto P(v | S) P(S)
     p_self.strategy_belief .*= likelihoods
     p_self.strategy_belief ./= sum(p_self.strategy_belief)
+
 end
 
+## ====================================================================
+
 function predict_opponent_vertices(p_self, p_opponent)
+
     n_v = length(p_opponent.weights)
     predicted_v_probs = zeros(n_v)
-    
+
     for (i, s) in enumerate(p_self.tracked_strategies)
         prob_s = p_self.strategy_belief[i]
-        
+
         v_probs = zeros(n_v)
         if s == "mixed"
             v_probs .= p_opponent.weights
@@ -482,7 +506,7 @@ function predict_opponent_vertices(p_self, p_opponent)
         end
         predicted_v_probs .+= prob_s .* v_probs
     end
-    
+
     return predicted_v_probs / sum(predicted_v_probs)
 end
 
@@ -502,208 +526,18 @@ function compute_states_nash(params, game, players, rng)
 
     # solve mixed nash and choose strategy 
     mixing_weights = compute_mixing_weights!(players)
+
+    # choose strategies 
     choose_strategies!(players, mixing_weights, rng, params, game)
+
+    # update beliefs 
     update_beliefs!(game, players)
+
+    # update chosen trajectories  
     players = update_chosen_trajectories!(players, params)
 
     return players
 end
 
 export compute_states_nash
-
-
-## ====================================================================
-
-# using Infiltrator
-
-# function rv_E_P_strategy(game, params)
-
-#     # get most recent player states 
-#     p1 = game.p1_state[end]
-#     p2 = game.p2_state[end]
-
-#     # p1_chosen = p1.chosen 
-#     # p2_chosen = p2.chosen 
-
-#     # choose the trajectory based on the strategy 
-#     # p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
-
-#     # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
-#     # rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ] 
-#     # rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ] 
-
-#     # @infiltrate 
-
-#     rv_E = p1.rv_chosen[end, :]
-#     rv_P = p2.rv_chosen[end, :]
-
-#     return rv_E, rv_P
-# end
-
-# export rv_E_P_strategy
-
-
-## ====================================================================
-
-function find_ref_orbit(game, params)
-
-    # rv_E, rv_P = rv_E_P_strategy( game, params ) 
-
-    t_ref_E_hist = game.t_ref_E[end]
-    rv_ref_E_hist = game.rv_ref_E[end]
-
-    # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
-    t_ref_E = t_ref_E_hist[params.k_tt_replan+1, :]
-    rv_ref_E = rv_ref_E_hist[params.k_tt_replan+1, :]
-
-    kep_ref_E = cart2kep(rv_ref_E, params.mu)
-
-    return t_ref_E, rv_ref_E, kep_ref_E
-end
-
-export find_ref_orbit
-
-
-## ====================================================================
-
-function prop_rv_ref(kep_ref_E, params)
-
-    # save OG reference orbit 
-    kep0_ref_E = params.kep0_ref_E
-    kep0_ref_E[end] = kep_ref_E[end]
-
-    rv0_ref_E = kep2cart(kep0_ref_E, params.mu)
-
-    # t_ref_E, rv_ref_E_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
-    t_ref_E, rv_ref_E_hist = prop_kepler_tof_Nseg(rv0_ref_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
-    # rv_ref_E_hist = vv2m(rv_ref_E_hist) 
-
-    return t_ref_E, rv_ref_E_hist
-end
-
-export prop_rv_ref
-
-
-## ==================================================================== 
-
-function prop_game_step(game, params, rng)
-
-    # get the current player states 
-    rv_E = game.p1_state[end].rv_chosen[end, :]
-    rv_P = game.p2_state[end].rv_chosen[end, :]
-
-    # return reference orbit for most recent step 
-    t_ref_E, rv_ref_E, kep_ref_E = find_ref_orbit(game, params)
-
-    # generate rv_ref_E_hist 
-    t_ref_E_hist, rv_ref_E_hist = prop_rv_ref(kep_ref_E, params)
-
-    # now move game forward one step 
-    push!(game.tt, game.tt[end] + params.tt_step)
-    push!(game.k_replan, game.k_replan[end] + 1)
-    push!(game.rv_E, rv_E)
-    push!(game.rv_P, rv_P)
-    push!(game.t_ref_E, t_ref_E .+ t_ref_E_hist)
-    push!(game.rv_ref_E, rv_ref_E_hist)
-
-    # propagate chosen trajectories for evader and pursuer 
-    t_E_hist, rv_E_hist, t_P_hist, rv_P_hist = prop_chosen_rv(rv_E, rv_P, params)
-
-    # save player state and control hists (carry forward beliefs from previous step)
-    p1 = player_struct([], [], [], [], [], [], rv_E_hist, [], [], [], deepcopy(game.p1_state[end].fp_belief), deepcopy(game.p1_state[end].strategy_belief), deepcopy(game.p1_state[end].tracked_strategies))
-    p2 = player_struct([], [], [], [], [], [], rv_P_hist, [], [], [], deepcopy(game.p2_state[end].fp_belief), deepcopy(game.p2_state[end].strategy_belief), deepcopy(game.p2_state[end].tracked_strategies))
-    players = [p1, p2]
-
-    # compute all possible Δv solutions - 
-    players = compute_states_nash(params, game, players, rng)
-
-    # save player state in game 
-    push!(game.p1_state, players[1])
-    push!(game.p2_state, players[2])
-
-    return game
-end
-
-export prop_game_step
-
-## ====================================================================
-
-function run_game(rng, N_replan=10, p1_strategy="mixed", p2_strategy="mixed")
-
-    params, players, game = init_game(rng, p1_strategy, p2_strategy)
-
-    for ii = 1:N_replan-1
-        println("step: ", ii + 1, "\n")
-        game = prop_game_step(game, params, rng)
-    end
-
-    return game, params
-end
-
-export run_game
-
-
-## ====================================================================
-
-function run_MC_games(rng, N_games, N_replan, p1_strategy="mixed", p2_strategy="mixed")
-
-    games_vec = []
-
-    for jj = 1:N_games
-
-        params, players, game = init_game(rng, p1_strategy, p2_strategy)
-
-        for ii = 1:N_replan-1
-            println("game: ", jj, " step: ", ii + 1, "\n")
-            game = prop_game_step(game, params, rng)
-        end
-
-        push!(games_vec, game)
-
-    end
-
-    # print_MC_stats( games_vec ) 
-    save_games_vec(games_vec)
-
-    return games_vec
-end
-
-export run_MC_games
-
-# ==================================================================== 
-
-using Base.Threads
-
-function run_MC_games_parallel(rng, N_games, N_replan, p1_strategy="mixed", p2_strategy="mixed")
-
-    # Create thread-safe storage
-    games_vec = Vector{Any}(undef, N_games)
-
-    # Create independent RNGs for each game (thread-safe)
-    seeds = rand(rng, UInt, N_games)
-
-    # run games in parallel
-    Threads.@threads for i_game = 1:N_games
-
-        local_rng = MersenneTwister(seeds[i_game])
-
-        params, players, game = init_game(local_rng, p1_strategy, p2_strategy)
-
-        # propogate each game forward one step at a time 
-        for i_step = 1:N_replan-1
-            println("game: ", i_game, " step: ", i_step + 1)
-            game = prop_game_step(game, params, local_rng)
-        end
-
-        games_vec[i_game] = game
-
-    end
-
-    save_games_vec(games_vec)
-
-    return games_vec
-end
-
-export run_MC_games_parallel
-
 
