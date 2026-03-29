@@ -88,7 +88,7 @@ export run_MC_games
 
 using Base.Threads
 
-function run_MC_games_parallel(rng, N_games, N_replan, p1_strategy="mixed", p2_strategy="mixed")
+function run_MC_games_parallel(rng, N_games, k_replan, p1_strategy="mixed", p2_strategy="mixed")
 
     # Create thread-safe storage
     games_vec = Vector{Any}(undef, N_games)
@@ -104,7 +104,7 @@ function run_MC_games_parallel(rng, N_games, N_replan, p1_strategy="mixed", p2_s
         params, players, game = init_game(local_rng, p1_strategy, p2_strategy)
 
         # propogate each game forward one step at a time 
-        for i_step = 1:N_replan-1
+        for i_step = 1:k_replan-1
             println("game: ", i_game, " step: ", i_step + 1)
             game = prop_game_step(game, params, local_rng)
         end

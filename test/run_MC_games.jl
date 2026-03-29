@@ -40,12 +40,29 @@ rng = MersenneTwister(1)
 N_games = 100
 k_replan = 10
 
+# greedy, mixed, random, FP_greedy, FP_mixed, Meta_greedy, Meta_mixed
 p1_strategy = "greedy"
-p2_strategy = "greedy"
+p2_strategy = "Meta_greedy"
 
 # games_vec = run_MC_games( rng, N_games, k_replan, "random" ) 
 
 games_vec = run_MC_games_parallel(rng, N_games, k_replan, p1_strategy, p2_strategy)
+
+## ==================================================================== 
+## run all cases 
+## ==================================================================== 
+
+rng = MersenneTwister(1)
+
+N_games = 100
+k_replan = 10
+
+for p1_strategy in ["greedy", "mixed", "random", "FP_greedy", "FP_mixed", "Meta_greedy", "Meta_mixed"]
+    for p2_strategy in ["greedy", "mixed", "random", "FP_greedy", "FP_mixed", "Meta_greedy", "Meta_mixed"]
+        games_vec = run_MC_games_parallel(rng, N_games, k_replan, p1_strategy, p2_strategy)
+    end
+end
+
 
 
 ## ==================================================================== 

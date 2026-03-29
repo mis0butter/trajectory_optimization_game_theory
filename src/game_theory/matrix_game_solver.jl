@@ -442,6 +442,7 @@ Update fictitious play belief based on the opponent's chosen vertex.
 Increments the count for the vertex the opponent actually chose.
 """
 function update_beliefs!(game, players)
+
     # P1 observes P2's choice → update P1's belief about P2
     players[1].fp_belief[players[2].chosen] += 1
     # P2 observes P1's choice → update P2's belief about P1
@@ -450,32 +451,51 @@ function update_beliefs!(game, players)
     # Bayesian update of meta-strategy belief
     update_strategy_belief!(players[1], players[2])
     update_strategy_belief!(players[2], players[1])
+
 end
 
 ## ====================================================================
 
 function update_strategy_belief!(p_self, p_opponent)
 
+    # 1. CALCULATING THE LIKELIHOODS: P(v_t | s)
+    # How likely was the opponent's move if they were using strategy 's'?
     likelihoods = zeros(length(p_self.tracked_strategies))
+
     for (i, s) in enumerate(p_self.tracked_strategies)
         if s == "mixed"
+            # P(v_t | s) = w[v_t]
             likelihoods[i] = p_opponent.weights[p_opponent.chosen]
+
         elseif s == "greedy"
+            # P(v_t | s) = 1 if max weight, else 0
             likelihoods[i] = (p_opponent.chosen == argmax(p_opponent.weights)) ? 1.0 : 0.0
+
         elseif s == "random"
+            # P(v_t | s) = 1 / N_v
             likelihoods[i] = 1.0 / length(p_opponent.weights)
+
         elseif s isa Int
+            # P(v_t | s) = 1 if v_t == k, else 0
             likelihoods[i] = (p_opponent.chosen == s) ? 1.0 : 0.0
+
         else
             likelihoods[i] = 1.0 / length(p_opponent.weights) # fallback
         end
     end
 
-    # Add small epsilon so we never permanently rule out a strategy if they switch
+    # 2. ADDING EPSILON
+    # Math note: Add 10^-4 so beliefs never hit absolute zero.
     likelihoods = max.(likelihoods, 1e-4)
 
-    # Bayes rule: P(S | v) \\propto P(v | S) P(S)
+    # 3. APPLYING BAYES' THEOREM: P(S|v) = P(v|S) * P(S) / sum(...)
+
+    # Numerator: P(v_t | s) * P_t(s)
+    # Multiplies our current belief by the likelihood we just calculated.
     p_self.strategy_belief .*= likelihoods
+
+    # Denominator (Normalization): Divide by the sum of all probabilities
+    # This ensures all our new belief probabilities still add up to 1.0 (100%).
     p_self.strategy_belief ./= sum(p_self.strategy_belief)
 
 end
@@ -485,12 +505,18 @@ end
 function predict_opponent_vertices(p_self, p_opponent)
 
     n_v = length(p_opponent.weights)
-    predicted_v_probs = zeros(n_v)
+    predicted_v_probs = zeros(n_v) # This will be our final 'p' vector
 
     for (i, s) in enumerate(p_self.tracked_strategies)
+
+        # P_{t+1}(s) 
+        # Grabbing our updated confidence in strategy 's' from Step 1.
         prob_s = p_self.strategy_belief[i]
 
         v_probs = zeros(n_v)
+
+        # P(v_{t+1} = i | s)
+        # Figuring out the opponent's vertex probabilities IF they are using 's'
         if s == "mixed"
             v_probs .= p_opponent.weights
         elseif s == "greedy"
@@ -504,9 +530,15 @@ function predict_opponent_vertices(p_self, p_opponent)
         else
             v_probs .= 1.0 / n_v # fallback
         end
+
+        # THE CORE EQUATION: Summation part!
+        # Math: p_i += P(v_{t+1} = i | s) * P_{t+1}(s)
+        # We multiply their hypothetical move (v_probs) by our belief in that 
+        # hypothesis (prob_s), and add it to our running total.
         predicted_v_probs .+= prob_s .* v_probs
     end
 
+    # Returns the final 'p' vector (normalized just to be safe)
     return predicted_v_probs / sum(predicted_v_probs)
 end
 
