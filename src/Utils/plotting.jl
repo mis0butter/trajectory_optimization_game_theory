@@ -480,7 +480,7 @@ export plot_traj_cand
 function plot_Δv_weights(
     game,               # game struct 
     params,             # struct of parameters 
-    k,                  # k_replan step of the game      
+    k,                  # i_game_step of the game      
     fig=nothing,      # figure handle 
 )
 
@@ -492,9 +492,9 @@ function plot_Δv_weights(
     n_vertices = size(game.p1_state[1].cost, 1)
 
     # get params 
-    N = params.N
+    N = params.n_seg_horizon
     mu = params.mu
-    tof_N_sol = params.tof / params.N
+    tof_N_sol = params.t_horizon / params.n_seg_horizon
 
     p1_chosen = game.p1_state[k].chosen
     p1_color = :blue
@@ -553,8 +553,8 @@ function plot_p1_p2_traj(game, parameters, kk)
     p2_chosen = p2.chosen
 
     # get current state 
-    rv_E = p1.X[p1_chosen][parameters.k_tt_replan+1, :]
-    rv_P = p2.X[p2_chosen][parameters.k_tt_replan+1, :]
+    rv_E = p1.X[p1_chosen][parameters.n_seg_per_game_step+1, :]
+    rv_P = p2.X[p2_chosen][parameters.n_seg_per_game_step+1, :]
 
     # plot 
     fig = plot_axes3d()
@@ -562,7 +562,7 @@ function plot_p1_p2_traj(game, parameters, kk)
     # fig = plot_orbit( rv_P_hist, fig ) 
     fig = plot_polygon(game.rv_ref_E[kk][end, :], parameters, fig)
 
-    for i in 1:parameters.k_tt_replan
+    for i in 1:parameters.n_seg_per_game_step
 
         # plot player 1 
         rv_E = p1.X[p1.chosen][i, :]
@@ -587,10 +587,10 @@ function plot_p1_p2_traj(game, parameters, kk)
             p1 = game.p1_state[j]
             p2 = game.p2_state[j]
 
-            rv_E = p1.X[p1.chosen][1:parameters.k_tt_replan+1, :]
+            rv_E = p1.X[p1.chosen][1:parameters.n_seg_per_game_step+1, :]
             lines!(rv_E[:, 1], rv_E[:, 2], rv_E[:, 3]; linewidth=2, color=:blue)
 
-            rv_P = p2.X[p2.chosen][1:parameters.k_tt_replan+1, :]
+            rv_P = p2.X[p2.chosen][1:parameters.n_seg_per_game_step+1, :]
             lines!(rv_P[:, 1], rv_P[:, 2], rv_P[:, 3]; linewidth=2, color=:red)
 
         end
@@ -602,8 +602,7 @@ function plot_p1_p2_traj(game, parameters, kk)
     # title 
     ax = fig.current_axis
 
-    # title_string = string( parameters.strategy, " game: k_replan = ", kk ) 
-    title_string = string("p1 strategy = ", parameters.strategy, ", p2 strategy = ", parameters.p2_strategy, "\n k_replan = ", kk)
+    title_string = string("p1 strategy = ", parameters.strategy, ", p2 strategy = ", parameters.p2_strategy, "\n i_game_step = ", kk)
     ax.x.title = title_string
 
     return fig

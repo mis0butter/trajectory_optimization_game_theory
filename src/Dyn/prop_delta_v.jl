@@ -113,9 +113,9 @@ function find_ref_orbit(game, params)
     t_ref_E_hist = game.t_ref_E[end]
     rv_ref_E_hist = game.rv_ref_E[end]
 
-    # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
-    t_ref_E = t_ref_E_hist[params.k_tt_replan+1, :]
-    rv_ref_E = rv_ref_E_hist[params.k_tt_replan+1, :]
+    # get the rv for each player at the n_seg_per_game_step + 1 time step --> make it CURRENT state 
+    t_ref_E = t_ref_E_hist[params.n_seg_per_game_step+1, :]
+    rv_ref_E = rv_ref_E_hist[params.n_seg_per_game_step+1, :]
 
     kep_ref_E = cart2kep(rv_ref_E, params.mu)
 
@@ -135,8 +135,8 @@ function prop_rv_ref(kep_ref_E, params)
 
     rv0_ref_E = kep2cart(kep0_ref_E, params.mu)
 
-    # t_ref_E, rv_ref_E_hist = propagate_2Body(rv0_ref_E, params.tof, params.mu, 1.0) 
-    t_ref_E, rv_ref_E_hist = prop_kepler_tof_Nseg(rv0_ref_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
+    # t_ref_E, rv_ref_E_hist = propagate_2Body(rv0_ref_E, params.t_horizon, params.mu, 1.0) 
+    t_ref_E, rv_ref_E_hist = prop_kepler_tof_Nseg(rv0_ref_E, zeros(params.n_seg_horizon, 3), params.n_seg_horizon, params.t_horizon / params.n_seg_horizon, params.mu)
     # rv_ref_E_hist = vv2m(rv_ref_E_hist) 
 
     return t_ref_E, rv_ref_E_hist

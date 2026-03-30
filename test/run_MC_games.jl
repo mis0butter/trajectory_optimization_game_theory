@@ -16,18 +16,18 @@ using Infiltrator
 
 rng = MersenneTwister(1)
 
-# run_game( rng, k_replan = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
+# run_game( rng, n_game_steps = 10, p1_strategy = "mixed", p2_strategy = "mixed" ) 
 
-k_replan = 10
+n_game_steps = 10
 p1_strategy = 1
 p2_strategy = "FP_mixed"
-game, params = run_game(rng, k_replan, p1_strategy, p2_strategy)
+game, params = run_game(rng, n_game_steps, p1_strategy, p2_strategy)
 
 # ---------------------------------- 
 # plotting stuff 
 
 # k = 1 
-fig = plot_p1_p2_traj(game, params, k_replan)
+fig = plot_p1_p2_traj(game, params, n_game_steps)
 fig_stats = plot_game_stats(game, params)
 
 
@@ -38,15 +38,15 @@ fig_stats = plot_game_stats(game, params)
 rng = MersenneTwister(1)
 
 N_games = 100
-k_replan = 10
+n_game_steps = 10
 
 # greedy, mixed, random, FP_greedy, FP_mixed, Meta_greedy, Meta_mixed
 p1_strategy = "greedy"
 p2_strategy = "Meta_greedy"
 
-# games_vec = run_MC_games( rng, N_games, k_replan, "random" ) 
+# games_vec = run_MC_games( rng, N_games, n_game_steps, "random" ) 
 
-games_vec = run_MC_games_parallel(rng, N_games, k_replan, p1_strategy, p2_strategy)
+games_vec = run_MC_games_parallel(rng, N_games, n_game_steps, p1_strategy, p2_strategy)
 
 ## ==================================================================== 
 ## run all cases 
@@ -55,11 +55,11 @@ games_vec = run_MC_games_parallel(rng, N_games, k_replan, p1_strategy, p2_strate
 rng = MersenneTwister(1)
 
 N_games = 100
-k_replan = 10
+n_game_steps = 10
 
 for p1_strategy in ["greedy", "mixed", "random", "FP_greedy", "FP_mixed", "Meta_greedy", "Meta_mixed"]
     for p2_strategy in ["greedy", "mixed", "random", "FP_greedy", "FP_mixed", "Meta_greedy", "Meta_mixed"]
-        games_vec = run_MC_games_parallel(rng, N_games, k_replan, p1_strategy, p2_strategy)
+        games_vec = run_MC_games_parallel(rng, N_games, n_game_steps, p1_strategy, p2_strategy)
     end
 end
 

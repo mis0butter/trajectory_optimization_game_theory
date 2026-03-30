@@ -148,15 +148,15 @@ function compute_players_XU(params, game, players)
         v_f = rv_0_hist[end, 4:6]
 
         # get params 
-        tof = params.tof
-        N = params.N
+        t_horizon = params.t_horizon
+        n_seg_horizon = params.n_seg_horizon
         mu = params.mu
 
         for jj in eachindex(vertices)
 
             rv_f = [vertices[jj]; v_f]
-            Δv_sol = min_Δv_dist(rv_0, rv_f, tof, N, mu)
-            t, rv_hist = prop_kepler_tof_Nseg(rv_0, Δv_sol, N, tof / N, mu)
+            Δv_sol = min_Δv_dist(rv_0, rv_f, t_horizon, n_seg_horizon, mu)
+            t, rv_hist = prop_kepler_tof_Nseg(rv_0, Δv_sol, n_seg_horizon, t_horizon / n_seg_horizon, mu)
 
             # save hist 
             push!(p.X, rv_hist)
@@ -427,9 +427,9 @@ function update_chosen_trajectories!(players, params)
 
     for i in 1:2
         idx = players[i].chosen
-        players[i].t_chosen = players[i].t[idx][1:params.k_tt_replan+1]
-        players[i].rv_chosen = players[i].X[idx][1:params.k_tt_replan+1, :]
-        players[i].U_chosen = players[i].U[idx][1:params.k_tt_replan, :]
+        players[i].t_chosen = players[i].t[idx][1:params.n_seg_per_game_step+1]
+        players[i].rv_chosen = players[i].X[idx][1:params.n_seg_per_game_step+1, :]
+        players[i].U_chosen = players[i].U[idx][1:params.n_seg_per_game_step, :]
     end
 
     return players

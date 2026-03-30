@@ -29,18 +29,22 @@ function init_game(
     # get period of orbit 
     T = 2 * pi * sqrt(a^3 / mu)
 
-    # orbit parameters of pursuer and evader 
-    k_tt_replan = 5       # determines time of flight to catch up  
-    tof = T / k_tt_replan # tof for pursuer to catch up to evader  
-    N = 10              # segments 
+    # --- orbit discretization ---
+    n_seg_orbit         = 50    # total segments per orbit
+    n_seg_horizon       = 10    # segments per optimization window
+    n_seg_per_game_step = 5     # segments executed per game step
+
+    # --- derived time quantities ---
+    dt_seg        = T / n_seg_orbit
+    t_horizon     = n_seg_horizon * dt_seg
+    tt_game_step  = n_seg_per_game_step * dt_seg
 
     # start time 
     tt = 0
-    tt_step = k_tt_replan * tof / N
 
     # propagate ref orbits 
-    t_E, rv_E_hist = propagate_2Body(rv_0_E, tof, mu, 1.0)
-    t_P, rv_P_hist = propagate_2Body(rv_0_P, tof, mu, 1.0)
+    t_E, rv_E_hist = propagate_2Body(rv_0_E, t_horizon, mu, 1.0)
+    t_P, rv_P_hist = propagate_2Body(rv_0_P, t_horizon, mu, 1.0)
     rv_E_hist = vv2m(rv_E_hist)
     rv_P_hist = vv2m(rv_P_hist)
 
@@ -51,10 +55,10 @@ function init_game(
     params = (
         mu=mu,
         r=r,
-        N=N,
-        tof=tof,
-        k_tt_replan=k_tt_replan,
-        tt_step=tt_step,
+        n_seg_horizon=n_seg_horizon,
+        t_horizon=t_horizon,
+        n_seg_per_game_step=n_seg_per_game_step,
+        tt_game_step=tt_game_step,
         kep0_ref_E=kep0_ref_E,
         T=T,
         strategy=p1_strategy,
@@ -64,7 +68,7 @@ function init_game(
 
     # save rv_ref from E to position for vertices of polygon 
     # rv_ref_E = rv_E_hist
-    t_ref_E, rv_ref_E = prop_kepler_tof_Nseg(rv_0_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
+    t_ref_E, rv_ref_E = prop_kepler_tof_Nseg(rv_0_E, zeros(params.n_seg_horizon, 3), params.n_seg_horizon, params.t_horizon / params.n_seg_horizon, params.mu)
 
     # save player state and control hists 
     tracked_strategies = ["mixed", "greedy", "random", 1, 2, 3, 4, 5, 6]
@@ -79,7 +83,7 @@ function init_game(
     game = game_struct([], [], [], [], [], [], [], [], [])
 
     push!(game.tt, tt)
-    push!(game.k_replan, 1)
+    push!(game.i_game_step, 1)
     push!(game.rv_E, rv_0_E)
     push!(game.rv_P, rv_0_P)
     push!(game.t_ref_E, t_ref_E)

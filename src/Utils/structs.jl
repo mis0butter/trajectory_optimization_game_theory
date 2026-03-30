@@ -32,7 +32,7 @@ export test_struct
 mutable struct game_struct
 
     tt                  # timetag of the game 
-    k_replan            # replan index 
+    i_game_step         # current game step index 
     rv_E                # current vector for evader 
     rv_P                # current vector for pursuer 
     t_ref_E

@@ -13,8 +13,8 @@ function prop_game_step(game, params, rng)
     t_ref_E_hist, rv_ref_E_hist = prop_rv_ref(kep_ref_E, params)
 
     # now move game forward one step 
-    push!(game.tt, game.tt[end] + params.tt_step)
-    push!(game.k_replan, game.k_replan[end] + 1)
+    push!(game.tt, game.tt[end] + params.tt_game_step)
+    push!(game.i_game_step, game.i_game_step[end] + 1)
     push!(game.rv_E, rv_E)
     push!(game.rv_P, rv_P)
     push!(game.t_ref_E, t_ref_E .+ t_ref_E_hist)
@@ -42,11 +42,11 @@ export prop_game_step
 
 ## ====================================================================
 
-function run_game(rng, N_replan=10, p1_strategy="mixed", p2_strategy="mixed")
+function run_game(rng, n_game_steps=10, p1_strategy="mixed", p2_strategy="mixed")
 
     params, players, game = init_game(rng, p1_strategy, p2_strategy)
 
-    for ii = 1:N_replan-1
+    for ii = 1:n_game_steps-1
         println("step: ", ii + 1, "\n")
         game = prop_game_step(game, params, rng)
     end
@@ -59,7 +59,7 @@ export run_game
 
 ## ====================================================================
 
-function run_MC_games(rng, N_games, N_replan, p1_strategy="mixed", p2_strategy="mixed")
+function run_MC_games(rng, N_games, n_game_steps, p1_strategy="mixed", p2_strategy="mixed")
 
     games_vec = []
 
@@ -67,7 +67,7 @@ function run_MC_games(rng, N_games, N_replan, p1_strategy="mixed", p2_strategy="
 
         params, players, game = init_game(rng, p1_strategy, p2_strategy)
 
-        for ii = 1:N_replan-1
+        for ii = 1:n_game_steps-1
             println("game: ", jj, " step: ", ii + 1, "\n")
             game = prop_game_step(game, params, rng)
         end
@@ -88,7 +88,7 @@ export run_MC_games
 
 using Base.Threads
 
-function run_MC_games_parallel(rng, N_games, k_replan, p1_strategy="mixed", p2_strategy="mixed")
+function run_MC_games_parallel(rng, N_games, n_game_steps, p1_strategy="mixed", p2_strategy="mixed")
 
     # Create thread-safe storage
     games_vec = Vector{Any}(undef, N_games)
@@ -103,8 +103,8 @@ function run_MC_games_parallel(rng, N_games, k_replan, p1_strategy="mixed", p2_s
 
         params, players, game = init_game(local_rng, p1_strategy, p2_strategy)
 
-        # propogate each game forward one step at a time 
-        for i_step = 1:k_replan-1
+        # propagate each game forward one step at a time 
+        for i_step = 1:n_game_steps-1
             println("game: ", i_game, " step: ", i_step + 1)
             game = prop_game_step(game, params, local_rng)
         end
@@ -136,11 +136,11 @@ export run_MC_games_parallel
 #     # p2_chosen = p2.chosen 
 
 #     # choose the trajectory based on the strategy 
-#     # p1_chosen, p2_chosen = p_strategy( game, game.k_replan[end], params.strategy ) 
+#     # p1_chosen, p2_chosen = p_strategy( game, game.i_game_step[end], params.strategy ) 
 
-#     # get the rv for each player at the k_tt_replan + 1 time step --> make it CURRENT state 
-#     # rv_E = p1.X[ p1_chosen ][ params.k_tt_replan + 1, : ] 
-#     # rv_P = p2.X[ p2_chosen ][ params.k_tt_replan + 1, : ] 
+#     # get the rv for each player at the n_seg_per_game_step + 1 time step --> make it CURRENT state 
+#     # rv_E = p1.X[ p1_chosen ][ params.n_seg_per_game_step + 1, : ] 
+#     # rv_P = p2.X[ p2_chosen ][ params.n_seg_per_game_step + 1, : ] 
 
 #     # @infiltrate 
 

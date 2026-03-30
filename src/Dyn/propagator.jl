@@ -11,11 +11,11 @@ function prop_chosen_rv(rv_E, rv_P, params)
 
     # @infiltrate 
 
-    t_E, rv_E_hist = prop_kepler_tof_Nseg(rv_E, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
-    t_P, rv_P_hist = prop_kepler_tof_Nseg(rv_P, zeros(params.N, 3), params.N, params.tof / params.N, params.mu)
+    t_E, rv_E_hist = prop_kepler_tof_Nseg(rv_E, zeros(params.n_seg_horizon, 3), params.n_seg_horizon, params.t_horizon / params.n_seg_horizon, params.mu)
+    t_P, rv_P_hist = prop_kepler_tof_Nseg(rv_P, zeros(params.n_seg_horizon, 3), params.n_seg_horizon, params.t_horizon / params.n_seg_horizon, params.mu)
 
-    # t_E, rv_E_hist = propagate_2Body(rv_E, params.tof, params.mu, 1.0) 
-    # t_P, rv_P_hist = propagate_2Body(rv_P, params.tof, params.mu, 1.0) 
+    # t_E, rv_E_hist = propagate_2Body(rv_E, params.t_horizon, params.mu, 1.0) 
+    # t_P, rv_P_hist = propagate_2Body(rv_P, params.t_horizon, params.mu, 1.0) 
     # rv_P_hist = vv2m(rv_P_hist) 
     # rv_E_hist = vv2m(rv_E_hist) 
 

@@ -188,8 +188,8 @@ export rand_IC
 "Compute norm of U vectors for both players"
 function p1_p2_u_hist(game, params=game.params[1])
 
-    k_tt_replan = params.k_tt_replan
-    k_max = game.k_replan[end]
+    n_seg_per_game_step = params.n_seg_per_game_step
+    k_max = game.i_game_step[end]
 
     p1_U_hist = []
     p2_U_hist = []
@@ -201,8 +201,8 @@ function p1_p2_u_hist(game, params=game.params[1])
         p1_chosen = p1.chosen
         p2_chosen = p2.chosen
 
-        p1_U = game.p1_state[kk].U[p1_chosen][1:k_tt_replan, :]
-        p2_U = game.p2_state[kk].U[p2_chosen][1:k_tt_replan, :]
+        p1_U = game.p1_state[kk].U[p1_chosen][1:n_seg_per_game_step, :]
+        p2_U = game.p2_state[kk].U[p2_chosen][1:n_seg_per_game_step, :]
 
         push!(p1_U_hist, p1_U)
         push!(p2_U_hist, p2_U)
@@ -222,8 +222,8 @@ export p1_p2_u_hist
 "Compute norm of U vectors for both players"
 function U_norm(game, params=game.params[1])
 
-    k_tt_replan = params.k_tt_replan
-    k_max = game.k_replan[end]
+    n_seg_per_game_step = params.n_seg_per_game_step
+    k_max = game.i_game_step[end]
 
     p1_U_hist = []
     p2_U_hist = []
@@ -235,8 +235,8 @@ function U_norm(game, params=game.params[1])
         p1_chosen = p1.chosen
         p2_chosen = p2.chosen
 
-        p1_U = game.p1_state[kk].U[p1_chosen][1:k_tt_replan, :]
-        p2_U = game.p2_state[kk].U[p2_chosen][1:k_tt_replan, :]
+        p1_U = game.p1_state[kk].U[p1_chosen][1:n_seg_per_game_step, :]
+        p2_U = game.p2_state[kk].U[p2_chosen][1:n_seg_per_game_step, :]
 
         push!(p1_U_hist, p1_U)
         push!(p2_U_hist, p2_U)
@@ -259,8 +259,8 @@ export U_norm
 # tt_hist, p1_rv_hist, p2_rv_hist, rv_ref_hist = p_rv_ref_hist( game, params ) 
 function p_rv_ref_hist(game, params=game.params[1])
 
-    k_tt_replan = params.k_tt_replan
-    k_max = game.k_replan[end]
+    n_seg_per_game_step = params.n_seg_per_game_step
+    k_max = game.i_game_step[end]
 
     tt_hist = []
     p1_rv_hist = []
@@ -275,15 +275,15 @@ function p_rv_ref_hist(game, params=game.params[1])
         p2_chosen = p2.chosen
 
         # get traveled trajectory 
-        tt = game.t_ref_E[kk][1:k_tt_replan]
-        p1_r = game.p1_state[kk].X[p1_chosen][1:k_tt_replan, :]
-        p2_r = game.p2_state[kk].X[p2_chosen][1:k_tt_replan, :]
-        rv_ref = game.rv_ref_E[kk][1:k_tt_replan, :]
+        tt = game.t_ref_E[kk][1:n_seg_per_game_step]
+        p1_r = game.p1_state[kk].X[p1_chosen][1:n_seg_per_game_step, :]
+        p2_r = game.p2_state[kk].X[p2_chosen][1:n_seg_per_game_step, :]
+        rv_ref = game.rv_ref_E[kk][1:n_seg_per_game_step, :]
         if kk == k_max
-            tt = game.t_ref_E[kk][1:k_tt_replan+1]
-            p1_r = game.p1_state[kk].X[p1_chosen][1:k_tt_replan+1, :]
-            p2_r = game.p2_state[kk].X[p2_chosen][1:k_tt_replan+1, :]
-            rv_ref = game.rv_ref_E[kk][1:k_tt_replan+1, :]
+            tt = game.t_ref_E[kk][1:n_seg_per_game_step+1]
+            p1_r = game.p1_state[kk].X[p1_chosen][1:n_seg_per_game_step+1, :]
+            p2_r = game.p2_state[kk].X[p2_chosen][1:n_seg_per_game_step+1, :]
+            rv_ref = game.rv_ref_E[kk][1:n_seg_per_game_step+1, :]
         end
 
         push!(tt_hist, tt)
@@ -345,12 +345,10 @@ using JLD2
 
 function save_games_vec(games_vec, params=games_vec[1].params[1])
 
-    # save_folder = string( "test/results/", params.strategy, "/" ) 
-    save_folder = string("test/results/", "p1_", params.strategy, "_p2_", params.p2_strategy, "/")
+    k_max = games_vec[1].i_game_step[end]
+    save_folder = string("test/results/n", k_max, "/p1_", params.strategy, "_p2_", params.p2_strategy, "/")
 
-    if !isdir(save_folder)
-        mkdir(save_folder)
-    end
+    mkpath(save_folder)
 
     N_games = length(games_vec)
 
