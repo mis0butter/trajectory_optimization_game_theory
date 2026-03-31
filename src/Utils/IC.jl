@@ -13,7 +13,7 @@ function init_game(
     r = 6378.0        # Earth radius [km] 
 
     # radius of polygon circle!!!! 
-    R_polygon = 6378.0 / 100
+    R_polygon = 6378.0 / 1000 
 
     # orbital elements
     a = r + 620.0

@@ -67,8 +67,9 @@ end
 ## ====================================================================
 
 results_dir = "test/results"
-windows = [10, 20, 30, 50]
-valid_strategies = Set(["greedy", "mixed", "random", "FP_greedy", "FP_mixed", "Meta_greedy", "Meta_mixed"])
+windows = [10, 20, 30]
+# valid_strategies = Set(["greedy", "mixed", "random", "FP_greedy", "FP_mixed", "Meta_greedy", "Meta_mixed"])
+valid_strategies = Set(["greedy", "mixed", "random", "FP_greedy", "FP_mixed"])
 
 results_df = DataFrame(
     n_game_steps=Int[],
@@ -86,18 +87,16 @@ results_df = DataFrame(
     p2_correct_id_rate=Float64[],
 )
 
-# Collect .jld2 paths from both flat layout (test/results/p1_X_p2_Y/)
-# and nested layout (test/results/n50/p1_X_p2_Y/)
+# Collect .jld2 paths from nested layout (test/results/n<k>/p1_X_p2_Y/)
 jld2_paths = String[]
 for entry in readdir(results_dir, join=true)
-    if isdir(entry) && startswith(basename(entry), "p1_")
-        jld2 = joinpath(entry, "games_100.jld2")
-        isfile(jld2) && push!(jld2_paths, jld2)
-    elseif isdir(entry) && startswith(basename(entry), "n")
-        for sub in readdir(entry, join=true)
-            if isdir(sub) && startswith(basename(sub), "p1_")
-                jld2 = joinpath(sub, "games_100.jld2")
-                isfile(jld2) && push!(jld2_paths, jld2)
+    isdir(entry) && startswith(basename(entry), "n") || continue
+    for sub in readdir(entry, join=true)
+        if isdir(sub) && startswith(basename(sub), "p1_")
+            for f in readdir(sub, join=true)
+                if endswith(f, ".jld2") && startswith(basename(f), "games_")
+                    push!(jld2_paths, f)
+                end
             end
         end
     end
