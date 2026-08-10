@@ -1,0 +1,97 @@
+#============================================================
+
+prop_stateUV_Nseg:
+
+Description: Propagates an initial state to the Nth segment of the trajectory
+
+Inputs:
+    1. x0 - Non-dimensionalized initial state vector of form [r̄; v̄]
+    2. Δv - Matrix of size (N, 3) where each row is the non-dimensionalized velocity vector at a segment of the trajectory
+    3. UV - Kepler's Universal Variable
+    4. N - Number of segments of the trajectory
+
+Outputs:
+    1. xk - Non-dimensionalized final state vector
+    2. Δt - Change in time between states
+
+============================================================#
+
+function prop_stateUV_Nseg(
+    x0, 
+    Δv, 
+    UV, 
+    N
+) 
+
+    # Creating Iteration Variables 
+    xk = copy(x0)
+    Δt = 0.0
+
+    # Propagating to N 
+    for i = 1:N 
+
+        # Applying Δv
+        xkdv = apply_Δv(xk, Δv[i, :])
+
+        # Propagating
+        xk, δt = propKepUV(xkdv, UV) 
+
+        # Updating
+        Δt += δt
+
+    end
+
+    # Outputting
+    return xk, Δt
+end
+
+#============================================================
+
+prop_stateUV_Nseg_RANGE:
+
+Description: Propagates an initial state through a vector of N trajectory segments
+
+Inputs: 
+    1. x0 - Non-dimensionalized initial state vector of form [r̄; v̄]
+    2. Δv - Matrix of size (N, 3) where each row is the non-dimensionalized velocity vector at a segment of the trajectory
+    3. UV - Kepler's Universal Variable
+    4. N - vector of segments of the trajectory
+
+Outputs:
+    1. xk - Matrix of size (N, 6) where each row is the nondimensionalized state at each segment of the trajectory
+    2. Δt - Change in time between initial and final states
+
+============================================================#
+
+function prop_stateUV_Nseg_range(
+    x0, 
+    Δv, 
+    UV, 
+    N
+    ) 
+    
+    # Creating Iteration Variables
+    xk = copy(x0)
+    Δt = 0.0
+
+    # Output Variable
+    X = zeros(last(N)+1, 6)
+    X[1, :] = xk
+
+    # Propagating to N
+    for i in N
+        # Applying Δv
+        xkdv = apply_Δv(xk, Δv[i, :]) 
+
+        # Propagating
+        xk, δt = propKepUV(xkdv, UV)
+
+        # Updating
+        X[i+1, :] = xk
+        Δt += δt
+    end
+
+    # Outputting
+    return X, Δt
+end 
+

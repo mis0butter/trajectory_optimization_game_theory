@@ -1,0 +1,108 @@
+Multi-agent systems are increasingly prevalent in space. 
+% 
+From satellite constellation coordination to autonomous collision avoidance, engineers must design systems that can manage the actions and trajectories of other objects in space while completing mission goals. 
+% 
+The cooperative multi-agent problem has been extensively studied, which solves for the motion of all agents toward a common objective. 
+% 
+% Classic cooperative scenarios include docking \red{cite}, communication networks \red{cite}, and 
+% 
+However, as international competition creates an increasingly crowded field in space, adversarial interactions must be considered. 
+% 
+% The cooperative problem has been extensively studied, such as in rendezvous and proximity operations problems . 
+% with two active spacecraft or with one active and one passive spacecraft 
+% has been extensively researched. 
+% but the noncooperative problem has received less attention. 
+In the noncooperative multi-agent problem, each agent must complete its own objective, such as following a reference trajectory, while defending against attacks or factoring in adversarial behavior from the other agent.
+% 
+% The 2-player case can be formulated as a two-sided optimization problem.  
+% % 
+% Disruptions are of particular concern to critical satellite missions. For example, missile attacks on satellites have created debris swarms with low orbital decay rates. Much attention has been directed to tracking artificial satellites as part of space domain awareness, but there is interest in disrupting satellite activities without creating additional debris. 
+% This paper assumes that   
+
+% - missile attacks on satellites have created orbital debris
+% - space domain awareness
+% - there is desire to disrupt satellite activities without creating additional orbital debris
+% - passive maneuvers on satellites completing missions
+% 
+Under these circumstances, game theory is uniquely suited for modeling the strategic interactions of rational agents with competing objectives in complex environments.
+An autonomous spacecraft can make decisions to fulfill its own mission objective, such as following a reference trajectory, while factoring in the non-cooperative behavior of other actors.
+
+Game theory has been used in motion planning for robotic systems in which the game is formulated as a multi-agent trajectory optimization problem.
+% Compared with single-agent trajectory optimization problems, the methods for solving multi-agent problems are limited as only specialized cases can be solved exactly \red{cite}, although 
+Methods for solving such games are limited compared to single-agent problems due to computational challenges \red{cite}, though 
+    % - cite: Bolei Di and Andrew Lamperski. Newton’s method and differential dynamic programming for unconstrained nonlinear dynamic games. In Proceedings of the Conference on Decision Making and Control (CDC). IEEE, 2019.
+advances in computational methods have yielded progress \red{cite}. 
+Extending such methods to the dynamic environment of space presents additional challenges, but 
+% particularly for multi-agent systems with competing objectives. 
+% and they often consider systems that work to achieve a common goal rather than truly autonomous agents.
+% 
+% a growing body of research seeks to examine 
+research interest in examining autonomous spacecraft systems through a game theoretic framework continues to grow, with 
+% such methods 
+% Autonomous agents need algorithms 
+% Autonomous agents need algorithms to complete their own mission objectives in the presence of 
+% for applications such as 
+% Applications for such algorithms include 
+applications in  
+collision avoidance \cite{bombardelli2015optimal}, trajectory design with unknown disturbances \cite{olympio2010designing}, and pursuit and evasion games \cite{pontani2009numerical, stupik2012optimal}.    
+% 
+
+% Whereas 
+% 
+In this work, we focus on developing methods for the non-cooperative spacecraft pursuit-evasion game.
+% where the objective of the first agent is to capture the other agent, and the objective of the second agent is to follow a reference trajectory while evading capture. 
+The objective of one agent is to follow a reference trajectory while evading capture, and the objective of the second agent is to capture the first agent. 
+
+Previous work has posed the pursuit-evasion game as a mass-optimal zero-sum differential game, finding open loop strategies using PMP \cite{vaseghi2008advanced}. However, the indirect formulation results in time-optimal solutions which require that both spacecraft have always on-thrust, an inefficient method of control \cite{venigalla2021multi}. 
+% 
+\cite{feng2024method} propose a hierarchical structure model that leverages differential game theory to address the orbital pursuit-evasion dilemmas encountered by spacecraft clusters, incorporating task assignment optimization and saddle point solutions through advanced algorithms \cite{feng2024method}. 
+% 
+\cite{li2024orbital} extends this by introducing a linear-quadratic differential game approach for orbital pursuit-evasion-defense scenarios, offering insights into multi-player engagements where a defender spacecraft protects an evader from interception \cite{li2024orbital}. 
+% 
+Additionally, \cite{bian2023control} focus on three-party engagements in low earth orbit, utilizing differential game theory to develop control strategies for scenarios involving an attacker, defender, and target spacecraft, with the attacker maneuvering between evading the defender and pursuing the target \cite{bian2023control}. 
+% 
+Further, \cite{feng2024method} tackle the pursuit-evasion problem along elliptical orbits, providing a precise gradient method to solve the associated differential equations and demonstrating its efficacy in orbital engagements \cite{pang2024solving}. 
+% 
+Finally, \cite{wei2023two} introduce hierarchical guidance laws for a pursuer in an orbital pursuit-evasion-defense game, emphasizing the trade-offs between conservative and radical strategies in maneuvering around a defender to minimize pursuit time \cite{wei2023two}. 
+% 
+These advancements in game-theoretic approaches are critical for the development of autonomous spacecraft capable of complex decision-making in highly dynamic and contested orbital environments. 
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/evader_pursuer_diagram.png}
+    \caption{Evader and Pursuer diagram}
+    \label{fig:evader_pursuer_diagram}
+\end{figure}
+% \blue{
+% The aforementioned approaches use classic game theory approaches to find the Nash equilibrium, or saddle point solution to a differential game. However, equilibrium solutions to trajectory games do not always exist, and deterministic actions can be exploited by an opponent \cite{peters2022learning}. In pure strategies, players are bound to deterministic behavior, and the evader is captured.
+% } 
+
+The aforementioned approaches find deterministic strategies by finding the Nash equilibrium, or saddle point solution to a differential game. 
+% Equilibrium solutions 
+The Nash equilibrium is a situation where no player could gain by changing their own strategy (holding all other players’ strategies fixed). 
+However, equilibrium solutions do not always exist as existing methods are either restricted to specialized cases or extend methods from static games without exploiting time-varying dynamics \cite{di_newtons_2019}.  
+Crucially, the solution strategies converge onto deterministic strategies which may be exploited by opponents \cite{peters2022learning}. 
+
+
+% We seek to find optimal trajectories for the non-cooperative spacecraft zero-sum pursuer-evader game subject to orbital dynamics constraints. We assume that the evading spacecraft follows a reference orbit for a designated mission, such as providing telecommunication services or taking images of a specific location at a critical time. In contrast, the mission of the pursuing spacecraft is to disrupt the evader.  
+
+% Pursuit evasion games for spacecraft largely considers two scenarios: interception and rendezvous. Interception is when the pursuer targets the same final location as the evader at some future point in time, and rendezvous is when the pursuer attempts to intercept and match its final velocity with the evader as well. Interception includes kinetic and explosive impacts which can create undesirable large amounts of debris. This paper addresses a rendezvous scenario in the interest of attacking or protecting space assets in ways that do not generate excessive space debris.
+
+In this work, we leverage a formulation of lifted games over multiple trajectory candidates, which admit a natural class of high performance mixed strategies. 
+These contributions enable efficient and reliable online trajectory planning for autonomous agents in noncooperative settings, such as the tag example of Figure 1. 
+We validate our methods in a suite of Monte Carlo studies, in which we demonstrate that lifting gives rise to mixed strategies as shown in Figure 1(b), providing a significant competitive advantage in both open-loop and receding-horizon play. Our method’s reliable convergence and its ability to explicitly account for constraints enables training from scratch within only a few minutes of simulated self-play. 
+Once fully trained, learning can be disabled and our method generates mixed strategies within 2 ms for the tag example in Figure 1.
+ 
+
+% We constrain the range of motion for the pursuer and evader to an orbital tube whose cross-section is a 6-sided polygon. At each iteration of the planning period, the evader and pursuer target the vertices of the polygon centered at a future point along the reference trajectory. The stage costs of the discretized trajectories to each vertex are computed, averaged, and combined in a 2-player cost bimatrix for the pursuer and evader. We solve the simplex linear program associated with a zero sum game, compute the mixing weights which act as a probability distribution, and sample from the distribution to select a trajectory for each player. We repeat this process to propagate the game state forward. 
+
+
+% A framework uniquely suited for determining optimal strategies for competing agents is game theory. Game theory is the mathematical study of strategic interactions, and existing game theoretic approaches to multi-agent spacecraft maneuvers include finding deterministic closed-loop \cite{desilva2020} and open-loop \cite{vaseghi2008advanced} Nash equilibrium solutions. In \cite{desilva2020}, the rendezvous problem between two active spacecraft is formulated as a two player nonzero-sum differential game. LQ cooperative and noncooperative differential algorithms are applied to state-dependent Riccati equations (SDRE) describing the game dynamics to obtain a closed-loop feedback control law. Finally, a multiplayer sequential game strategy is synthesized to extend the control law to the relative motion synchronization of multiple vehicles. 
+
+
+
+
+% 
+
+
+

@@ -1,0 +1,101 @@
+
+\usepackage{cite}
+\let\proof\relax 
+\let\endproof\relax 
+\usepackage{amsmath, amssymb, amsfonts, amsthm}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{subfig}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{mwe}
+
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{mathtools}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}%
+
+\usepackage[capitalize,noabbrev,nameinlink]{cleveref}
+\crefformat{equation}{(#2#1#3)}
+\Crefname{algocfline}{Algorithm}{Algorithms}
+\Crefname{algocf}{line}{lines}
+\Crefname{assumption}{Assumption}{Assumptions}
+\crefrangeformat{assumption}{Assumptions~#3#1#4-#5#2#6}
+
+\usepackage{amsmath, nccmath}
+\usepackage{etoolbox}
+\AtBeginEnvironment{bmatrix}{\setlength{\arraycolsep}{1pt}}
+\setcounter{MaxMatrixCols}{30} 
+
+% \usepackage{balance}
+% \usepackage[%
+%     %style=numeric-comp,
+%     style=ieee,
+%     sorting=none,
+%     natbib=true,  % Imitate the natbib package (e.g. using \citet, \citep)
+%     % block=ragged,
+%     backend=biber,
+%     sortcites=true,
+%     doi=false,
+%     url=false,
+%     giveninits=true,
+%     maxcitenames=4, %How many people before *choosing* to contract with [et al.]
+%     minbibnames=3, %How many authors *at least*  before *inserting* the [et al.]
+%     maxbibnames=4, %How many authors *at most*  before *inserting* the [et al.]
+%     hyperref
+% ]{biblatex}
+% \bibliography{refs.bib}
+
+\usepackage{tabstackengine}
+\setstackEOL{\cr}
+
+% Commands 
+\newcommand{\mbf}{\mathbf}
+\newcommand{\bs}{\boldsymbol}
+\newcommand{\xdim}{n}
+\newcommand{\tdim}{r}
+\newcommand{\datadim}{p} 
+\newcommand{\state}{\mathbf{x}}
+\newcommand{\dstate}{\dot \state}
+\newcommand{\bxi}{\boldsymbol{\xi}}
+\newcommand{\ith}{~$i^\text{th}$~}
+\newcommand{\jth}{~$j^\text{th}$~}
+\newcommand{\bThx}{\mathbf{\Theta(x)}}
+\newcommand{\bXi}{\mathbf{\Xi}}
+\newcommand{\bdX}{\mathbf{\dot{X}}}
+\newcommand{\param}{\theta}
+\newcommand{\bsig}{\bs{\sigma}}
+\newcommand*{\vertbar}{\rule[-1ex]{0.5pt}{2.5ex}}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\newcommand*{\red}{\textcolor{red}}
+\newcommand*{\blue}{\textcolor{blue}}
+\newcommand*{\violet}{\textcolor{violet}}
+\newcommand{\david}[1]{\textcolor{blue}{[David: #1]}}
+\newcommand{\somi}[1]{\textcolor{teal}{[Somi: #1]}}
+
+\renewcommand{\algorithmicrequire}{\, \, \, \, \textbf{Input:}}
+\renewcommand{\algorithmicensure}{\, \, \, \,  \textbf{Output:}}
+
+\newcommand{\rotvert}{\rotatebox[origin=c]{90}{$\vert$}}
+\newcommand{\rowsvdots}{\multicolumn{1}{@{}c@{}}{\vdots}}
+
+
+\makeatletter
+\let\oldnorm\norm
+\def\norm{\@ifstar{\oldnorm}{\oldnorm*}}
+\makeatother
+
+\newtheorem{remark}{Remark}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem*{proposition-non}{Proposition}
+\newtheorem{problem}{Problem}
+
+

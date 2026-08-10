@@ -1,0 +1,105 @@
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+
+\IEEEoverridecommandlockouts  % This command is only needed if 
+                              % you want to use the \thanks command
+\overrideIEEEmargins          % Needed to meet printer requirements.
+
+\input{sections/macros}
+\graphicspath{ {./images/} } 
+
+% ================================================== % 
+% front matter 
+% ================================================== % 
+
+\title{\LARGE \bf
+Game Theoretic Spacecraft Pursuit Evasion with Fictitious Play
+} 
+
+\author{
+Junette Hsin$^{1}$ and 
+Luis Sentis$^{1}$ 
+% <-this % stops a space
+% \thanks{*This work was not supported by any organization}% <-this % stops a space
+\thanks{$^{1}$Departments of Aerospace Engineering \& Engineering Mechanics and $^{2}$Electrical and Computer Engineering,
+        University of Texas at Austin, \{{\tt\small jhsin, lsentis\}@utexas.edu}}%
+}
+ 
+\begin{document}
+
+\maketitle 
+
+% \vspace{-10em}
+
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+% ================================================== % 
+\begin{abstract}
+
+We use techniques from celestial mechanics and differential game theory to find optimal trajectories for the non-cooperative spacecraft pursuer-evader game. We compare employing mixed strategies with using deterministic pure strategies and completely random strategies and show results. 
+
+\end{abstract}
+
+% ================================================== % 
+% contents 
+% ================================================== % 
+
+\section{Introduction}
+\label{sec:intro}
+\input{sections/intro} 
+
+% \section{Related Work}
+% \label{sec:related_work} 
+% \input{sections/related_work}
+
+
+% ================================================== % s
+\section{Problem Formulation}
+\label{sec:prob_form}
+\input{sections/prob_form}
+
+
+% ================================================== % 
+
+\section{Approach}
+\label{sec:methods}
+\input{sections/methods}
+
+
+% % ================================================== % 
+
+\section{Experiments \& Results}
+\label{sec:results}
+\input{sections/results}
+
+
+% % ================================================== % 
+
+% \section{Conclusions \& Future Work}
+\section{Discussion}
+\label{sec:conclusions}
+\input{sections/conclusions}
+
+
+
+% ================================================== % 
+\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+% ================================================== % 
+
+
+% \balance
+% \printbibliography
+\bibliographystyle{ieeetr}
+\bibliography{refs}
+
+
+% ================================================== % 
+\end{document}
