@@ -67,7 +67,7 @@ end
 ## ====================================================================
 
 results_dir = "test/results"
-windows = [10, 20, 30]
+windows = [5, 10, 30]
 # valid_strategies = Set(["greedy", "mixed", "random", "FP_greedy", "FP_mixed", "Meta_greedy", "Meta_mixed"])
 valid_strategies = Set(["greedy", "mixed", "random", "FP_greedy", "FP_mixed"])
 
@@ -194,12 +194,132 @@ for jld2_path in jld2_paths
 end
 
 
-## ====================================================================
+## ========================================================= 
 ## Save results
-## ====================================================================
+## ========================================================= 
 
 sort!(results_df, [:n_game_steps, :p1_strategy, :p2_strategy])
 
 CSV.write("test/MC_results_late_game.csv", results_df)
 println("\nSaved results to test/MC_results_late_game.csv")
 println("Total rows: $(nrow(results_df))")
+
+## ========================================================= 
+## Plot results
+## ========================================================= 
+
+using Plots 
+using Plots.Measures 
+
+strategies = ["FP_greedy", "FP_mixed", "greedy", "mixed", "random"]
+labels = ["FP-gr", "FP-mx", "greedy", "mixed", "random"]
+
+function build_matrix(df, n, metric)
+    M = zeros(5, 5)
+    for (i, p1) in enumerate(strategies), (j, p2) in enumerate(strategies)
+        row = filter(r -> r.n_game_steps == n &&
+                          r.p1_strategy == p1 &&
+                          r.p2_strategy == p2, df)
+        M[i, j] = row[1, metric]
+    end
+    return M
+end
+
+h0 = heatmap(labels, labels, build_matrix(results_df, 5, :game_value_last_quarter),
+    title="S = 5", xlabel="Pursuer (P2)", ylabel="Evader (P1)",
+    color=:RdYlBu, clims=(1.0, 3.6), xrotation=45, colorbar=false)
+
+h1 = heatmap(labels, labels, build_matrix(results_df, 10, :game_value_last_quarter),
+    title="S = 10", xlabel="Pursuer (P2)", ylabel="",
+    color=:RdYlBu, clims=(1.0, 3.6), xrotation=45, colorbar=false, yticks=false)
+
+h2 = heatmap(labels, labels, build_matrix(results_df, 30, :game_value_last_quarter),
+    title="S = 30", xlabel="Pursuer (P2)", ylabel="",
+    color=:RdYlBu, clims=(1.0, 3.6), xrotation=45, colorbar=false, yticks=false)
+
+# Dummy scatter for a standalone colorbar
+cb = scatter([0], [0], zcolor=[NaN], clims=(1.0, 3.6), color=:RdYlBu,
+    label="", colorbar_title="", framestyle=:none,
+    markersize=0, markeralpha=0, colorbar=true)
+
+lay = grid(1, 4, widths=[0.31, 0.31, 0.31, 0.07])
+plot(h0, h1, h2, cb, layout=lay, size=(1300, 350),
+    top_margin=2mm, bottom_margin=12mm, left_margin=6mm)
+
+savefig("test/MC_results_late_game_heatmap.png")
+
+## ========================================================= 
+## scatter plot of ΔV vs distance 
+## ========================================================= 
+
+df30 = filter(r -> r.n_game_steps == 30, results_df)
+is_fp_p1 = [s in ("FP_greedy", "FP_mixed") for s in df30.p1_strategy]
+is_fp_p2 = [s in ("FP_greedy", "FP_mixed") for s in df30.p2_strategy]
+
+scatter(df30.p1_U_total[is_fp_p1], df30.player_distance[is_fp_p1],
+    label="Evader FP", markerstrokewidth=0, marker=:star, ms=6,
+    color="#1f77b4")    # blue
+
+scatter!(df30.p1_U_total[.!is_fp_p1], df30.player_distance[.!is_fp_p1],
+    label="Evader non-FP", marker=:diamond, ms=6, markerstrokewidth=0,
+    color="#66cc66")    # light green
+
+scatter!(df30.p2_U_total[is_fp_p2], df30.player_distance[is_fp_p2],
+    label="Pursuer FP", marker=:circle, ms=6, markerstrokewidth=0,
+    color="#d62728")    # red
+
+scatter!(df30.p2_U_total[.!is_fp_p2], df30.player_distance[.!is_fp_p2],
+    label="Pursuer non-FP", marker=:utriangle, ms=6, markerstrokewidth=0,
+    color="#ffb366", # light orange
+    xlabel="ΔV (km/s)", ylabel="Mean distance (km)", legend=:outertop, legend_column=4, size=(600, 400), ylims=(2.5, 11.5), 
+    bottom_margin=5mm, left_margin=5mm, right_margin=10mm)
+
+savefig("test/MC_results_late_game_delta_v_vs_distance.png")
+
+## ========================================================= 
+## box plots 
+## ========================================================= 
+
+using StatsPlots
+using CategoricalArrays
+
+strategy_order = ["FP-greedy", "FP-mixed", "greedy", "mixed", "random"]
+name_map = Dict("FP_greedy"=>"FP-greedy", "FP_mixed"=>"FP-mixed",
+                "greedy"=>"greedy", "mixed"=>"mixed", "random"=>"random")
+
+# Evader (P1)
+box_p1 = DataFrame(
+    strategy = categorical([name_map[r.p1_strategy] for r in eachrow(results_df)],
+                           levels=strategy_order),
+    horizon  = categorical(["s=$(r.n_game_steps)" for r in eachrow(results_df)],
+                           levels=["s=5", "s=10", "s=30"]),
+    value    = results_df.game_value_last_quarter
+)
+
+p1 = groupedboxplot(box_p1.strategy, box_p1.value, group=box_p1.horizon,
+    xlabel="", ylabel="Last-quarter game value",
+    title="Evader (P1) Strategy",
+    legend=:outertop, legend_column=3)
+
+# Pursuer (P2)
+box_p2 = DataFrame(
+    strategy = categorical([name_map[r.p2_strategy] for r in eachrow(results_df)],
+                           levels=strategy_order),
+    horizon  = categorical(["s=$(r.n_game_steps)" for r in eachrow(results_df)],
+                           levels=["s=5", "s=10", "s=30"]),
+    value    = results_df.game_value_last_quarter
+)
+
+p2 = groupedboxplot(box_p2.strategy, box_p2.value, group=box_p2.horizon,
+    xlabel="", ylabel="Last-quarter game value",
+    title="Pursuer (P2) Strategy",
+    legend=false)
+
+plot(p1, p2, layout=(2, 1), size=(700, 700),
+    bottom_margin=5mm, left_margin=5mm)
+
+# plot(p1, p2, layout=(1, 2), size=(1000, 400),
+    # bottom_margin=5mm, left_margin=5mm)
+
+savefig("test/MC_results_late_game_boxplot.png")
+
