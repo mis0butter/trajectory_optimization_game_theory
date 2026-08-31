@@ -287,6 +287,52 @@ end
 # pre-A1 orientation, passes after -- so it is also an integration test for A1.
 # ---------------------------------------------------------------------------
 
+@testset "gradient-based inner solver (A6/D9)" begin
+    # min_optim must actually USE the gradient now. On a quadratic it should hit the
+    # exact minimum in a handful of iterations; Nelder-Mead would need dozens.
+    Q = Diagonal([1.0, 10.0, 100.0, 1000.0]); b = [1.0, -2.0, 3.0, -4.0]
+    f(x) = 0.5 * x' * Q * x - b' * x
+    r = min_optim_info(f, zeros(4))
+    @test r.converged
+    @test isapprox(r.x_min, Q \ b; rtol = 1e-6)
+    @test r.iters < 60                      # gradient-based, not simplex
+
+    # shape preservation: aug_L passes a 30x1 Matrix and then takes norm(x_min - x_k)
+    r2 = min_optim_info(x -> sum(abs2, x), zeros(6, 1))
+    @test size(r2.x_min) == (6, 1)
+
+    # the guard: a non-finite objective must not propagate (it trips an assertion
+    # inside Optim's line search rather than just returning a bad answer)
+    g(x) = (v = sum(abs2, x) - 1.0; v < 0 ? NaN : v)
+    @test_nowarn min_optim_info(x -> (v = g(x); isfinite(v) ? v : 1e6), [3.0, 3.0])
+end
+
+@testset "min_Δv_dist_solve diagnostics and escalation" begin
+    params, players, game = init_game(MersenneTwister(12))
+    V = collect(polygon_vertices(game.rv_ref_E[end][end, :], params))
+    rv0 = players[1].rv_0_hist[1, :]
+    rvf = [V[1]; players[1].rv_0_hist[end, 4:6]]
+    N, mu, th = params.n_seg_horizon, params.mu, params.t_horizon
+
+    s = min_Δv_dist_solve(rv0, rvf, th, N, mu; Δv_max = params.Δv_max, w_miss = params.w_miss)
+    @test s.converged
+    @test size(s.Δv_sol) == (N, 3)
+    @test !s.escalated                       # 2.0 km/s cap is inactive by ~90x (D6)
+    @test s.max_Δv < params.Δv_max
+    @test s.iters > 0 && s.t > 0
+
+    # it must actually reach the vertex
+    _, rvh = prop_kepler_tof_Nseg(rv0, s.Δv_sol, N, th / N, mu)
+    @test norm(rvh[end, 1:3] - V[1]) < 1e-6
+
+    # and a genuinely binding cap must take the augmented-Lagrangian path
+    s2 = min_Δv_dist_solve(rv0, rvf, th, N, mu; Δv_max = 1e-3, w_miss = params.w_miss)
+    @test s2.escalated
+
+    # min_Δv_dist keeps its old contract: just the Δv matrix
+    @test min_Δv_dist(rv0, rvf, th, N, mu; Δv_max = params.Δv_max) isa AbstractMatrix
+end
+
 @testset "Meta_* / FP_* P2 axis and sign convention (D5)" begin
     # `cost` is indexed [P1_vertex, P2_vertex]. `predict_opponent_vertices` returns a
     # distribution over the OPPONENT's vertices, so for P2 that is a distribution over

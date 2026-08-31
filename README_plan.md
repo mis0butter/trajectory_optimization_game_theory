@@ -37,11 +37,11 @@ smoke sweep remain. Per-defect detail is in the §3 `Status` column and the note
   of truth, rather than a verbatim copy that would drift.
 - **`test/runtests.jl`** — was 6 lines testing nothing; now **3092 passing, 0 failing, 0 broken**.
 
-**Remaining in Gate A:** A6 (Ipopt for the *trajectory optimizer* — still Nelder-Mead today);
-the smoke sweep. A6 needs a dependency decision first: `ADNLPModels`/`NLPModelsIpopt` are not in
-the Manifest, and adding them re-resolves a Manifest built under Julia 1.11.1 on a 1.12.7
-machine. The zero-dependency alternative is JuMP `@operator` with the ΔV constraints written
-natively as quadratics (they need no operator at all).
+- **A6 / D9 — the trajectory optimizer is gradient-based.** BFGS + BackTracking, 12/12
+  converged, 38% less fuel, ~10^7 better terminal miss. **Ipopt was tried and does not converge
+  on this problem** — see note [h]. Zero new dependencies either way.
+
+**Remaining in Gate A:** the smoke sweep only. Gate A is otherwise complete.
 
 **Two headline changes to the plan's premises:**
 
@@ -131,10 +131,10 @@ D1–D9 are the original audit. **D10–D13 were found on Aug 31** while executi
 | D6 | **ΔV constraint inert.** `Δv_max = 2.0` km/s default, never threaded from `params`; observed max per-segment ‖Δv‖ ≈ 0.591 km/s. The paper states 0.1 km/s. | `min_fns.jl:47`, `matrix_game_solver.jl:158` | The constraint never binds, so "comparable ΔV budgets" is unsupported. Four separate literals would need editing to change it. | **CONFIRMED, reframed.** Measured max ‖Δv‖ = **0.0221 km/s**, not 0.591. Plumbing fixed (keyword args + `params.Δv_max`); see [b]. |
 | D7 | **Silent LP failure.** The `OPTIMAL` check is a non-fatal `println`; the `error` is commented out. OSQP is a first-order ADMM QP solver (default tolerance ~1e-3) being used on a pure LP, with a `z ≥ 1e-4` floor. | `matrix_game_solver.jl:103-128` | A bad solve is currently invisible, and the weights feed `ProbabilityWeights` and will feed exploitability arithmetic. Severity **unmeasured** — see A1. | **QUANTIFIED and FIXED.** 0.83% `ALMOST_OPTIMAL` under OSQP. Solver swapped to Ipopt; see [c]. |
 | D8 | Live `@exfiltrate` in an analysis path; `load_games_vec` reads a path layout `save_games_vec` no longer writes. | `Utils.jl:301`, `plotting.jl:827`, `Utils.jl:367-378` | Analysis drops into Infiltrator; loader is dead code. | **FIXED** Aug 31. `@exfiltrate` removed; `load_games_vec` repaired to the `n<k>/` layout. |
-| D9 | **Derivative-free inner solver.** The trajectory optimizer is a hand-rolled augmented Lagrangian whose inner solve is `Optim.optimize(fn, dfn, x_0, NelderMead())` — Nelder-Mead on a 30-dimensional problem (N=10 segments × 3), discarding the ForwardDiff gradient `dfn` that is built and passed to it. | `min_fns.jl:109-124`, `aug_L.jl:184-196` | Nelder-Mead stagnates above ~10 dimensions. Likely a direct cause of D3 (poor terminal miss) and of D6 (the ΔV penalty never activating). Reviewer 7 #1 asked for solver details and real-time suitability. | **CONFIRMED, reframed.** Nelder-Mead is *not* failing at targeting (4 cm miss from a 2.4–39 km Lambert guess). Real cost is D11 + no convergence stats. **OPEN** — Day 7. |
+| D9 | **Derivative-free inner solver.** The trajectory optimizer is a hand-rolled augmented Lagrangian whose inner solve is `Optim.optimize(fn, dfn, x_0, NelderMead())` — Nelder-Mead on a 30-dimensional problem (N=10 segments × 3), discarding the ForwardDiff gradient `dfn` that is built and passed to it. | `min_fns.jl:109-124`, `aug_L.jl:184-196` | Nelder-Mead stagnates above ~10 dimensions. Likely a direct cause of D3 (poor terminal miss) and of D6 (the ΔV penalty never activating). Reviewer 7 #1 asked for solver details and real-time suitability. | **FIXED** Aug 31. Replaced by BFGS + BackTracking with analytic AD gradients: 12/12 converged, miss 7.6e-12 km, 38% less fuel. Ipopt was tried and does not converge here — see [h]. |
 | D10 | **AD path broken — no gradient exists.** `cart2kep` allocates `oe = zeros(6)` (a `Vector{Float64}`) then assigns orbital elements into it. It sits on the objective's call path via `prop_kepler_tof:125` → `prop_kepler_tof_Nseg:174`, so `ForwardDiff.gradient` of the trajectory objective throws `MethodError` on `setindex!` with a `Dual`. Invisible because the only consumer of that gradient was `NelderMead()`, which never evaluates it. | `propagator.jl:179-186` | **Invalidates §9 risk 4.** No gradient-based solver — Ipopt, LBFGS, or the existing `min_bfgs` — could ever have run. The plan's LBFGS fallback shared the same broken dependency, so it was not a hedge. | **FIXED** Aug 31. One line. Gated: bitwise identical on 20,000 random states, and ForwardDiff now matches `central_fdm(5,1)` to 1.6e-9. |
 | D11 | **The fuel objective is inert.** In `min_Δv_dist` the terminal-miss term is a distance in km (1–40 at the Lambert guess) while `sum_norm_Δv` returns Σ‖Δv‖² in (km/s)² (~1e-3). At the implicit weight of 1.0 the miss term outweighs fuel by ~3 orders of magnitude. | `min_fns.jl:74-75`, `obj_fns.jl:159-171` | `min_Δv_dist` does not minimize Δv in any meaningful sense — it is a pure targeting solve. "Comparable ΔV budgets" is unsupported, and D4's stage cost operates on Δv values that were never fuel-optimized. **This is the real defect D3 was standing in front of.** | **FIXED** Aug 31. True ΔV with an ε=1e-12 desingularization for the gradient; `w_miss` in `params`, swept. See [g]. |
-| D12 | **Augmented Lagrangian double-counts the objective.** `min_aug_L_eq_ineq` sums `aug_L_fn` and `aug_L_ineq_fn`, each of which already includes `obj_fn(x)`, giving `2·obj_fn(x)` + both penalty sets. The correct single-call form (`aug_L_eq_ineq_fn`) exists and is commented out one line below. | `aug_L.jl:241-243` | The objective is weighted 2× against the constraints, so both are systematically under-enforced. Off the game hot path (`min_Δv_dist` → `min_aug_L_ineq`), but reached by `min_Δv` — the "correct pattern" for hard-constraining miss distance. | **OPEN**, deferred. Dies with the file if A6 drops the hand-rolled AL as planned. |
+| D12 | **Augmented Lagrangian double-counts the objective.** `min_aug_L_eq_ineq` sums `aug_L_fn` and `aug_L_ineq_fn`, each of which already includes `obj_fn(x)`, giving `2·obj_fn(x)` + both penalty sets. The correct single-call form (`aug_L_eq_ineq_fn`) exists and is commented out one line below. | `aug_L.jl:241-243` | The objective is weighted 2× against the constraints, so both are systematically under-enforced. Off the game hot path (`min_Δv_dist` → `min_aug_L_ineq`), but reached by `min_Δv` — the "correct pattern" for hard-constraining miss distance. | **OPEN**, deferred. The AL is now bypassed on the hot path (0/12 escalations), so this is reachable only via `min_Δv`. Fix if that path is ever used. |
 | D13 | **Opponent identification is structurally uncomputable for FP opponents.** `tracked_strategies` is `["mixed","greedy","random",1..6]` — it contains no `FP_*` or `Meta_*` hypotheses. | `IC.jl:74` | `p1_correct_id_rate` / `p2_correct_id_rate` are `NaN` against every FP opponent; `test/MC_results_late_game.csv` confirms this for all FP columns. `results.md` reports "correct-ID rate is 1.0 for all identifiable opponents" — true only because FP opponents are excluded by the word *identifiable*. The metric was never computed for the opponents the paper is about. | **OPEN** — a modeling gap, not a bug: extending it needs the opponent's `fp_belief`, which a player does not observe. Surface in the writing. |
 
 ### Notes
@@ -260,6 +260,46 @@ Two things worth putting in the paper:
 **Open question for the author, not a defect:** `w_miss` could go *below* 1 to buy back fuel,
 since the miss has four orders of magnitude of headroom before the A3 threshold. Left at 1.0
 because the action semantics want the vertex actually reached; worth a sentence either way.
+
+**[h] A6 resolved — but with quasi-Newton, not Ipopt.** Ipopt was tried first and **does not
+converge on this problem** at any iteration budget up to 5000 (the terminal miss even oscillates
+non-monotonically: 1e-6 at 200 iterations, 4e-3 at 1000, 2.9e-5 at 5000). Cause: the problem is
+stiff — a 1e-5 km/s change in Δv moves the terminal position by metres over 10 segments — and a
+JuMP user-defined operator gives Ipopt no structure, so `hessian_approximation="limited-memory"`
+cannot build a usable curvature model. Measured on the 12 step-1 subproblems (median):
+
+| solver | converged | wall | terminal miss | ΔV |
+|---|---|---|---|---|
+| AL + Nelder-Mead (incumbent) | n/a | 0.122 s | 7.0e-05 km | 0.04758 |
+| **BFGS + BackTracking** | **12/12** | 0.154 s | **7.6e-12 km** | **0.02926** |
+| LBFGS + BackTracking | 12/12 | **0.016 s** | 3.2e-12 km | 0.04169 |
+| Ipopt (JuMP `@operator`, constrained) | **0/12** | 0.162 s | 1.0e-06 km | 0.03187 |
+
+**BFGS is now the default**: 38% less fuel and ~10^7 better terminal miss than the incumbent, for
+26% more wall time (~36 min per 5x5 sweep). Two details were load-bearing, and neither is in the
+original plan:
+
+- **A guarded objective.** A large enough trial Δv makes the Kepler propagation non-finite, and a
+  NaN trips an assertion *inside* Optim's line search (`isfinite(phi_c)`). Returning a large
+  finite value lets the line search back off.
+- **`BackTracking`, not the `HagerZhang` default.** HagerZhang extrapolates into the blow-up
+  region; backtracking only shrinks the step. This alone moved convergence from 1/12 to 12/12.
+
+Also: **the augmented Lagrangian is now bypassed unless the ΔV cap actually binds** (verified
+post-solve; 0/12 escalations, consistent with note [b]), and `min_aug_L_ineq` gained the
+50-iteration cap it never had. `min_Δv_dist_solve` returns `converged`/`iters`/`escalated` per
+solve, recorded in `solve_info.traj`, which is what makes a sweep-wide convergence rate
+reportable.
+
+**For the paper**, the honest and stronger claim is the comparison itself: *"we evaluated an
+interior-point NLP solver (Ipopt) via a user-defined-operator interface; it failed to converge on
+this problem class at any iteration budget, while quasi-Newton with analytic AD gradients and a
+backtracking line search converged on 100% of solves."* That answers Reviewer 7 #1 better than
+either result alone. Caveat to state: `g_converged` is 0/12 — these terminate on step/objective
+tolerance, not gradient norm, because the terminal-miss term is an **exact penalty** (a norm, so
+non-smooth precisely at the solution). A squared miss is smooth but strictly worse in practice —
+its gradient vanishes near zero, so the optimizer stops driving the miss down (measured 4.2e-2
+instead of 1.4e-9).
 
 **Not a defect, but state it in the paper.** `axis_123` is *not* an orthogonal frame:
 `a1 . a2 = -9.9e-3 ~ -e`. The hexagon lies in the `a2`-`a3` (radial/normal) plane, **not** the

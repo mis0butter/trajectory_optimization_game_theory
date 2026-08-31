@@ -67,27 +67,74 @@ function min_Δv_dist(
     w_miss = 1.0,       # weight on the terminal miss term
 )
 
+    min_Δv_dist_solve(rv_0, rv_f, tof, N, mu; dm, Δv_max, w_miss).Δv_sol
+end
+
+export min_Δv_dist
+
+"""
+    min_Δv_dist_solve(...) -> (; Δv_sol, converged, g_converged, iters, t, escalated, max_Δv)
+
+`min_Δv_dist` plus per-solve diagnostics, which is what `compute_players_XU` records so the
+convergence rate over the ~450,000 solves in a sweep can be reported (Reviewer 7 #1).
+
+**The augmented Lagrangian is bypassed unless it is needed.** The per-segment ΔV cap is
+inactive by a factor of ~90 in this scenario (measured max ‖Δv‖ ≈ 0.022 km/s against a 2.0 km/s
+cap, defect D6), so wrapping every solve in an outer AL loop only adds iterations. Here the
+problem is solved unconstrained, the cap is then *verified*, and the AL is invoked only if it is
+genuinely violated — which also keeps the code correct if someone sets a binding `Δv_max`.
+`escalated` records which path was taken.
+
+The objective is **guarded**: a large enough trial Δv makes the Kepler propagation non-finite,
+and a `NaN` trips an assertion inside Optim's line search. Returning a large finite value
+instead lets the line search back off.
+"""
+function min_Δv_dist_solve(
+    rv_0, rv_f, tof,
+    N       = 20,
+    mu      = 1.0,
+    ;
+    dm      = "pro",
+    Δv_max  = 2.0,
+    w_miss  = 1.0,
+    method  = default_method(),
+    tol     = 1e-10,
+    maxiter = 2000,
+)
+
     tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm )
-    x_0 = reshape( Δv_vec, N*3, 1 )
+    x_0 = vec( Δv_vec )
 
-    # define objective function
-    obj_fn(x) = + sum_norm_Δv( x, N ) +
-                w_miss * miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu )
+    raw(x) = sum_norm_Δv( x, N ) +
+             w_miss * miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu )
+    guarded(x) = (v = raw(x); isfinite(v) ? v : 1e6)
 
-    # inequality constraint ? 
-    h_fn(x) = constrain_Δv( x, N, Δv_max ) 
-    
-    # minimize constrained 
-    x_min  = min_aug_L( obj_fn, x_0, nothing, h_fn ) 
-    # x_min  = min_aug_L( obj_fn, x_0 ) 
-    
-    # get solution 
-    Δv_sol = reshape( x_min, N, 3 ) 
+    # nondimensionalize: decision variables are O(1e-2) while objective gradients are
+    # O(1e3), since a small Δv moves the terminal position a long way over 10 segments
+    s  = max( maximum(abs, x_0), 1e-6 )
+    z0 = x_0 ./ s
+    r  = min_optim_info( z -> guarded(s .* z), z0; method, tol, maxiter )
+    x_min = s .* vec(r.x_min)
 
-    return Δv_sol 
-end 
+    # verify the ΔV cap, and escalate only if it actually binds
+    escalated = any( >(0), constrain_Δv( x_min, N, Δv_max ) )
+    if escalated
+        h_fn(x) = constrain_Δv( x, N, Δv_max )
+        x_min = vec( min_aug_L( guarded, reshape(x_min, N*3, 1), nothing, h_fn ) )
+    end
 
-export min_Δv_dist 
+    Δv_sol = reshape( x_min, N, 3 )
+
+    (; Δv_sol,
+       converged   = r.converged,
+       g_converged = r.g_converged,
+       iters       = r.iters,
+       t           = r.t,
+       escalated,
+       max_Δv      = maximum(norm.(eachrow(Δv_sol))))
+end
+
+export min_Δv_dist_solve
 
 ## ====================================================================
 
@@ -126,22 +173,81 @@ export max_Δv_dist
 
 ## ====================================================================
 
-"Minimize function using Optim"
-function min_optim(  
-    fn,                     # objective function 
-    x_0,                    # initial guess 
-    method = NelderMead(), 
-    tol = 1e-6, 
-) 
+"Default inner solver: quasi-Newton with a backtracking line search (see min_optim_info)."
+default_method() = BFGS(linesearch = Optim.LineSearches.BackTracking())
 
-    # assign gradient fn 
-    dfn = x -> ForwardDiff.gradient( fn, x ) 
+"""
+    min_optim_info(fn, x_0; method, tol, maxiter) -> (; x_min, converged, g_converged, iters, t)
 
-    # minimize 
-    result = optimize( fn, dfn, x_0, method ) 
-    x_min  = result.minimizer 
+Gradient-based unconstrained minimization, returning solver diagnostics.
 
-    return x_min 
+**Was Nelder-Mead (defect D9).** The old body built a ForwardDiff gradient and passed it to
+`optimize(fn, dfn, x_0, NelderMead())`, which ignores it — so a derivative-free simplex method
+ran on a 30-dimensional problem while an analytic gradient sat unused. It could not have been
+otherwise: `ForwardDiff.gradient` *threw* until D10 was fixed in `cart2kep`.
+
+Measured on the 12 step-1 trajectory subproblems (median):
+
+    AL + NelderMead (incumbent)   0.122 s   miss 7.0e-05 km   ΔV 0.04758
+    BFGS  + BackTracking          0.154 s   miss 7.6e-12 km   ΔV 0.02926   12/12 converged
+    LBFGS + BackTracking          0.016 s   miss 3.2e-12 km   ΔV 0.04169   12/12 converged
+    Ipopt via JuMP @operator      0.162 s   miss 1.0e-06 km   ΔV 0.03187    0/12 converged
+
+BFGS is the default: 38% less fuel and ~10^7 better terminal miss than the incumbent, for 26%
+more wall time. `LBFGS()` is the fast alternative if sweep time ever binds.
+
+Two details are load-bearing:
+
+  * **`BackTracking`, not the `HagerZhang` default.** HagerZhang extrapolates, and a large enough
+    trial step makes the Kepler propagation non-finite, which trips an assertion inside the line
+    search (`isfinite(phi_c)`). Backtracking only ever shrinks the step. With HagerZhang only
+    1/12 solves converged; with BackTracking, 12/12.
+  * **The gradient must be in-place.** `Optim` wants `g!(G, x)`; handing it an out-of-place
+    closure is what let the old code silently pair a gradient with a derivative-free method.
+
+Note `g_converged` is typically false: these terminate on step/objective tolerance rather than
+gradient norm, because the terminal-miss term enters as an *exact penalty* (a norm, hence
+non-smooth exactly at the solution being sought). Report that honestly rather than claiming
+first-order optimality.
+"""
+function min_optim_info(
+    fn,                     # objective function
+    x_0,                    # initial guess
+    ;
+    method  = default_method(),
+    tol     = 1e-10,
+    maxiter = 2000,
+)
+
+    x0v = vec(x_0)
+    cfg = ForwardDiff.GradientConfig(fn, x0v)
+    g!(G, x) = (ForwardDiff.gradient!(G, fn, x, cfg); G)
+
+    t = @elapsed result = optimize(fn, g!, x0v, method,
+            Optim.Options(g_tol = tol, iterations = maxiter, allow_f_increases = true))
+
+    # preserve the caller's array shape: aug_L passes a 30x1 Matrix and then does
+    # norm(x_min - x_k), which would be a DimensionMismatch against a plain Vector
+    x_min = reshape(Optim.minimizer(result), size(x_0))
+
+    (; x_min,
+       converged   = Optim.converged(result),
+       g_converged = Optim.g_converged(result),
+       iters       = Optim.iterations(result),
+       f_min       = Optim.minimum(result),
+       t)
+end
+
+export min_optim_info
+
+"Minimize function using Optim (shape-preserving; see min_optim_info for diagnostics)."
+function min_optim(
+    fn,                     # objective function
+    x_0,                    # initial guess
+    method = default_method(),
+    tol    = 1e-10,
+)
+    min_optim_info(fn, x_0; method, tol).x_min
 end
 
 export min_optim 

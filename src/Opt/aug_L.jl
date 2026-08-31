@@ -159,12 +159,13 @@ export min_aug_L_eq
 ## ====================================================================
 
 "Minimize inequality-constrained Augmented Lagrangian" 
-function min_aug_L_ineq( 
-    obj_fn,         # objective function 
-    h_fn,           # inequality constraint function: h <= 0  
-    x_0,            # initial guess 
-    tol     = 1e-6, 
-) 
+function min_aug_L_ineq(
+    obj_fn,         # objective function
+    h_fn,           # inequality constraint function: h <= 0
+    x_0,            # initial guess
+    tol     = 1e-6,
+    k_max   = 50,   # outer-iteration cap -- see note below
+)
 
     # step 0: initialize 
     λ_k     = zeros(length(h_fn(x_0)))              # initial Lagrange multiplier  
@@ -187,25 +188,35 @@ function min_aug_L_ineq(
         #  constructed here was dead, since the inner solver never called it.)
         x_min = min_optim( fn, x_k )
 
-        # step 3 check convergence ... 
-        dx     = norm(x_min - x_k) 
-        h_prod = prod( [ h < 0 for h in h_fn(x_min) ] ) 
-        if ( dx < tol ) && 
-            # && ( norm(c_fn(x_min)) < tol )  
-           ( h_prod ) 
-                loop = false 
-        else 
-            x_k = x_min 
-        end 
+        # step 3 check convergence ...
+        dx     = norm(x_min - x_k)
+        h_prod = prod( [ h < 0 for h in h_fn(x_min) ] )
+        if ( dx < tol ) &&
+            # && ( norm(c_fn(x_min)) < tol )
+           ( h_prod )
+                loop = false
+        else
+            x_k = x_min
+        end
 
-        # update constraint values 
+        # Iteration cap. This loop previously had none: no maxiter, no wall-clock
+        # bound, no failure branch -- so a non-converging solve hung indefinitely,
+        # and inside `Threads.@threads` that is a stuck sweep with no diagnostic.
+        # Note the termination test above is effectively `dx < tol` alone, because
+        # `h_prod` is trivially true whenever the ΔV cap is inactive (defect D6).
+        if k >= k_max
+            @warn "min_aug_L_ineq hit its iteration cap" k_max dx feasible=h_prod
+            loop = false
+        end
+
+        # update constraint values
         h_k = h_fn( x_k )
-        λ_k, p_k = update_λ_p_ineq( λ_k, p_k, h_k, γ ) 
+        λ_k, p_k = update_λ_p_ineq( λ_k, p_k, h_k, γ )
 
-    end 
+    end
 
-    return x_k 
-end 
+    return x_k
+end
 
 export min_aug_L_ineq 
 

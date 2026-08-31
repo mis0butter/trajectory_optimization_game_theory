@@ -285,8 +285,9 @@ function compute_players_XU(params, game, players)
         for jj in eachindex(vertices)
 
             rv_f = [vertices[jj]; v_f]
-            t_solve = @elapsed Δv_sol = min_Δv_dist(rv_0, rv_f, t_horizon, n_seg_horizon, mu;
-                                                    Δv_max=params.Δv_max, w_miss=params.w_miss)
+            sol = min_Δv_dist_solve(rv_0, rv_f, t_horizon, n_seg_horizon, mu;
+                                    Δv_max=params.Δv_max, w_miss=params.w_miss)
+            Δv_sol = sol.Δv_sol
             t, rv_hist = prop_kepler_tof_Nseg(rv_0, Δv_sol, n_seg_horizon, t_horizon / n_seg_horizon, mu)
 
             # save hist
@@ -294,16 +295,23 @@ function compute_players_XU(params, game, players)
             push!(p.U, Δv_sol)
             push!(p.t, t)
 
-            # per-solve diagnostics. `miss` is the A3 reachability metric — the
-            # distance between where the candidate actually ends up and the
-            # hexagon vertex it was aimed at — recorded here so it is monitored
-            # continuously rather than only by an offline probe.
+            # Per-solve diagnostics. `miss` is the A3 reachability metric — the
+            # distance between where the candidate actually ends up and the hexagon
+            # vertex it was aimed at — recorded here so it is monitored continuously
+            # rather than only by an offline probe. `converged` / `iters` are what
+            # make the solver's convergence rate over a whole sweep reportable
+            # (Reviewer 7 #1); `escalated` records whether the ΔV cap actually bound
+            # and forced the augmented-Lagrangian path.
             push!(p.solve_info.traj, (
-                vertex  = jj,
-                t_solve = t_solve,
-                miss    = norm(rv_hist[end, 1:3] - vertices[jj]),
-                max_Δv  = maximum(norm.(eachrow(Δv_sol))),
-                sum_Δv  = sum(norm.(eachrow(Δv_sol))),
+                vertex      = jj,
+                t_solve     = sol.t,
+                miss        = norm(rv_hist[end, 1:3] - vertices[jj]),
+                max_Δv      = sol.max_Δv,
+                sum_Δv      = sum(norm.(eachrow(Δv_sol))),
+                converged   = sol.converged,
+                g_converged = sol.g_converged,
+                iters       = sol.iters,
+                escalated   = sol.escalated,
             ))
 
         end
