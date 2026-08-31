@@ -23,9 +23,19 @@ function prop_game_step(game, params, rng)
     # propagate chosen trajectories for evader and pursuer 
     t_E_hist, rv_E_hist, t_P_hist, rv_P_hist = prop_chosen_rv(rv_E, rv_P, params)
 
-    # save player state and control hists (carry forward beliefs from previous step)
-    p1 = player_struct([], [], [], [], [], [], rv_E_hist, [], [], [], deepcopy(game.p1_state[end].fp_belief), deepcopy(game.p1_state[end].strategy_belief), deepcopy(game.p1_state[end].tracked_strategies))
-    p2 = player_struct([], [], [], [], [], [], rv_P_hist, [], [], [], deepcopy(game.p2_state[end].fp_belief), deepcopy(game.p2_state[end].strategy_belief), deepcopy(game.p2_state[end].tracked_strategies))
+    # save player state and control hists (carry forward beliefs from previous step).
+    # solve_info is deliberately NOT carried forward: it is per-step diagnostics.
+    prev1, prev2 = game.p1_state[end], game.p2_state[end]
+    p1 = player_struct(; rv_0_hist          = rv_E_hist,
+                         fp_belief          = deepcopy(prev1.fp_belief),
+                         strategy_belief    = deepcopy(prev1.strategy_belief),
+                         tracked_strategies = deepcopy(prev1.tracked_strategies),
+                         learner_state      = deepcopy(prev1.learner_state))
+    p2 = player_struct(; rv_0_hist          = rv_P_hist,
+                         fp_belief          = deepcopy(prev2.fp_belief),
+                         strategy_belief    = deepcopy(prev2.strategy_belief),
+                         tracked_strategies = deepcopy(prev2.tracked_strategies),
+                         learner_state      = deepcopy(prev2.learner_state))
     players = [p1, p2]
 
     # compute all possible Δv solutions - 

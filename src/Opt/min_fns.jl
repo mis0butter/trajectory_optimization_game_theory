@@ -1,15 +1,16 @@
 ## ====================================================================
 
 "Minimize Δv for trajectory with N segments "
-function min_Δv(  
-    rv_0,               # initial position vector 
-    rv_f,               # final position vector 
-    tof,                # time of flight 
-    N      = 20,        # number of segments 
-    mu     = 1.0,       # gravitational parameter 
+function min_Δv(
+    rv_0,               # initial position vector
+    rv_f,               # final position vector
+    tof,                # time of flight
+    N      = 20,        # number of segments
+    mu     = 1.0,       # gravitational parameter
+    ;                   # --- keyword-only below (see note in min_Δv_dist) ---
     dm     = "pro",     # direction of motion
-    Δv_max = 2.0,       # maximum Δv 
-) 
+    Δv_max = 2.0,       # maximum per-segment Δv [km/s]
+)
 
     tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm ) 
     x_0 = reshape( Δv_vec, N*3, 1 ) 
@@ -36,24 +37,43 @@ export min_Δv
 
 ## ====================================================================
 
-"Minimize Δv for trajectory with N segments "
-function min_Δv_dist(  
-    rv_0,               # initial position vector 
-    rv_f,               # final position vector 
-    tof,                # time of flight 
-    N      = 20,        # number of segments 
-    mu     = 1.0,       # gravitational parameter 
-    dm     = "pro",     # direction of motion
-    Δv_max = 2.0,       # maximum Δv 
-) 
+"""
+    min_Δv_dist(rv_0, rv_f, tof, N, mu; dm, Δv_max, w_miss)
 
-    tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm ) 
-    x_0 = reshape( Δv_vec, N*3, 1 ) 
-    
-    # define objective function 
-    obj_fn(x) = + sum_norm_Δv( x, N ) + 
-                miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
-    
+Minimize Δv for a trajectory with N segments, targeting `rv_f`.
+
+`dm` and `Δv_max` are **keyword-only, deliberately**. They used to be positional
+arguments 6 and 7, and the only production call site (`compute_players_XU`)
+passed five positional arguments — so `Δv_max` silently fell back to its 2.0 km/s
+default and the cap was never threaded from `params`. Making them keywords means
+a caller can set `Δv_max` without also having to know about `dm` (defect D6).
+
+`w_miss` scales the terminal-miss term against the fuel term. This weighting is
+not cosmetic: the miss term is a distance in km (order 1-40 at the Lambert
+initial guess) while `sum_norm_Δv` returns an energy-like Σ‖Δv‖² in (km/s)²
+(order 1e-3), so at `w_miss = 1.0` the miss term outweighs fuel by roughly three
+orders of magnitude and the solve is effectively pure targeting with fuel
+ignored (defect D11). Default 1.0 preserves the historical behavior exactly.
+"""
+function min_Δv_dist(
+    rv_0,               # initial position vector
+    rv_f,               # final position vector
+    tof,                # time of flight
+    N      = 20,        # number of segments
+    mu     = 1.0,       # gravitational parameter
+    ;                   # --- keyword-only below ---
+    dm     = "pro",     # direction of motion
+    Δv_max = 2.0,       # maximum per-segment Δv [km/s]
+    w_miss = 1.0,       # weight on the terminal miss term
+)
+
+    tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm )
+    x_0 = reshape( Δv_vec, N*3, 1 )
+
+    # define objective function
+    obj_fn(x) = + sum_norm_Δv( x, N ) +
+                w_miss * miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu )
+
     # inequality constraint ? 
     h_fn(x) = constrain_Δv( x, N, Δv_max ) 
     
@@ -76,17 +96,18 @@ function max_Δv_dist(
     rv_0,               # initial position vector 
     rv_f,               # final position vector 
     tof,                # time of flight 
-    N      = 20,        # number of segments 
-    mu     = 1.0,       # gravitational parameter 
+    N      = 20,        # number of segments
+    mu     = 1.0,       # gravitational parameter
+    ;                   # --- keyword-only below (see note in min_Δv_dist) ---
     dm     = "pro",     # direction of motion
-    Δv_max = 2.0,       # maximum Δv 
-) 
+    Δv_max = 2.0,       # maximum per-segment Δv [km/s]
+)
 
-    tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm ) 
-    x_0 = reshape( Δv_vec, N*3, 1 ) 
-    
-    # define objective function 
-    obj_fn(x) = - sum_norm_Δv( x, N ) - 
+    tof_N, Δv_vec = lambert_init_guess( rv_0, rv_f, tof, N, mu, dm )
+    x_0 = reshape( Δv_vec, N*3, 1 )
+
+    # define objective function
+    obj_fn(x) = - sum_norm_Δv( x, N ) -
                 miss_distance_prop_kepler_Nseg( rv_0, x, N, rv_f, tof_N, mu ) 
     
     # inequality constraint ? 

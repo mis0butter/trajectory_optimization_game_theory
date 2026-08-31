@@ -824,8 +824,6 @@ function plot_game_stats(game, params)
     ax3 = Axis(fig[3, 1], xlabel="time", title="player distance")
     lines!(ax3, 1:length(r_norm), r_norm, color=:green)
 
-    @exfiltrate
-
     return fig
 end
 

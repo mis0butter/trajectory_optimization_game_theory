@@ -130,11 +130,11 @@ function min_aug_L_eq(
         k += 1 
 
         # step 1: assign augmented Lagrangian fn 
-        fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_k, p_k ) 
-        dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
+        fn(x_k) = aug_L_fn( obj_fn, c_fn, x_k, λ_k, p_k )
 
-        # step 2: minimize unconstrained problem  
-        # x_min = min_bfgs( fn, dfn, x_k )  
+        # step 2: minimize unconstrained problem
+        # (min_optim builds its own gradient closure; the one that used to be
+        #  constructed here was dead, since the inner solver never called it.)
         x_min = min_optim( fn, x_k )
         
         # step 3 check convergence ... 
@@ -180,11 +180,11 @@ function min_aug_L_ineq(
         k += 1 
 
         # step 1: assign augmented Lagrangian fn 
-        fn(x_k) = aug_L_ineq_fn( obj_fn, h_fn, x_k, λ_k, p_k ) 
-        dfn     = x_k -> ForwardDiff.gradient( fn, x_k ) 
+        fn(x_k) = aug_L_ineq_fn( obj_fn, h_fn, x_k, λ_k, p_k )
 
-        # step 2: minimize unconstrained problem  
-        # x_min = min_bfgs( fn, dfn, x_k )  
+        # step 2: minimize unconstrained problem
+        # (min_optim builds its own gradient closure; the one that used to be
+        #  constructed here was dead, since the inner solver never called it.)
         x_min = min_optim( fn, x_k )
 
         # step 3 check convergence ... 

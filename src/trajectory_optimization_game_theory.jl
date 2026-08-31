@@ -13,7 +13,8 @@ using Optim                 # think i only use ... some functions
 # Modeling
 # using LazySets              # don't think I use this 
 using JuMP: JuMP, @variable, @constraint, @objective
-using OSQP: OSQP
+using OSQP: OSQP          # retained for comparison benchmarks; not the active LP backend
+using Ipopt: Ipopt        # matrix-game LP backend (see solve_simplex_lp)
 
 using StatsBase: ProbabilityWeights, sample
 using Statistics: mean, var, std

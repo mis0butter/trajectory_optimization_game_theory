@@ -51,7 +51,22 @@ function init_game(
     # save reference orbit 
     kep0_ref_E = copy(kep0_E)
 
-    # game parameters 
+    # --- trajectory optimization ---
+    # Defaults chosen to reproduce the historical behavior exactly, so that adding
+    # these knobs changes no number until someone deliberately sets one.
+    #   Δv_max: measured max per-segment ‖Δv‖ is ~0.022 km/s, so 2.0 is inactive by
+    #           a factor of ~90.  Even the paper's stated 0.1 km/s would not bind;
+    #           binding requires ~0.02.  See defect D6.
+    #   w_miss: weight on terminal miss relative to fuel.  See defect D11 and the
+    #           docstring of min_Δv_dist.
+    Δv_max = 2.0
+    w_miss = 1.0
+
+    # --- stage cost weights (see stage_cost in matrix_game_solver.jl) ---
+    λ1 = 1.0    # separation term
+    λ2 = 0.1    # differential-fuel term
+
+    # game parameters
     params = (
         mu=mu,
         r=r,
@@ -63,7 +78,11 @@ function init_game(
         T=T,
         strategy=p1_strategy,
         p2_strategy=p2_strategy,
-        R_polygon=R_polygon
+        R_polygon=R_polygon,
+        Δv_max=Δv_max,
+        w_miss=w_miss,
+        λ1=λ1,
+        λ2=λ2
     )
 
     # save rv_ref from E to position for vertices of polygon 
@@ -73,7 +92,10 @@ function init_game(
     # save player state and control hists 
     tracked_strategies = ["mixed", "greedy", "random", 1, 2, 3, 4, 5, 6]
     strategy_belief = ones(length(tracked_strategies)) / length(tracked_strategies)
-    p = player_struct([], [], [], [], [], [], [], [], [], [], ones(6), strategy_belief, tracked_strategies)
+    # NOTE: ones(6) hardcodes the hexagon arity; see C4 (vertex ablation), which
+    # must also touch polygon_vertices, tracked_strategies above, and the cost
+    # matrix allocation in compute_cost_matrices.
+    p = player_struct(; fp_belief=ones(6), strategy_belief, tracked_strategies)
     players = [p, deepcopy(p)]
 
     players[1].rv_0_hist = rv_E_hist

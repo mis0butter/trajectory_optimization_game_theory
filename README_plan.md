@@ -4,6 +4,55 @@
 
 ---
 
+## Status — Aug 31 2026
+
+Gate A is roughly two-thirds done. Per-defect detail is in the §3 `Status` column and notes.
+
+**Landed (all verified value-preserving except where a fix is the point):**
+
+- **A1 / D1 — the LP is fixed.** `sms(-A)` for P1, `sms(A')` for P2, orientation derived from
+  `stage_cost` rather than assumed. Value threaded (`V`, `V_lo`, `V_hi`, `gap`); weights
+  normalized centrally; the `z >= 1e-4` floor dropped; `zeros(6,6)` derived from `n_vertices`.
+- **LP backend OSQP → Ipopt** (`tol=1e-14`), decided by measurement — see note [c].
+- **`nash_certificate`** — solver-independent saddle-point residual, plus a never-throw
+  record-and-fall-back policy.
+- **A6.0 / D10 — the AD path works for the first time.** One line in `cart2kep`. Gated bitwise
+  on 20,000 states and against `central_fdm(5,1)` to 1.6e-9.
+- **A5 / D8** — `@exfiltrate` removed, `load_games_vec` repaired, `prop_rv_ref` aliasing bug
+  fixed (`copy` on `params.kep0_ref_E`), `@elapsed` instrumentation on every trajectory solve
+  and every LP.
+- **D6 plumbing** — `dm`/`Δv_max` keyword-only; `params` gained `Δv_max`, `w_miss`, `λ1`, `λ2`.
+- **Schema (was Gate C's C2, pulled forward)** — `player_struct` gained `solve_info` and
+  `learner_state` plus an all-keyword constructor, so future fields stop requiring lockstep
+  edits at three sites. Done now because there is zero saved data to invalidate.
+- **`src/game_theory/exploitability.jl`** — `exploitability`, `exploitability_series`,
+  `belief_exploitability`.
+- **`test/runtests.jl`** — was 6 lines testing nothing; now **3077 passing, 0 failing, 2
+  intentional `@test_broken`** that pin D4 and D11 so the fixes flip them.
+
+**Remaining in Gate A:** task zero (`CLAUDE.md`); A4 (D4 stage cost, note [d]); D11 rescaling;
+A6 (Ipopt for the *trajectory optimizer* — still Nelder-Mead today); D5 (note [e]); smoke sweep.
+
+**Two headline changes to the plan's premises:**
+
+1. **D3 is dead** — see note [a]. §9 risk 2 does not fire, and A3 leaves the critical path.
+2. **§9 risk 4 was wrong** — the AD path was *not* de-risked; it was broken (D10), and the
+   LBFGS fallback shared the same broken dependency. Fixed, but it means A6's justification is
+   now D11 + convergence statistics, not reachability.
+
+**Corrections to §1 (this machine):**
+
+- **`test/results/` does not exist here** and was never copied — it is gitignored, so the ~12 GB
+  never left the old machine. Gate A generated its own inputs instead; this cost ~1 minute.
+- **32 cores / 62 GB RAM / 1.4 TB free**, not 8 cores. Measured **56 ms** per trajectory solve
+  in steady state (the 1.19 s first-call figure is JIT), **46 s** per 30-step game
+  single-threaded → **~45 min for a full 5×5 sweep**, not 2 h 51 min.
+- Julia is **1.12.7**; `Manifest.toml` was resolved under 1.11.1. Working so far, but any
+  `Pkg.add` re-resolves it — see A6.
+- The repo is on branch **`aamas`**, not `main`. `README.md` does not exist.
+
+---
+
 ## 0. Context
 
 `/Users/june/research/game_theory_space` is a Julia package (`trajectory_optimization_game_theory`) implementing a two-spacecraft orbital pursuit-evasion game. An evader (P1) follows a reference orbit while a pursuer (P2) tries to close distance. At each game step both players generate six candidate trajectories targeting the vertices of a hexagon around the reference orbit, form a 6×6 zero-sum matrix game, solve it by LP, and pick a vertex according to a strategy (mixed / greedy / random / fictitious-play variants).
@@ -34,8 +83,8 @@ Do **not** claim "the game is time-varying" as novelty — it is not. Treat the 
 - Julia with the repo's `Project.toml` / `Manifest.toml`. `Pkg.instantiate()` from the repo root.
 - **Launch Julia with threads:** `julia -t 8 --project=.`. `Threads.nthreads()` defaults to **1**, and `run_MC_games_parallel` uses `Threads.@threads` — without this every sweep runs serially.
 - All result paths are **relative**; scripts must be run from the repo root.
-- **Disk:** `test/results/` currently holds ~12 GB. Gate A diagnostics need only `test/results/n30/` (~1.4 GB, 25 files at ~59 MB) copied to the new machine. Budget 20–40 GB for new runs unless B2 (slim persistence) lands first.
-- **Measured baseline cost:** the 5×5 sweep at 50 games × 30 steps took **2 h 51 min** wall clock on an 8-core machine, ~6 min per matchup, derived from output file mtimes.
+- **Disk:** ~~`test/results/` currently holds ~12 GB.~~ **Superseded — see Status above: it does not exist on this machine.** Gate A diagnostics need only `test/results/n30/` (~1.4 GB, 25 files at ~59 MB) copied to the new machine. Budget 20–40 GB for new runs unless B2 (slim persistence) lands first.
+- **Measured baseline cost (superseded — see Status):** the 5×5 sweep at 50 games × 30 steps took **2 h 51 min** wall clock on an 8-core machine, ~6 min per matchup, derived from output file mtimes.
 
 ---
 
@@ -55,17 +104,82 @@ Before any code changes, write `CLAUDE.md` at the repo root (README.md is curren
 
 ## 3. Verified defects
 
-| # | Defect | Location | Consequence |
+D1–D9 are the original audit. **D10–D13 were found on Aug 31** while executing Gate A; the
+`Status` column and the notes after the table are the current state.
+
+| # | Defect | Location | Consequence | Status |
+|---|---|---|---|---|
+| D1 | **LP sign inversion.** `solve_mixed_security_strategy` returns the row player's *minimizing* security strategy. `solve_mixed_nash(A)` therefore gives the evader a distance-minimizing mixed strategy and the pursuer a distance-maximizing one — both reversed. Verified numerically on a matrix with a known saddle point: the evader is assigned ~1.0 weight on its worst row. | `matrix_game_solver.jl:55-59` | Every `mixed` and `greedy` number in the CDC tables is the equilibrium of the reversed game. Reviewer 7 #2, Reviewer 8 #1. | **FIXED** Aug 31. `sms(-A)`/`sms(A')`, orientation derived from `stage_cost`. Pinned by a test asserting the old pairing is exploitable. |
+| D2 | **No Monte Carlo.** `init_game` hardcodes both orbits; `rand_IC` exists but its only call site is commented out. Only the vertex-sampling RNG varies between trials. | `IC.jl:19-26`, `IC.jl:24-25` | For deterministic matchups (greedy/greedy, greedy/FP-greedy, FP-greedy/FP-greedy) all 50 trials are bit-identical — those cells are N=1. `results.md:12` claims "independent initial conditions." | **OPEN** — Gate B (B1). |
+| D3 | **Candidate trajectories may not reach their vertices.** `min_Δv_dist` folds terminal miss distance into the *objective* at weight 1.0 instead of constraining it; `sum_norm_Δv` returns Σ‖Δv‖² despite its name. | `min_fns.jl:54-55`, `obj_fns.jl:160-171` | If the miss is comparable to R=6.378 km the action space is fiction and both the lifting proposition and the safety claim collapse. Reviewer 5 #3. **Existential — measure in week 1.** | **RESOLVED — NOT A DEFECT.** Measured 2880 on-policy samples: median miss **4.1 cm**, p95 8.1 cm, max 18 cm = 2.8e-5·R. See note [a]. |
+| D4 | **Stage cost is not fuel.** Code computes `0.1*norm(u1-u2)` — the norm of the *difference* of control vectors, which rewards the evader for thrusting differently from the pursuer and the pursuer for matching thrust direction. Paper Eq. (9) writes `λ₂(‖u_P‖ − ‖u_E‖)`, which is differential fuel and *is* meaningful. | `matrix_game_solver.jl:179-190` | The implemented objective has no physical interpretation. Reviewer 7 minor #1. | **OPEN** — Day 4. Note the sign trap in [d]. |
+| D5 | **`Meta_*` pursuer transpose.** P2's meta branches use `players[2].cost * predicted_v_probs`; the FP branches correctly use `cost'`. | `matrix_game_solver.jl:394-405` | Indexes the wrong axis. Invalidates all existing `Meta_*`-as-P2 data. | **OPEN** — Day 8. Three defects, not two: see [e]. |
+| D6 | **ΔV constraint inert.** `Δv_max = 2.0` km/s default, never threaded from `params`; observed max per-segment ‖Δv‖ ≈ 0.591 km/s. The paper states 0.1 km/s. | `min_fns.jl:47`, `matrix_game_solver.jl:158` | The constraint never binds, so "comparable ΔV budgets" is unsupported. Four separate literals would need editing to change it. | **CONFIRMED, reframed.** Measured max ‖Δv‖ = **0.0221 km/s**, not 0.591. Plumbing fixed (keyword args + `params.Δv_max`); see [b]. |
+| D7 | **Silent LP failure.** The `OPTIMAL` check is a non-fatal `println`; the `error` is commented out. OSQP is a first-order ADMM QP solver (default tolerance ~1e-3) being used on a pure LP, with a `z ≥ 1e-4` floor. | `matrix_game_solver.jl:103-128` | A bad solve is currently invisible, and the weights feed `ProbabilityWeights` and will feed exploitability arithmetic. Severity **unmeasured** — see A1. | **QUANTIFIED and FIXED.** 0.83% `ALMOST_OPTIMAL` under OSQP. Solver swapped to Ipopt; see [c]. |
+| D8 | Live `@exfiltrate` in an analysis path; `load_games_vec` reads a path layout `save_games_vec` no longer writes. | `Utils.jl:301`, `plotting.jl:827`, `Utils.jl:367-378` | Analysis drops into Infiltrator; loader is dead code. | **FIXED** Aug 31. `@exfiltrate` removed; `load_games_vec` repaired to the `n<k>/` layout. |
+| D9 | **Derivative-free inner solver.** The trajectory optimizer is a hand-rolled augmented Lagrangian whose inner solve is `Optim.optimize(fn, dfn, x_0, NelderMead())` — Nelder-Mead on a 30-dimensional problem (N=10 segments × 3), discarding the ForwardDiff gradient `dfn` that is built and passed to it. | `min_fns.jl:109-124`, `aug_L.jl:184-196` | Nelder-Mead stagnates above ~10 dimensions. Likely a direct cause of D3 (poor terminal miss) and of D6 (the ΔV penalty never activating). Reviewer 7 #1 asked for solver details and real-time suitability. | **CONFIRMED, reframed.** Nelder-Mead is *not* failing at targeting (4 cm miss from a 2.4–39 km Lambert guess). Real cost is D11 + no convergence stats. **OPEN** — Day 7. |
+| D10 | **AD path broken — no gradient exists.** `cart2kep` allocates `oe = zeros(6)` (a `Vector{Float64}`) then assigns orbital elements into it. It sits on the objective's call path via `prop_kepler_tof:125` → `prop_kepler_tof_Nseg:174`, so `ForwardDiff.gradient` of the trajectory objective throws `MethodError` on `setindex!` with a `Dual`. Invisible because the only consumer of that gradient was `NelderMead()`, which never evaluates it. | `propagator.jl:179-186` | **Invalidates §9 risk 4.** No gradient-based solver — Ipopt, LBFGS, or the existing `min_bfgs` — could ever have run. The plan's LBFGS fallback shared the same broken dependency, so it was not a hedge. | **FIXED** Aug 31. One line. Gated: bitwise identical on 20,000 random states, and ForwardDiff now matches `central_fdm(5,1)` to 1.6e-9. |
+| D11 | **The fuel objective is inert.** In `min_Δv_dist` the terminal-miss term is a distance in km (1–40 at the Lambert guess) while `sum_norm_Δv` returns Σ‖Δv‖² in (km/s)² (~1e-3). At the implicit weight of 1.0 the miss term outweighs fuel by ~3 orders of magnitude. | `min_fns.jl:74-75`, `obj_fns.jl:159-171` | `min_Δv_dist` does not minimize Δv in any meaningful sense — it is a pure targeting solve. "Comparable ΔV budgets" is unsupported, and D4's stage cost operates on Δv values that were never fuel-optimized. **This is the real defect D3 was standing in front of.** | **OPEN** — Day 5. `w_miss` knob added (default 1.0 = no change). Needs a deliberate rescaling, not just uncommenting `obj_fns.jl:166`. |
+| D12 | **Augmented Lagrangian double-counts the objective.** `min_aug_L_eq_ineq` sums `aug_L_fn` and `aug_L_ineq_fn`, each of which already includes `obj_fn(x)`, giving `2·obj_fn(x)` + both penalty sets. The correct single-call form (`aug_L_eq_ineq_fn`) exists and is commented out one line below. | `aug_L.jl:241-243` | The objective is weighted 2× against the constraints, so both are systematically under-enforced. Off the game hot path (`min_Δv_dist` → `min_aug_L_ineq`), but reached by `min_Δv` — the "correct pattern" for hard-constraining miss distance. | **OPEN**, deferred. Dies with the file if A6 drops the hand-rolled AL as planned. |
+| D13 | **Opponent identification is structurally uncomputable for FP opponents.** `tracked_strategies` is `["mixed","greedy","random",1..6]` — it contains no `FP_*` or `Meta_*` hypotheses. | `IC.jl:74` | `p1_correct_id_rate` / `p2_correct_id_rate` are `NaN` against every FP opponent; `test/MC_results_late_game.csv` confirms this for all FP columns. `results.md` reports "correct-ID rate is 1.0 for all identifiable opponents" — true only because FP opponents are excluded by the word *identifiable*. The metric was never computed for the opponents the paper is about. | **OPEN** — a modeling gap, not a bug: extending it needs the opponent's `fp_belief`, which a player does not observe. Surface in the writing. |
+
+### Notes
+
+**[a] D3 is dead — the lifting is real.** Measured Aug 31 over 2880 on-policy samples (8 seeds x
+30 steps x 2 players x 6 vertices, `random/random`):
+
+| | median | p95 | max |
 |---|---|---|---|
-| D1 | **LP sign inversion.** `solve_mixed_security_strategy` returns the row player's *minimizing* security strategy. `solve_mixed_nash(A)` therefore gives the evader a distance-minimizing mixed strategy and the pursuer a distance-maximizing one — both reversed. Verified numerically on a matrix with a known saddle point: the evader is assigned ~1.0 weight on its worst row. | `matrix_game_solver.jl:55-59` | Every `mixed` and `greedy` number in the CDC tables is the equilibrium of the reversed game. Reviewer 7 #2, Reviewer 8 #1. |
-| D2 | **No Monte Carlo.** `init_game` hardcodes both orbits; `rand_IC` exists but its only call site is commented out. Only the vertex-sampling RNG varies between trials. | `IC.jl:19-26`, `IC.jl:24-25` | For deterministic matchups (greedy/greedy, greedy/FP-greedy, FP-greedy/FP-greedy) all 50 trials are bit-identical — those cells are N=1. `results.md:12` claims "independent initial conditions." |
-| D3 | **Candidate trajectories may not reach their vertices.** `min_Δv_dist` folds terminal miss distance into the *objective* at weight 1.0 instead of constraining it; `sum_norm_Δv` returns Σ‖Δv‖² despite its name. | `min_fns.jl:54-55`, `obj_fns.jl:160-171` | If the miss is comparable to R=6.378 km the action space is fiction and both the lifting proposition and the safety claim collapse. Reviewer 5 #3. **Existential — measure in week 1.** |
-| D4 | **Stage cost is not fuel.** Code computes `0.1*norm(u1-u2)` — the norm of the *difference* of control vectors, which rewards the evader for thrusting differently from the pursuer and the pursuer for matching thrust direction. Paper Eq. (9) writes `λ₂(‖u_P‖ − ‖u_E‖)`, which is differential fuel and *is* meaningful. | `matrix_game_solver.jl:179-190` | The implemented objective has no physical interpretation. Reviewer 7 minor #1. |
-| D5 | **`Meta_*` pursuer transpose.** P2's meta branches use `players[2].cost * predicted_v_probs`; the FP branches correctly use `cost'`. | `matrix_game_solver.jl:394-405` | Indexes the wrong axis. Invalidates all existing `Meta_*`-as-P2 data. |
-| D6 | **ΔV constraint inert.** `Δv_max = 2.0` km/s default, never threaded from `params`; observed max per-segment ‖Δv‖ ≈ 0.591 km/s. The paper states 0.1 km/s. | `min_fns.jl:47`, `matrix_game_solver.jl:158` | The constraint never binds, so "comparable ΔV budgets" is unsupported. Four separate literals would need editing to change it. |
-| D7 | **Silent LP failure.** The `OPTIMAL` check is a non-fatal `println`; the `error` is commented out. OSQP is a first-order ADMM QP solver (default tolerance ~1e-3) being used on a pure LP, with a `z ≥ 1e-4` floor. | `matrix_game_solver.jl:103-128` | A bad solve is currently invisible, and the weights feed `ProbabilityWeights` and will feed exploitability arithmetic. Severity **unmeasured** — see A1. |
-| D8 | Live `@exfiltrate` in an analysis path; `load_games_vec` reads a path layout `save_games_vec` no longer writes. | `Utils.jl:301`, `plotting.jl:827`, `Utils.jl:367-378` | Analysis drops into Infiltrator; loader is dead code. |
-| D9 | **Derivative-free inner solver.** The trajectory optimizer is a hand-rolled augmented Lagrangian whose inner solve is `Optim.optimize(fn, dfn, x_0, NelderMead())` — Nelder-Mead on a 30-dimensional problem (N=10 segments × 3), discarding the ForwardDiff gradient `dfn` that is built and passed to it. | `min_fns.jl:109-124`, `aug_L.jl:184-196` | Nelder-Mead stagnates above ~10 dimensions. Likely a direct cause of D3 (poor terminal miss) and of D6 (the ΔV penalty never activating). Reviewer 7 #1 asked for solver details and real-time suitability. |
+| terminal miss | 4.1 cm | 8.1 cm | 18 cm |
+| as a fraction of R = 6.378 km | 6.5e-6 | 1.3e-5 | 2.8e-5 |
+
+No late-game degradation (steps 25-30 indistinguishable from 1-6), no player asymmetry. The
+decision rule `p95 < R/2` passes with ~40,000x margin. **Section 9 risk 2 does not fire.** The
+miss is now recorded per solve in `player_struct.solve_info.traj`, so it is monitored
+continuously rather than by an offline probe, and `test/runtests.jl` asserts it.
+
+**[b] D6 reframed - the dV cap is irrelevant, not merely un-threaded.** Measured max per-segment
+norm(dv) = **0.0221 km/s**. The original claim of 0.591 km/s is **not reproduced** - it is 27x
+smaller. Critically, **the paper's stated 0.1 km/s would also never bind**; binding requires
+~0.02. So the honest fix is not "set it to 0.1 and now the constraint is real" - it is either to
+state that the constraint is inactive at this scenario scale, or to choose a cap reflecting an
+actual thruster. Plumbing is fixed either way: `dm`/`dv_max` are now keyword-only, and
+`params.dv_max` / `params.w_miss` thread to the call site.
+
+**[c] D7 measured, and the solver replaced.** 0.83% of OSQP solves returned `ALMOST_OPTIMAL`,
+silently, into `ProbabilityWeights`. A solver-independent `nash_certificate` (saddle-point
+residual; consults no status flag) was added and the backends benchmarked over 300 random 6x6
+games:
+
+| backend | median residual | fraction > 1e-8 | ms |
+|---|---|---|---|
+| OSQP, defaults (**the CDC-era solver**) | 1.7e-3 | **100%** | 22.8 |
+| OSQP, polish + eps 1e-9 | 2.6e-16 | **24%** (bimodal) | 9.4 |
+| OSQP, polish + eps 1e-12 | 2.6e-16 | 25% (bimodal) | 21.4 |
+| **Ipopt, tol 1e-14** | **2.7e-14** | **0%** | **3.3** |
+
+OSQP-with-polish is exact when polish succeeds and ~5e-3 when it does not; tightening tolerances
+does not move that split. **Every CDC-era LP was solved to roughly three decimal places.** Ipopt
+is uniformly accurate, fastest, and already a dependency - no Manifest change. This table is the
+solver characterization Reviewer 7 #1 asked for. Failure policy is now record-and-fall-back
+(never `error()` inside `Threads.@threads`), so the failure *rate* becomes a reportable number.
+
+**[d] A4 sign trap.** The "intended" form commented at `matrix_game_solver.jl:324` is
+`0.1*(norm(u1) - norm(u2))`. Under the corrected D1 orientation `stage_cost` is P1's payoff and
+P1 *maximizes* it, so with `u1 = u_E`, `u2 = u_P` the paper's Eq. (9) requires
+`lambda2*(norm(u2) - norm(u1))` - the commented line is **sign-inverted**. Uncommenting it would
+survive A1 and quietly poison Gate B. Pinned by a `@test_broken` in `test/runtests.jl`.
+
+**[e] D5 is three defects, not two.** P2's `Meta_greedy` (`:562-566`) is missing the transpose
+*and* uses `argmin` where the correct `FP_greedy` P2 branch (`:550-553`) uses `argmax` - since
+`players[2].cost = -A`, `argmax` is right. `Meta_mixed` (`:568-573`) is missing the transpose
+*and* has its weight formula inverted relative to `FP_mixed`. Because both dimensions are 6, the
+axis error produces a plausible-looking index instead of erroring.
+
+**Not a defect, but state it in the paper.** `axis_123` is *not* an orthogonal frame:
+`a1 . a2 = -9.9e-3 ~ -e`. The hexagon lies in the `a2`-`a3` (radial/normal) plane, **not** the
+plane normal to velocity; those coincide only for a circular orbit and differ by ~0.57 deg at
+e=0.01. Reviewer 5 #1 asked exactly how vertex positions are obtained, so say which plane.
 
 ---
 
@@ -181,7 +295,7 @@ Cut from the bottom: **`Meta_*` promotion** → **24-vertex ablation** (keep 6/1
 ## 9. Risks
 
 1. **The headline may shrink.** With correct signs, `mixed` becomes genuinely unexploitable and FP's gain against it should approach zero — that is what minimax *means*. The exploitation-vs-safety framing is robust to this because it predicts it, but the abstract cannot be written before Gate B closes.
-2. **D3 could be fatal.** If candidates do not reach their vertices, the action space is ill-defined and Gate A expands into fixing the trajectory optimizer. Hence the week-1 placement.
+2. ~~**D3 could be fatal.**~~ **RETIRED Aug 31.** Measured: median terminal miss 4.1 cm against R = 6.378 km, no late-game degradation. The action space is well defined and the lifting is faithful. See note [a].
 3. **Novelty pressure from [3].** Peters et al. covers lifting, mixed strategies, receding horizon, time-varying payoffs, and a randomized-IC tournament with SEM. The delta is online opponent modeling and the exploitation/safety tradeoff. Everything in the paper should be pointed at that delta; anything that reads as "Peters et al. applied to orbits" should be cut.
-4. **The Ipopt migration (A6) is the largest single code risk.** It touches the innermost, most-called function in the system and perturbs every trajectory in every result. Mitigations: it lands in Gate A, before the expensive sweeps, so nothing is re-run twice; the objective is already ForwardDiff-differentiable, so the AD path is de-risked; and the LBFGS fallback is a two-line change if JuMP's nonlinear interface resists. If A6 slips past Sep 6, take the fallback rather than pushing the Gate B re-run.
+4. **The Ipopt migration (A6) is the largest single code risk.** It touches the innermost, most-called function in the system and perturbs every trajectory in every result. **One stated mitigation was false and has been corrected:** the objective was *not* ForwardDiff-differentiable (D10), and the LBFGS fallback shared that same broken dependency, so it was never a hedge. Both are fixed as of Aug 31 — AD now matches finite differences to 1.6e-9 — so the mitigation is real now rather than assumed. The remaining mitigations stand: it lands in Gate A before the expensive sweeps, and LBFGS is a small change if JuMP's nonlinear interface resists. If A6 slips past Sep 6, take the fallback rather than pushing the Gate B re-run.
 5. **Ipopt may change the story, not just the numbers.** Better convergence should lower terminal miss (helping D3) and make the ΔV constraint bindable (fixing D6) — but it also means the corrected `mixed`/`greedy` strategies are being computed on a *different, better* action set than the CDC results used. Treat every CDC number as void; do not attempt reconciliation.

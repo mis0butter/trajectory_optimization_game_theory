@@ -129,8 +129,11 @@ export find_ref_orbit
 
 function prop_rv_ref(kep_ref_E, params)
 
-    # save OG reference orbit 
-    kep0_ref_E = params.kep0_ref_E
+    # save OG reference orbit
+    # `copy` is load-bearing: params.kep0_ref_E is a mutable Vector shared with
+    # game.params[1], so assigning into it without copying overwrites the stored
+    # reference elements on every game step (and races across threads).
+    kep0_ref_E = copy(params.kep0_ref_E)
     kep0_ref_E[end] = kep_ref_E[end]
 
     rv0_ref_E = kep2cart(kep0_ref_E, params.mu)

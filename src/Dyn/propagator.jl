@@ -176,13 +176,12 @@ function cart2kep(rv, mu)
     tanom = mod(xlambdat - raan - argper, pi2)
 
     # load orbital element vector
-    oe = zeros(6)
-    oe[1] = sma
-    oe[2] = eccm
-    oe[3] = inc
-    oe[4] = raan
-    oe[5] = argper
-    oe[6] = tanom
+    # NOTE: built by concatenation, not `zeros(6)` + setindex!.  Preallocating a
+    # Vector{Float64} here silently broke every gradient-based solver: ForwardDiff
+    # propagates Dual numbers through rv, and assigning a Dual into a Float64 array
+    # throws MethodError.  This went unnoticed because the only caller of the
+    # ForwardDiff gradient was NelderMead, which never evaluates it (see D9/D10).
+    oe = [sma, eccm, inc, raan, argper, tanom]
 
     return oe
 end

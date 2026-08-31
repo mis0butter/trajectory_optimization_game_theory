@@ -298,8 +298,6 @@ function p_rv_ref_hist(game, params=game.params[1])
     p2_rv_hist = float.(mapreduce(permutedims, hcat, p2_rv_hist)')
     rv_ref_hist = float.(mapreduce(permutedims, hcat, rv_ref_hist)')
 
-    @exfiltrate
-
     return tt_hist, p1_rv_hist, p2_rv_hist, rv_ref_hist
 end
 
@@ -364,13 +362,25 @@ export save_games_vec
 
 ## ====================================================================
 
-function load_games_vec(N_games, p1_strategy="mixed", p2_strategy="mixed")
+"""
+    load_games_vec(N_games, n_game_steps, p1_strategy, p2_strategy)
 
-    # save_folder = string( "test/results/", p1_strategy, "/" ) 
-    save_folder = string("test/results/", "p1_", p1_strategy, "_p2_", p2_strategy, "/")
+Inverse of `save_games_vec`. The layout below must stay in sync with the one
+written there: `test/results/n<k_max>/p1_<P1>_p2_<P2>/games_<N>.jld2`.
+
+(Previously this read `test/results/p1_X_p2_Y/...` — missing the `n<k_max>`
+level — so it could never load anything `save_games_vec` wrote. It had no call
+sites, which is why the breakage went unnoticed.)
+"""
+function load_games_vec(N_games, n_game_steps, p1_strategy="mixed", p2_strategy="mixed")
+
+    save_folder = string("test/results/n", n_game_steps,
+                         "/p1_", p1_strategy, "_p2_", p2_strategy, "/")
 
     filename = string("games_", N_games, ".jld2")
     full_filename = string(save_folder, filename)
+
+    isfile(full_filename) || error("no saved games at $full_filename")
 
     @load full_filename games_vec
 

@@ -43,6 +43,8 @@ function game_cost(x, y, A)
     x' * A * y
 end
 
+export game_cost
+
 """
 A zero-sum game solver that casts the game as linear program.
 """
@@ -52,79 +54,207 @@ struct MatrixGameSolver <: FiniteGameSolver end
 #     solve_mixed_nash( A )
 # end 
 
+"Project a raw LP iterate onto the probability simplex (clamp, then normalize)."
+function normalize_simplex(w)
+    v = max.(vec(w), 0.0)
+    s = sum(v)
+    s > 1e-12 ? v ./ s : fill(inv(length(v)), length(v))
+end
+
+export normalize_simplex
+
+"""
+    nash_certificate(A, x, y, V)
+
+Solver-independent check that `(x, y, V)` really is a saddle point of the
+zero-sum game with P1 payoff `A`, where P1 maximizes and P2 minimizes.
+
+Deliberately consults no solver status flag. OSQP is a first-order ADMM method
+being used on a pure LP; asking it whether it converged is weaker evidence than
+checking the optimality conditions directly. Reported as a scale-free residual so
+it can be aggregated across game steps with wildly different cost magnitudes.
+"""
+function nash_certificate(A, x, y, V)
+    scale = max(1.0, maximum(abs, A))
+    v_bilinear = game_cost(x, y, A)
+    violation = max(
+        abs(sum(x) - 1),                # x on the simplex
+        abs(sum(y) - 1),                # y on the simplex
+        max(0.0, -minimum(x)),          # x nonnegative
+        max(0.0, -minimum(y)),          # y nonnegative
+        max(0.0, maximum(A * y) - V),   # y holds P1 to at most V
+        max(0.0, V - minimum(A' * x)),  # x guarantees P1 at least V
+        abs(v_bilinear - V),            # value agrees with the bilinear form
+    ) / scale
+    (; violation, v_bilinear)
+end
+
+export nash_certificate
+
+"""
+    solve_mixed_nash(A)
+
+Zero-sum matrix game on P1's payoff matrix `A`: `A[i,j]` is P1's payoff when P1
+plays row `i` and P2 plays column `j`.
+
+**Orientation (defect D1).** `stage_cost` increases with the separation between
+the two spacecraft, and `compute_cost_matrices` sets `players[1].cost = +stage_cost`,
+`players[2].cost = -stage_cost`. Player 1 is the evader, who wants separation, so
+**P1 MAXIMIZES `A` and P2 MINIMIZES `A`** — which is exactly what every
+fictitious-play branch in `choose_strategies!` already assumes (`argmax` on P1's
+expected costs).
+
+`solve_mixed_security_strategy(M)` solves `min_x max_j (x'M)_j`: it returns the
+security strategy of the row player who *minimizes* `M`. Hence
+
+    P1 maximizes A  <=>  P1 minimizes -A   ->  sms(-A),  maximin = -v
+    P2 minimizes A over its columns        ->  sms(A'),  minimax = +v
+
+The previous implementation called `sms(A)` and `sms(-A')` — both of these with
+the orientation inverted, handing the evader a distance-*minimizing* mixed
+strategy and the pursuer a distance-*maximizing* one. Every `mixed` and `greedy`
+number in the CDC submission is therefore the equilibrium of the reversed game.
+Reviewer 7 (#2, #3), Reviewer 8 (#1) and the AE all flagged this.
+
+By von Neumann's minimax theorem maximin == minimax; `gap` is the numerical
+evidence, and `cert_violation` independently certifies the saddle point.
+"""
 function solve_mixed_nash(A)
-    sol1 = solve_mixed_security_strategy(A)
-    sol2 = solve_mixed_security_strategy(-A')
-    (; x=sol1.x, y=sol2.x)
+
+    sol1 = solve_mixed_security_strategy(-A)   # P1: the MAXIMIZER of A
+    sol2 = solve_mixed_security_strategy(A')   # P2: the MINIMIZER of A
+
+    x, y      = normalize_simplex(sol1.x), normalize_simplex(sol2.x)
+    V_lo, V_hi = -sol1.v, sol2.v               # maximin, minimax
+    V          = 0.5 * (V_lo + V_hi)
+
+    cert = nash_certificate(A, x, y, V)
+
+    # Failure policy: never throw. This runs inside `Threads.@threads` in
+    # run_MC_games_parallel, where an error would take down a whole sweep rather
+    # than a single 6x6 solve. Instead, fall back to the pure maximin/minimax
+    # strategies -- always well defined, deterministic -- and mark the record so
+    # the failure rate can be reported rather than silently absorbed.
+    fallback = false
+    if cert.violation > 1e-8
+        # Pure maximin / minimax, computed directly from A so they are exact
+        # regardless of what the solver did. These bracket the true value:
+        # V_lo_pure <= V <= V_hi_pure, so the midpoint is a principled estimate,
+        # unlike the single matrix entry game_cost(x,y,A) would give.
+        row_min, col_max = vec(minimum(A, dims=2)), vec(maximum(A, dims=1))
+        x = zeros(size(A, 1)); x[argmax(row_min)] = 1.0
+        y = zeros(size(A, 2)); y[argmin(col_max)] = 1.0
+        V = 0.5 * (maximum(row_min) + minimum(col_max))
+        fallback = true
+        @warn "matrix game certificate failed; falling back to pure maximin/minimax" violation=cert.violation
+    end
+
+    (; x, y, V, V_lo, V_hi,
+       gap            = abs(V_hi - V_lo),
+       bilinear       = game_cost(x, y, A),
+       status1        = sol1.status,
+       status2        = sol2.status,
+       cert_violation = cert.violation,
+       fallback)
 end
 
 export solve_mixed_nash
 
 ## ====================================================================
 
-function solve_mixed_security_strategy(player_cost_matrix)
+"""
+    solve_mixed_security_strategy(M)
 
-    # TODO: transform the game to ensure that the cost matrix is entrywise positive
-    r = size(player_cost_matrix, 1)
-    p = size(player_cost_matrix, 2)
+Security strategy of the row player who MINIMIZES `M`, i.e. `argmin_x max_j (x'M)_j`,
+together with the value of that game.
 
-    min_value = 0
-    for i in 1:r
-        for j in 1:p
-            if player_cost_matrix[i, j] <= min_value
-                min_value = player_cost_matrix[i, j]
-            end
-        end
-    end
-    if min_value <= 0
-        c = -min_value + 1
-        M = player_cost_matrix + (-min_value + 1) * ones(r, p)
-    end
+Returns `(; x, v, status, obj)`. Note `v` (lowercase) is the *game value*, while
+`solve_simplex_lp` returns `obj`, the raw LP objective `1'z` — a different
+quantity. Those two used to be `v` and `V`, one character apart, which is how the
+value came to be discarded at the call site.
+"""
+function solve_mixed_security_strategy(M_in)
 
-    # TODO: solve the LP associated to a zero sum game
-    ans = solve_simplex_lp(M)
+    # Shift the matrix entrywise positive so the standard LP transformation applies.
+    # (Previously this was guarded by `if min_value <= 0` with `min_value` seeded at
+    # 0 and only ever decreasing -- so the branch always fired, and had it not,
+    # `M` and `c` would have been undefined.)
+    c = 1 - minimum(M_in)
+    M = M_in .+ c
+
+    ans     = solve_simplex_lp(M)
     x_tilde = ans.x
-    V_tilde = ans.V
 
-    # TODO: transform the solution into the probability simplex
-    x_star = x_tilde * (1 / V_tilde)
-    V_star = (1 / V_tilde) - c
+    # Transform back to the probability simplex. Normalizing by `sum(x_tilde)`
+    # rather than by the solver's reported objective makes `sum(x) == 1` hold to
+    # machine precision regardless of solver slop, and keeps the value consistent
+    # with the strategy actually returned.
+    s      = sum(x_tilde)
+    x_star = s > 1e-12 ? x_tilde ./ s : fill(inv(length(x_tilde)), length(x_tilde))
+    V_star = (s > 1e-12 ? 1 / s : 0.0) - c
 
-    # @infiltrate
-
-    # TODO: return a named tuple of (; x, V) where x is the strategy and V is the value
-    (; x=x_star, v=V_star)
+    (; x=x_star, v=V_star, status=ans.status, obj=ans.obj)
 end
 
 export solve_mixed_security_strategy
 
 ## ====================================================================
 
-function solve_simplex_lp(A)
+"""
+    solve_simplex_lp(A)
 
-    # set-up the optimization problem 
+Solves `max 1'z s.t. A'z <= 1, z >= 0` — the standard LP of the row player who
+minimizes `A`. Returns `(; x, obj, status)` and never throws.
+
+Two changes from the original:
+
+  * **The `z[i] >= 1e-4` floor is gone**, replaced by plain nonnegativity. That
+    floor bounded `z`, not the probability `x = z/sum(z)`, so the probability
+    floor it induced varied per game step -- it was not the "probability floor"
+    the paper describes. Worse, it structurally forbids sparse-support
+    equilibria, which most 6x6 games have, so the LP was not computing the
+    minimax that the safety claim rests on.
+
+  * **The solver is Ipopt, not OSQP.** OSQP is a first-order ADMM QP solver being
+    applied to a pure LP. Measured over 300 random 6x6 games, by the saddle-point
+    residual of `nash_certificate`:
+
+        OSQP, defaults          median 1.7e-3    100% above 1e-8
+        OSQP, polish + 1e-9     median 2.6e-16    24% above 1e-8   (bimodal)
+        OSQP, polish + 1e-12    median 2.6e-16    25% above 1e-8   (bimodal)
+        Ipopt, tol = 1e-12      median 2.8e-12     0% above 1e-8
+        Ipopt, tol = 1e-14      median 2.7e-14     0% above 1e-8   <- chosen
+
+    OSQP with polish is exact when polish succeeds and ~5e-3 when it does not,
+    and tightening tolerances does not change that split. Ipopt is uniformly
+    accurate, and at tol=1e-14 it is also the fastest of the three (3.3 ms vs
+    9.4 ms). Ipopt is already a dependency, so this costs no Manifest change.
+
+    This measurement is what Reviewer 7 #1 asked for, and it is why the CDC
+    numbers were computed on LPs solved to roughly three decimal places.
+"""
+function solve_simplex_lp(A; tol=1e-14)
+
     model = JuMP.Model()
-    JuMP.set_optimizer(model, OSQP.Optimizer)
+    JuMP.set_optimizer(model, Ipopt.Optimizer)
     JuMP.set_silent(model)
+    JuMP.set_optimizer_attribute(model, "print_level", 0)
+    JuMP.set_optimizer_attribute(model, "tol", tol)
+    JuMP.set_optimizer_attribute(model, "constr_viol_tol", tol)
+    JuMP.set_optimizer_attribute(model, "dual_inf_tol", tol)
+    JuMP.set_optimizer_attribute(model, "compl_inf_tol", tol)
+    JuMP.set_optimizer_attribute(model, "honor_original_bounds", "yes")
 
-    # get dimensions 
     r, p = size(A)
 
-    # TODO: add constraints and objective
-    @variable(model, z[1:r])
+    @variable(model, z[1:r] >= 0)
     @objective(model, Max, ones(r)' * z)
     @constraint(model, c1, ones(p) >= A' * z)
 
-    for i in 1:r
-        @constraint(model, z[i] >= 1e-4)
-    end
-
     JuMP.optimize!(model)
 
-    (JuMP.termination_status(model) == JuMP.MOI.OPTIMAL) ||
-    # error("OSQP did not find an optimal solution to this matrix game.")
-        println("termination status = ", JuMP.termination_status(model))
-    (; x=JuMP.value.(z), V=JuMP.objective_value(model))
+    status = JuMP.termination_status(model)
+    (; x=JuMP.value.(z), obj=JuMP.objective_value(model), status)
 end
 
 export solve_simplex_lp
@@ -155,13 +285,26 @@ function compute_players_XU(params, game, players)
         for jj in eachindex(vertices)
 
             rv_f = [vertices[jj]; v_f]
-            Δv_sol = min_Δv_dist(rv_0, rv_f, t_horizon, n_seg_horizon, mu)
+            t_solve = @elapsed Δv_sol = min_Δv_dist(rv_0, rv_f, t_horizon, n_seg_horizon, mu;
+                                                    Δv_max=params.Δv_max, w_miss=params.w_miss)
             t, rv_hist = prop_kepler_tof_Nseg(rv_0, Δv_sol, n_seg_horizon, t_horizon / n_seg_horizon, mu)
 
-            # save hist 
+            # save hist
             push!(p.X, rv_hist)
             push!(p.U, Δv_sol)
             push!(p.t, t)
+
+            # per-solve diagnostics. `miss` is the A3 reachability metric — the
+            # distance between where the candidate actually ends up and the
+            # hexagon vertex it was aimed at — recorded here so it is monitored
+            # continuously rather than only by an offline probe.
+            push!(p.solve_info.traj, (
+                vertex  = jj,
+                t_solve = t_solve,
+                miss    = norm(rv_hist[end, 1:3] - vertices[jj]),
+                max_Δv  = maximum(norm.(eachrow(Δv_sol))),
+                sum_Δv  = sum(norm.(eachrow(Δv_sol))),
+            ))
 
         end
 
@@ -204,8 +347,11 @@ function compute_cost_matrices(players)
     i_vert = 1
     j_vert = 1
 
-    player1_cost_matrix = zeros(6, 6)
-    player2_cost_matrix = zeros(6, 6)
+    # arity is derived, not hardcoded: `n_vertices` below already computes it
+    # correctly, so a 12- or 24-vertex polygon (C4) does not BoundsError here
+    n_vertices_alloc = length(players[begin].t)
+    player1_cost_matrix = zeros(n_vertices_alloc, n_vertices_alloc)
+    player2_cost_matrix = zeros(n_vertices_alloc, n_vertices_alloc)
 
     n_vertices = length(players[begin].t)
 
@@ -298,13 +444,35 @@ export stage_cost_games_fn
 
 function compute_mixing_weights!(players)
 
-    # mixing weights - ZERO SUM GAME!!! 
-    mixing_weights = let
-        sol = solve_mixed_nash(players[1].cost)
-        (; sol.x, sol.y)
-    end
+    # mixing weights - ZERO SUM GAME!!!
+    t_lp = @elapsed sol = solve_mixed_nash(players[1].cost)
+
+    # `sol.x` and `sol.y` are already projected onto the probability simplex by
+    # solve_mixed_nash. That normalization is load-bearing well beyond sampling:
+    # update_strategy_belief! uses weights[chosen] as a likelihood, and
+    # predict_opponent_vertices copies weights straight into a probability
+    # vector. Both are meaningless on raw LP output.
+    mixing_weights = (; sol.x, sol.y)
     players[1].weights = mixing_weights[1]
     players[2].weights = mixing_weights[2]
+
+    # Retain the LP diagnostics: the Nash value used to be computed and thrown
+    # away, so there was no way to check maximin == minimax, and no record of
+    # whether a solve had degraded.
+    lp_record = (
+        V              = sol.V,
+        V_lo           = sol.V_lo,
+        V_hi           = sol.V_hi,
+        gap            = sol.gap,
+        cert_violation = sol.cert_violation,
+        fallback       = sol.fallback,
+        status1        = sol.status1,
+        status2        = sol.status2,
+        t_lp           = t_lp,
+    )
+    for p in players
+        p.solve_info = (; traj=p.solve_info.traj, lp=lp_record)
+    end
 
     return mixing_weights
 end
