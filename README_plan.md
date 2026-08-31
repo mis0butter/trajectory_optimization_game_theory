@@ -41,7 +41,11 @@ smoke sweep remain. Per-defect detail is in the §3 `Status` column and the note
   converged, 38% less fuel, ~10^7 better terminal miss. **Ipopt was tried and does not converge
   on this problem** — see note [h]. Zero new dependencies either way.
 
-**Remaining in Gate A:** the smoke sweep only. Gate A is otherwise complete.
+- **Smoke sweep passed** — see note [i]: 99.53% solver convergence, 0/2,500 LP certificate
+  failures, and `mixed`/`mixed` NashConv of 1.6e-14 confirming D1 end to end.
+
+**GATE A IS COMPLETE.** Next is Gate B, starting with B1 (real Monte Carlo / D2). Note the cost
+warning in [i]: a full 5x5 re-run now projects to ~2.5 h rather than ~36 min.
 
 **Two headline changes to the plan's premises:**
 
@@ -300,6 +304,43 @@ tolerance, not gradient norm, because the terminal-miss term is an **exact penal
 non-smooth precisely at the solution). A squared miss is smooth but strictly worse in practice —
 its gradient vanishes near zero, so the optimizer stops driving the miss down (measured 4.2e-2
 instead of 1.4e-9).
+
+**[i] Smoke sweep (Day 9) — the pipeline works end to end.** 25 matchups x 5 games x 10 steps
+= 125 games, **15,000 trajectory solves, 2,500 LP solves, 27.3 min** on 32 threads.
+
+| trajectory optimizer (BFGS + BackTracking) | |
+|---|---|
+| converged | **99.53%** (14,929 / 15,000) |
+| `g_converged` | 0.01% — terminates on step/objective tol, see [h] |
+| escalated to augmented Lagrangian | **0.00%** — the ΔV cap never binds, confirming [b] |
+| iterations | median 820, p95 1,303, max 2,000 (the cap) |
+| terminal miss | median 7.3e-12 km, p95 6.1e-10, **max 8.2e-05** (R = 6.378) |
+| total ΔV per solve | median 0.0102 km/s |
+
+| matrix-game LP (Ipopt, tol 1e-14) | |
+|---|---|
+| certificate violation | median 3.7e-15, **max 1.1e-12** (threshold 1e-8) |
+| above threshold | **0 / 2,500** |
+| fell back to pure maximin/minimax | **0 / 2,500** |
+| maximin − minimax gap | max 7.5e-13 |
+| wall per LP | median 0.0057 s |
+
+**`mixed`/`mixed` NashConv of the strategies actually played: median 1.6e-14, max 3.3e-12.**
+The played mixed strategies *are* the stage-game equilibrium — D1 is fixed end to end, not just
+in unit tests. The 99.53% convergence rate is the number Reviewer 7 #1 asked for.
+
+**COST WARNING for Gate B.** In-pipeline median wall per trajectory solve is **0.505 s**, not the
+0.154 s measured on step-1 subproblems — later steps are harder (median 820 BFGS iterations, and
+some hit the 2,000 cap). Projecting a full 5x5 at 50 games x 30 steps on 32 threads:
+
+    per game    30 steps x 12 solves x 0.505 s  = 182 s
+    per matchup 50 games over 32 threads (2 waves) = ~364 s
+    full sweep  x 25 matchups                    = ~2.5 hours
+
+That is ~5x the earlier estimate and ~5x the Nelder-Mead incumbent. Levers, in order of
+preference: **LBFGS** instead of BFGS (measured 0.016 s vs 0.154 s on step-1 subproblems, ~10x
+faster, at ~40% more ΔV — the accuracy is unaffected, both reach ~1e-12); lower `maxiter` from
+2,000; or accept 2.5 h, which is still an overnight-free single sitting. Decide before B3.
 
 **Not a defect, but state it in the paper.** `axis_123` is *not* an orthogonal frame:
 `a1 . a2 = -9.9e-3 ~ -e`. The hexagon lies in the `a2`-`a3` (radial/normal) plane, **not** the
