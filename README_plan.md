@@ -6,7 +6,8 @@
 
 ## Status — Aug 31 2026
 
-Gate A is roughly two-thirds done. Per-defect detail is in the §3 `Status` column and notes.
+**Gate A is 9 of 10 items done.** Only A6 (Ipopt for the trajectory optimizer) and the
+smoke sweep remain. Per-defect detail is in the §3 `Status` column and the notes after it.
 
 **Landed (all verified value-preserving except where a fix is the point):**
 
@@ -27,11 +28,20 @@ Gate A is roughly two-thirds done. Per-defect detail is in the §3 `Status` colu
   edits at three sites. Done now because there is zero saved data to invalidate.
 - **`src/game_theory/exploitability.jl`** — `exploitability`, `exploitability_series`,
   `belief_exploitability`.
-- **`test/runtests.jl`** — was 6 lines testing nothing; now **3077 passing, 0 failing, 2
-  intentional `@test_broken`** that pin D4 and D11 so the fixes flip them.
+- **A4 / D4 — stage cost is differential fuel**, `λ1·sqrt(dist+0.1) + λ2·(‖u_P‖ − ‖u_E‖)`, with
+  the sign trap in note [d] avoided. First change that deliberately moves results.
+- **D11 — `sum_norm_Δv` returns true ΔV**, so fuel is an active term rather than outweighed
+  ~1000:1. See note [g], including the 162%-of-Lambert result.
+- **D5 — both `Meta_*` P2 branches corrected** (transpose + sign), now mirroring `FP_*` exactly.
+- **`CLAUDE.md` written** (task zero). Carries a compact D1–D13 index pointing here as the source
+  of truth, rather than a verbatim copy that would drift.
+- **`test/runtests.jl`** — was 6 lines testing nothing; now **3092 passing, 0 failing, 0 broken**.
 
-**Remaining in Gate A:** task zero (`CLAUDE.md`); A4 (D4 stage cost, note [d]); D11 rescaling;
-A6 (Ipopt for the *trajectory optimizer* — still Nelder-Mead today); D5 (note [e]); smoke sweep.
+**Remaining in Gate A:** A6 (Ipopt for the *trajectory optimizer* — still Nelder-Mead today);
+the smoke sweep. A6 needs a dependency decision first: `ADNLPModels`/`NLPModelsIpopt` are not in
+the Manifest, and adding them re-resolves a Manifest built under Julia 1.11.1 on a 1.12.7
+machine. The zero-dependency alternative is JuMP `@operator` with the ΔV constraints written
+natively as quadratics (they need no operator at all).
 
 **Two headline changes to the plan's premises:**
 
@@ -90,7 +100,11 @@ Do **not** claim "the game is time-varying" as novelty — it is not. Treat the 
 
 ## 2. Task zero — `CLAUDE.md`
 
-Before any code changes, write `CLAUDE.md` at the repo root (README.md is currently empty and open in the user's editor; write `CLAUDE.md` and leave README alone unless asked). It must capture:
+**DONE Aug 31** — `CLAUDE.md` exists at the repo root. One deviation: the defect table is a
+compact one-line-per-defect index pointing at §3 rather than a verbatim copy, so the two cannot
+drift. (`README.md` does not exist on this machine, contrary to the note below.)
+
+Before any code changes, write `CLAUDE.md` at the repo root. It must capture:
 
 - **Purpose and the game:** evader/pursuer, hexagonal lifting, per-step matrix game, receding horizon.
 - **Code organization:** `src/game_theory/` (matrix game solver, play loop), `src/Opt/` (trajectory optimization: augmented Lagrangian, objective/constraint functions), `src/Dyn/` (Kepler propagation), `src/Lambert/` (initial guess), `src/Utils/` (ICs, structs, plotting, MC statistics), `src/old/` (dead). Entry points: `test/run_all_MC_table.jl` produces the sweep, `test/analyze_late_game.jl` post-processes into `test/MC_results_late_game.csv` and figures.
@@ -112,14 +126,14 @@ D1–D9 are the original audit. **D10–D13 were found on Aug 31** while executi
 | D1 | **LP sign inversion.** `solve_mixed_security_strategy` returns the row player's *minimizing* security strategy. `solve_mixed_nash(A)` therefore gives the evader a distance-minimizing mixed strategy and the pursuer a distance-maximizing one — both reversed. Verified numerically on a matrix with a known saddle point: the evader is assigned ~1.0 weight on its worst row. | `matrix_game_solver.jl:55-59` | Every `mixed` and `greedy` number in the CDC tables is the equilibrium of the reversed game. Reviewer 7 #2, Reviewer 8 #1. | **FIXED** Aug 31. `sms(-A)`/`sms(A')`, orientation derived from `stage_cost`. Pinned by a test asserting the old pairing is exploitable. |
 | D2 | **No Monte Carlo.** `init_game` hardcodes both orbits; `rand_IC` exists but its only call site is commented out. Only the vertex-sampling RNG varies between trials. | `IC.jl:19-26`, `IC.jl:24-25` | For deterministic matchups (greedy/greedy, greedy/FP-greedy, FP-greedy/FP-greedy) all 50 trials are bit-identical — those cells are N=1. `results.md:12` claims "independent initial conditions." | **OPEN** — Gate B (B1). |
 | D3 | **Candidate trajectories may not reach their vertices.** `min_Δv_dist` folds terminal miss distance into the *objective* at weight 1.0 instead of constraining it; `sum_norm_Δv` returns Σ‖Δv‖² despite its name. | `min_fns.jl:54-55`, `obj_fns.jl:160-171` | If the miss is comparable to R=6.378 km the action space is fiction and both the lifting proposition and the safety claim collapse. Reviewer 5 #3. **Existential — measure in week 1.** | **RESOLVED — NOT A DEFECT.** Measured 2880 on-policy samples: median miss **4.1 cm**, p95 8.1 cm, max 18 cm = 2.8e-5·R. See note [a]. |
-| D4 | **Stage cost is not fuel.** Code computes `0.1*norm(u1-u2)` — the norm of the *difference* of control vectors, which rewards the evader for thrusting differently from the pursuer and the pursuer for matching thrust direction. Paper Eq. (9) writes `λ₂(‖u_P‖ − ‖u_E‖)`, which is differential fuel and *is* meaningful. | `matrix_game_solver.jl:179-190` | The implemented objective has no physical interpretation. Reviewer 7 minor #1. | **OPEN** — Day 4. Note the sign trap in [d]. |
-| D5 | **`Meta_*` pursuer transpose.** P2's meta branches use `players[2].cost * predicted_v_probs`; the FP branches correctly use `cost'`. | `matrix_game_solver.jl:394-405` | Indexes the wrong axis. Invalidates all existing `Meta_*`-as-P2 data. | **OPEN** — Day 8. Three defects, not two: see [e]. |
+| D4 | **Stage cost is not fuel.** Code computes `0.1*norm(u1-u2)` — the norm of the *difference* of control vectors, which rewards the evader for thrusting differently from the pursuer and the pursuer for matching thrust direction. Paper Eq. (9) writes `λ₂(‖u_P‖ − ‖u_E‖)`, which is differential fuel and *is* meaningful. | `matrix_game_solver.jl:179-190` | The implemented objective has no physical interpretation. Reviewer 7 minor #1. | **FIXED** Aug 31. `λ1·sqrt(dist+0.1) + λ2·(‖u_P‖−‖u_E‖)`; λ1/λ2 in `params`. Tests assert equal burns cancel exactly — the property `norm(u1-u2)` violated. |
+| D5 | **`Meta_*` pursuer transpose.** P2's meta branches use `players[2].cost * predicted_v_probs`; the FP branches correctly use `cost'`. | `matrix_game_solver.jl:394-405` | Indexes the wrong axis. Invalidates all existing `Meta_*`-as-P2 data. | **FIXED** Aug 31. Transpose added and `argmin`→`argmax` in `Meta_greedy`; `Meta_mixed` weight formula flipped to match `FP_mixed`. See [e]. |
 | D6 | **ΔV constraint inert.** `Δv_max = 2.0` km/s default, never threaded from `params`; observed max per-segment ‖Δv‖ ≈ 0.591 km/s. The paper states 0.1 km/s. | `min_fns.jl:47`, `matrix_game_solver.jl:158` | The constraint never binds, so "comparable ΔV budgets" is unsupported. Four separate literals would need editing to change it. | **CONFIRMED, reframed.** Measured max ‖Δv‖ = **0.0221 km/s**, not 0.591. Plumbing fixed (keyword args + `params.Δv_max`); see [b]. |
 | D7 | **Silent LP failure.** The `OPTIMAL` check is a non-fatal `println`; the `error` is commented out. OSQP is a first-order ADMM QP solver (default tolerance ~1e-3) being used on a pure LP, with a `z ≥ 1e-4` floor. | `matrix_game_solver.jl:103-128` | A bad solve is currently invisible, and the weights feed `ProbabilityWeights` and will feed exploitability arithmetic. Severity **unmeasured** — see A1. | **QUANTIFIED and FIXED.** 0.83% `ALMOST_OPTIMAL` under OSQP. Solver swapped to Ipopt; see [c]. |
 | D8 | Live `@exfiltrate` in an analysis path; `load_games_vec` reads a path layout `save_games_vec` no longer writes. | `Utils.jl:301`, `plotting.jl:827`, `Utils.jl:367-378` | Analysis drops into Infiltrator; loader is dead code. | **FIXED** Aug 31. `@exfiltrate` removed; `load_games_vec` repaired to the `n<k>/` layout. |
 | D9 | **Derivative-free inner solver.** The trajectory optimizer is a hand-rolled augmented Lagrangian whose inner solve is `Optim.optimize(fn, dfn, x_0, NelderMead())` — Nelder-Mead on a 30-dimensional problem (N=10 segments × 3), discarding the ForwardDiff gradient `dfn` that is built and passed to it. | `min_fns.jl:109-124`, `aug_L.jl:184-196` | Nelder-Mead stagnates above ~10 dimensions. Likely a direct cause of D3 (poor terminal miss) and of D6 (the ΔV penalty never activating). Reviewer 7 #1 asked for solver details and real-time suitability. | **CONFIRMED, reframed.** Nelder-Mead is *not* failing at targeting (4 cm miss from a 2.4–39 km Lambert guess). Real cost is D11 + no convergence stats. **OPEN** — Day 7. |
 | D10 | **AD path broken — no gradient exists.** `cart2kep` allocates `oe = zeros(6)` (a `Vector{Float64}`) then assigns orbital elements into it. It sits on the objective's call path via `prop_kepler_tof:125` → `prop_kepler_tof_Nseg:174`, so `ForwardDiff.gradient` of the trajectory objective throws `MethodError` on `setindex!` with a `Dual`. Invisible because the only consumer of that gradient was `NelderMead()`, which never evaluates it. | `propagator.jl:179-186` | **Invalidates §9 risk 4.** No gradient-based solver — Ipopt, LBFGS, or the existing `min_bfgs` — could ever have run. The plan's LBFGS fallback shared the same broken dependency, so it was not a hedge. | **FIXED** Aug 31. One line. Gated: bitwise identical on 20,000 random states, and ForwardDiff now matches `central_fdm(5,1)` to 1.6e-9. |
-| D11 | **The fuel objective is inert.** In `min_Δv_dist` the terminal-miss term is a distance in km (1–40 at the Lambert guess) while `sum_norm_Δv` returns Σ‖Δv‖² in (km/s)² (~1e-3). At the implicit weight of 1.0 the miss term outweighs fuel by ~3 orders of magnitude. | `min_fns.jl:74-75`, `obj_fns.jl:159-171` | `min_Δv_dist` does not minimize Δv in any meaningful sense — it is a pure targeting solve. "Comparable ΔV budgets" is unsupported, and D4's stage cost operates on Δv values that were never fuel-optimized. **This is the real defect D3 was standing in front of.** | **OPEN** — Day 5. `w_miss` knob added (default 1.0 = no change). Needs a deliberate rescaling, not just uncommenting `obj_fns.jl:166`. |
+| D11 | **The fuel objective is inert.** In `min_Δv_dist` the terminal-miss term is a distance in km (1–40 at the Lambert guess) while `sum_norm_Δv` returns Σ‖Δv‖² in (km/s)² (~1e-3). At the implicit weight of 1.0 the miss term outweighs fuel by ~3 orders of magnitude. | `min_fns.jl:74-75`, `obj_fns.jl:159-171` | `min_Δv_dist` does not minimize Δv in any meaningful sense — it is a pure targeting solve. "Comparable ΔV budgets" is unsupported, and D4's stage cost operates on Δv values that were never fuel-optimized. **This is the real defect D3 was standing in front of.** | **FIXED** Aug 31. True ΔV with an ε=1e-12 desingularization for the gradient; `w_miss` in `params`, swept. See [g]. |
 | D12 | **Augmented Lagrangian double-counts the objective.** `min_aug_L_eq_ineq` sums `aug_L_fn` and `aug_L_ineq_fn`, each of which already includes `obj_fn(x)`, giving `2·obj_fn(x)` + both penalty sets. The correct single-call form (`aug_L_eq_ineq_fn`) exists and is commented out one line below. | `aug_L.jl:241-243` | The objective is weighted 2× against the constraints, so both are systematically under-enforced. Off the game hot path (`min_Δv_dist` → `min_aug_L_ineq`), but reached by `min_Δv` — the "correct pattern" for hard-constraining miss distance. | **OPEN**, deferred. Dies with the file if A6 drops the hand-rolled AL as planned. |
 | D13 | **Opponent identification is structurally uncomputable for FP opponents.** `tracked_strategies` is `["mixed","greedy","random",1..6]` — it contains no `FP_*` or `Meta_*` hypotheses. | `IC.jl:74` | `p1_correct_id_rate` / `p2_correct_id_rate` are `NaN` against every FP opponent; `test/MC_results_late_game.csv` confirms this for all FP columns. `results.md` reports "correct-ID rate is 1.0 for all identifiable opponents" — true only because FP opponents are excluded by the word *identifiable*. The metric was never computed for the opponents the paper is about. | **OPEN** — a modeling gap, not a bug: extending it needs the opponent's `fp_belief`, which a player does not observe. Surface in the writing. |
 
@@ -138,13 +152,13 @@ decision rule `p95 < R/2` passes with ~40,000x margin. **Section 9 risk 2 does n
 miss is now recorded per solve in `player_struct.solve_info.traj`, so it is monitored
 continuously rather than by an offline probe, and `test/runtests.jl` asserts it.
 
-**[b] D6 reframed - the dV cap is irrelevant, not merely un-threaded.** Measured max per-segment
-norm(dv) = **0.0221 km/s**. The original claim of 0.591 km/s is **not reproduced** - it is 27x
+**[b] D6 reframed — the ΔV cap is irrelevant, not merely un-threaded.** Measured max per-segment
+‖Δv‖ = **0.0221 km/s**. The original claim of 0.591 km/s is **not reproduced** - it is 27x
 smaller. Critically, **the paper's stated 0.1 km/s would also never bind**; binding requires
 ~0.02. So the honest fix is not "set it to 0.1 and now the constraint is real" - it is either to
 state that the constraint is inactive at this scenario scale, or to choose a cap reflecting an
-actual thruster. Plumbing is fixed either way: `dm`/`dv_max` are now keyword-only, and
-`params.dv_max` / `params.w_miss` thread to the call site.
+actual thruster. Plumbing is fixed either way: `dm`/`Δv_max` are now keyword-only, and
+`params.Δv_max` / `params.w_miss` thread to the call site.
 
 **[c] D7 measured, and the solver replaced.** 0.83% of OSQP solves returned `ALMOST_OPTIMAL`,
 silently, into `ProbabilityWeights`. A solver-independent `nash_certificate` (saddle-point
@@ -168,13 +182,84 @@ solver characterization Reviewer 7 #1 asked for. Failure policy is now record-an
 `0.1*(norm(u1) - norm(u2))`. Under the corrected D1 orientation `stage_cost` is P1's payoff and
 P1 *maximizes* it, so with `u1 = u_E`, `u2 = u_P` the paper's Eq. (9) requires
 `lambda2*(norm(u2) - norm(u1))` - the commented line is **sign-inverted**. Uncommenting it would
-survive A1 and quietly poison Gate B. Pinned by a `@test_broken` in `test/runtests.jl`.
+survive A1 and quietly poison Gate B. **Fixed Aug 31**, and pinned by the "stage cost
+orientation" testset, which asserts the property the old form actually violated: two equal burns
+must cancel exactly, including equal-magnitude burns in orthogonal directions.
 
 **[e] D5 is three defects, not two.** P2's `Meta_greedy` (`:562-566`) is missing the transpose
 *and* uses `argmin` where the correct `FP_greedy` P2 branch (`:550-553`) uses `argmax` - since
 `players[2].cost = -A`, `argmax` is right. `Meta_mixed` (`:568-573`) is missing the transpose
 *and* has its weight formula inverted relative to `FP_mixed`. Because both dimensions are 6, the
 axis error produces a plausible-looking index instead of erroring.
+
+**[f] The game is NOT degenerate — but the decision margin is thin, and there is a geometric
+confound.** Measured Aug 31 over 240 matrices (4 matchups x 2 seeds x 30 steps), normalized by
+`|mean(A)|`:
+
+| metric | median | p90 | max |
+|---|---|---|---|
+| full matrix range | 46.0% | 59.3% | 88.2% |
+| P1 leverage vs a uniform opponent | 15.4% | 21.7% | 25.1% |
+| **best-vs-2nd-best row gap** | **1.7%** | 5.1% | 7.4% |
+
+Leverage grows from 8.3% (steps 1-6) to ~16-17% from step 7 on, consistent across all four
+matchups. And per-step edges **compound**: pure-vertex strategies (P1 always plays vertex j) vs a
+`mixed` pursuer give last-8-step separations spanning **39.5% and 47.2%** of the mean across the
+six vertices, on two seeds. So strategy selection matters a great deal over 30 steps.
+
+Two consequences:
+
+1. **The 1.7% decision margin is the number to worry about.** The D1 sign error produced
+   NashConv ~0.1 absolute on values of ~2.3 -- about **2.5x the decision gap** -- so it routinely
+   flipped which vertex was chosen. OSQP's 1.7e-3 residual is ~15-20% of the gap: not dominant,
+   but not ignorable for `greedy`, which is a bare `argmax` over near-ties.
+
+2. **NEW RISK - a geometric confound for the headline.** The vertex ranking is partly
+   seed-independent: vertices 3 (`botin`) and 6 (`topout`) are top-2 on both seeds, vertex 1
+   (`top`) is bottom-2 on both. 3 and 6 are the antipodal `axis_2`-dominant pair, i.e. in-plane;
+   vertex 1 is pure +`axis_3`, out-of-plane. That is physically expected -- an in-plane radial
+   offset converts into **along-track drift that grows over an orbit**, while out-of-plane
+   displacement merely oscillates. So the six vertices are not equally valuable for evasion, and
+   the asymmetry is static geometry, independent of the opponent.
+
+   **If FP-greedy wins partly by converging onto vertex 3 or 6, some of its measured advantage is
+   discovering a fixed geometric bias, not modeling an opponent** -- which is exactly the
+   headline claim. An AAMAS reviewer will ask this.
+
+   **Required control (add to Gate B, alongside B6):** a *best-fixed-vertex* baseline -- choose
+   the single best vertex in hindsight and play it every step. If FP does not clearly beat it,
+   the opponent-modeling claim is in trouble. If it does, the margin over that baseline *is* the
+   opponent-modeling effect, cleanly separated from geometry. `choose_strategies!` already
+   accepts an `Int` strategy, so this costs nothing to implement.
+
+**[g] D11 fixed — fuel is now genuinely part of the objective.** `sum_norm_Δv` returns true ΔV
+(with an ε=1e-12 desingularization so the gradient survives a zero-Δv segment, which plain
+`norm` would NaN). Measured at the 12 step-1 subproblems, sweeping `w_miss`:
+
+| w_miss | median fuel (km/s) | median miss (km) | p95 miss / R |
+|---|---|---|---|
+| 1 (default) | 0.04758 | 7.0e-5 | 2.0e-5 |
+| 10 | 0.06206 | 5.6e-5 | 1.4e-5 |
+| 100 | 0.06249 | 4.5e-5 | 1.1e-5 |
+| 1000 | 0.06825 | 2.5e-5 | 6.2e-6 |
+
+A clean monotone tradeoff, and **A3 passes at every setting** by 4+ orders of magnitude.
+
+Two things worth putting in the paper:
+
+- **The optimized trajectory costs *more* fuel than the Lambert initial guess** — 0.0476 vs
+  0.0293 km/s, i.e. 162%. That is not a regression: the Lambert guess misses its vertex by a
+  median of **20.3 km**, and the extra 63% ΔV is the price of actually arriving. This is a clean
+  one-line justification for why the optimizer exists at all, and it retires the D9 worry that
+  Nelder-Mead might not be earning its keep on the targeting objective.
+- **The balance has flipped.** Before: fuel ~1e-3 (squared norms) against a miss starting at
+  1–40 km, so miss outweighed fuel ~1000:1 and ΔV was not optimized. Now fuel ~0.048 against a
+  converged miss of 7e-5, so both terms are active — miss dominates early (driving the solve to
+  the vertex) and fuel dominates near the solution (trimming waste).
+
+**Open question for the author, not a defect:** `w_miss` could go *below* 1 to buy back fuel,
+since the miss has four orders of magnitude of headroom before the A3 threshold. Left at 1.0
+because the action semantics want the vertex actually reached; worth a sentence either way.
 
 **Not a defect, but state it in the paper.** `axis_123` is *not* an orthogonal frame:
 `a1 . a2 = -9.9e-3 ~ -e`. The hexagon lies in the `a2`-`a3` (radial/normal) plane, **not** the
@@ -233,6 +318,8 @@ This directly answers Reviewer 7 #1, which asked whether the MPC problem is conv
 **B4. Confidence intervals and significance.** `MC_stats` computes std but `print_MC_stats` prints means only, and `analyze_late_game.jl` reduces to `mean` before writing the CSV, so all dispersion is discarded. Add CI columns and a paired test on headline comparisons. **No number enters a table without an interval.**
 
 **B5. EGTA meta-game.** Treat the strategy table as a normal-form meta-game; report its Nash equilibrium (optionally α-Rank). Pure post-processing, and the principled fix for Reviewer 8's objection that "dominant strategy" is misused — afterwards you can say precisely whether FP-greedy is dominant or merely in the support.
+
+**B6b. Best-fixed-vertex baseline (added Aug 31 — see note [f]).** Play a single hindsight-best vertex every step. Controls for the static geometric asymmetry between hexagon vertices, without which the opponent-modeling headline is confounded. Uses the existing `Int` strategy branch.
 
 **B6. Oracle best-response baseline.** A player told the opponent's true strategy that best-responds exactly. ~10 lines, and it establishes the ceiling: "FP recovers X% of the oracle's advantage within N steps." This is the cheap stand-in for a MARL baseline (see §5).
 

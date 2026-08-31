@@ -173,8 +173,17 @@ end
 
 @testset "sum_norm_Δv returns norms, not squares (D3b/D11)" begin
     # [3 4 0; 0 0 0] -> ‖(3,4,0)‖ + ‖(0,0,0)‖ = 5, not 9+16 = 25.
-    # Currently returns squares; flip to @test when obj_fns.jl:166 is restored.
-    @test_broken sum_norm_Δv(vec([3.0 4.0 0.0; 0.0 0.0 0.0]), 2) ≈ 5.0
+    @test sum_norm_Δv(vec([3.0 4.0 0.0; 0.0 0.0 0.0]), 2) ≈ 5.0 atol=1e-9
+
+    # positively homogeneous of degree 1 (a norm); the squared form was degree 2
+    x = vec(randn(MersenneTwister(9), 10, 3))
+    @test sum_norm_Δv(2 .* x, 10) ≈ 2 * sum_norm_Δv(x, 10) rtol=1e-9
+
+    # the ε desingularization must keep the gradient finite at Δv = 0, where a
+    # plain norm would hand ForwardDiff a NaN
+    g = ForwardDiff.gradient(z -> sum_norm_Δv(z, 10), zeros(30))
+    @test all(isfinite, g)
+    @test sum_norm_Δv(zeros(30), 10) < 1e-9
 end
 
 # ---------------------------------------------------------------------------
@@ -255,11 +264,21 @@ end
     # separation up -> P1's payoff up. True already.
     @test stage_cost(far, x2, u0, u0) > stage_cost(x1, x2, u0, u0)
 
-    # Differential fuel: the evader burning should LOWER P1's payoff and the
-    # pursuer burning should RAISE it. The current `norm(u1-u2)` form is
-    # nonnegative and so raises the payoff in both cases. Flip to @test after A4.
-    @test_broken stage_cost(x1, x2, ub, u0) < stage_cost(x1, x2, u0, u0)
+    # Differential fuel λ2*(‖u_P‖ - ‖u_E‖): the evader burning LOWERS P1's payoff,
+    # the pursuer burning RAISES it. The old `norm(u1-u2)` form was nonnegative and
+    # so raised it in both cases.
+    @test stage_cost(x1, x2, ub, u0) < stage_cost(x1, x2, u0, u0)
     @test stage_cost(x1, x2, u0, ub) > stage_cost(x1, x2, u0, u0)
+
+    # equal burns must cancel exactly — the defining property of a differential-fuel
+    # term, and precisely what norm(u1-u2) got wrong (it penalized both players for
+    # thrusting in different directions)
+    @test stage_cost(x1, x2, ub, ub) ≈ stage_cost(x1, x2, u0, u0)
+    @test stage_cost(x1, x2, [0.1,0,0], [0.0,0.1,0]) ≈ stage_cost(x1, x2, u0, u0)
+
+    # λ1/λ2 are honored
+    @test stage_cost(x1, x2, u0, ub; λ2=0.0) ≈ stage_cost(x1, x2, u0, u0; λ2=0.0)
+    @test stage_cost(far, x2, u0, u0; λ1=2.0) > stage_cost(far, x2, u0, u0; λ1=1.0)
 end
 
 # ---------------------------------------------------------------------------
@@ -267,6 +286,29 @@ end
 # Robinson (1951) guarantees this only for a fixed payoff matrix. Fails under the
 # pre-A1 orientation, passes after -- so it is also an integration test for A1.
 # ---------------------------------------------------------------------------
+
+@testset "Meta_* / FP_* P2 axis and sign convention (D5)" begin
+    # `cost` is indexed [P1_vertex, P2_vertex]. `predict_opponent_vertices` returns a
+    # distribution over the OPPONENT's vertices, so for P2 that is a distribution over
+    # P1's rows -- which must contract the P1 axis, i.e. multiply by cost', not cost.
+    A  = [1.0 5.0; 2.0 3.0]        # deliberately non-symmetric
+    C2 = -A                         # players[2].cost
+    pred = [0.0, 1.0]               # P1 certainly plays vertex 2; A[2,:] = [2,3] -> P2 wants col 1
+
+    @test argmax(C2' * pred) == 1               # correct: transpose, and argmax on -A
+    @test argmax(C2  * pred) == 2               # the old un-transposed form: wrong answer
+    @test argmin(C2' * pred) == 2               # the old argmin: also wrong
+    @test argmax(C2' * pred) == argmin(A' * pred)   # mirrors FP_greedy exactly
+
+    # Meta_mixed weights must be INCREASING in P2's expected cost, like FP_mixed.
+    # The old form used `maximum(ec) .- ec`, which is decreasing.
+    ec = C2' * pred
+    @test all(diff((ec .- minimum(ec) .+ 1e-6)[sortperm(ec)]) .>= 0)
+
+    # end-to-end: a Meta_greedy pursuer must pick a valid column index
+    _, players, _ = init_game(MersenneTwister(11), "mixed", "Meta_greedy")
+    @test players[2].chosen in 1:size(players[1].cost, 2)
+end
 
 @testset "frozen-matrix FP converges to the LP equilibrium" begin
     A = randn(MersenneTwister(7), 6, 6)

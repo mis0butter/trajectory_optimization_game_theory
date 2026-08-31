@@ -318,13 +318,38 @@ export compute_players_XU
 
 ## ====================================================================
 
-# game cost 
-function stage_cost(x1, x2, u1, u2)
+"""
+    stage_cost(x1, x2, u1, u2; λ1, λ2)
 
-    # sqrt( norm(x1[1:3] - x2[1:3]) + 0.1 ) + 0.1 * (norm(u1) - norm(u2))
+P1's (the evader's) stage payoff. **P1 MAXIMIZES this**; P2's cost is its negation.
+
+    λ1 * sqrt(‖r1 - r2‖ + 0.1)  +  λ2 * (‖u_P‖ - ‖u_E‖)
+
+with `u1 = u_E` (evader control) and `u2 = u_P` (pursuer control). Separation up raises P1's
+payoff; the evader burning fuel lowers it; the pursuer burning fuel raises it.
+
+**Defect D4.** This previously computed `0.1 * norm(u1 - u2)` — the norm of the vector
+*difference* of the two controls. That is nonnegative, so it was added to **both** players'
+costs rather than transferred between them, breaking the zero-sum interpretation of the fuel
+term; and it is minimized when both players thrust *identically*, which is not a fuel incentive
+at all.
+
+**Sign trap.** The "intended" form left in a comment was `0.1*(norm(u1) - norm(u2))`, which is
+*inverted*: under the corrected D1 orientation this is P1's payoff and P1 maximizes it, so the
+paper's Eq. (9) `λ₂(‖u_P‖ − ‖u_E‖)` requires `norm(u2) - norm(u1)`. Restoring the commented
+line verbatim would have survived the A1 fix and quietly corrupted Gate B. Pinned by the
+"stage cost orientation" testset.
+
+Note the two terms are dimensionally incommensurable — `sqrt(km)` against `km/s` — so λ1 and λ2
+are arbitrary scale factors, not physical weights. Say so in the paper.
+"""
+function stage_cost(x1, x2, u1, u2; λ1=1.0, λ2=0.1)
+
     dist = norm(x1[1:3] - x2[1:3])
-    cost = 1.0 * sqrt(dist + 0.1) + 0.1 * (norm(u1 - u2))
+    cost = λ1 * sqrt(dist + 0.1) + λ2 * (norm(u2) - norm(u1))
 
+    # capture bonus, disabled: there is no capture/termination condition anywhere in
+    # the codebase yet (see Gate B, B3)
     # if dist < capture_threshold
     #     cost -= 50.0
     # end
@@ -338,7 +363,7 @@ export stage_cost
 ## ==================================================================== 
 # zero-sum game 
 
-function compute_cost_matrices(players)
+function compute_cost_matrices(players; λ1=1.0, λ2=0.1)
 
     # loop through time corresponding with control inputs 
     U_idx = eachindex(players[1].U[1][:, 1])
@@ -369,9 +394,9 @@ function compute_cost_matrices(players)
                 x2 = players[2].X[j_vert][ii, :]
                 u2 = players[2].U[j_vert][ii, :]
 
-                # compute costs for player 1 and 2  
-                cost1 = stage_cost(x1, x2, u1, u2)
-                cost2 = -stage_cost(x1, x2, u1, u2)
+                # compute costs for player 1 and 2
+                cost1 = stage_cost(x1, x2, u1, u2; λ1, λ2)
+                cost2 = -cost1
                 push!(player1_cost_tt, cost1)
                 push!(player2_cost_tt, cost2)
 
@@ -419,8 +444,10 @@ function stage_cost_games_fn(games_vec)
         u1 = p1_U_hist
         u2 = p2_U_hist
 
-        # compute stage cost at each time step for each trajectory 
-        stage_cost_game = [stage_cost(x1[ii, :], x2[ii, :], u1[ii, :], u2[ii, :]) for ii in 1:size(u1, 1)]
+        # compute stage cost at each time step for each trajectory.
+        # `get` guards against games saved before λ1/λ2 were added to params.
+        λ1, λ2 = get(params, :λ1, 1.0), get(params, :λ2, 0.1)
+        stage_cost_game = [stage_cost(x1[ii, :], x2[ii, :], u1[ii, :], u2[ii, :]; λ1, λ2) for ii in 1:size(u1, 1)]
         # stage_cost_game_mean = mean( stage_cost_game ) 
 
         push!(stage_cost_games, stage_cost_game)
@@ -560,16 +587,24 @@ function choose_strategies!(players, mixing_weights, rng, params, game)
         chosen[2] = sample(rng, ProbabilityWeights(w))
 
     elseif p2_strategy == "Meta_greedy"
+        # D5: two defects here, both fixed. (1) `predict_opponent_vertices` returns a
+        # distribution over P1's vertices, and cost is indexed [P1_vertex, P2_vertex],
+        # so the transpose is required -- without it the contraction ran over the wrong
+        # axis and returned a vector indexed by P1's vertices, which was then assigned
+        # to chosen[2]. Both dimensions are 6, so it silently produced a plausible
+        # index instead of erroring. (2) `argmin` was wrong: players[2].cost = -A, so
+        # maximizing it is what minimizes separation. Now mirrors FP_greedy exactly.
         predicted_v_probs = predict_opponent_vertices(players[2], players[1])
-        expected_costs = players[2].cost * predicted_v_probs
-        # player 2 minimizes so we take argmin 
-        chosen[2] = argmin(expected_costs)
+        expected_costs = players[2].cost' * predicted_v_probs
+        chosen[2] = argmax(expected_costs)
 
     elseif p2_strategy == "Meta_mixed"
+        # D5: transpose added, and the weight formula flipped to match FP_mixed --
+        # it previously used `maximum(...) .- ec`, decreasing in expected cost, i.e.
+        # the opposite of the correct branch directly above it.
         predicted_v_probs = predict_opponent_vertices(players[2], players[1])
-        meta_expected_costs = players[2].cost * predicted_v_probs
-        # for player 2 we negate or max over negative Expected Costs
-        w = maximum(meta_expected_costs) .- meta_expected_costs .+ 1e-6
+        meta_expected_costs = players[2].cost' * predicted_v_probs
+        w = meta_expected_costs .- minimum(meta_expected_costs) .+ 1e-6
         chosen[2] = sample(rng, ProbabilityWeights(w))
 
     elseif p2_strategy isa Int
@@ -721,8 +756,8 @@ function compute_states_nash(params, game, players, rng)
     # compute X, U, and t for both players (optimization)   
     players = compute_players_XU(params, game, players)
 
-    # compute cost matrices 
-    players = compute_cost_matrices(players)
+    # compute cost matrices
+    players = compute_cost_matrices(players; λ1=params.λ1, λ2=params.λ2)
 
     # solve mixed nash and choose strategy 
     mixing_weights = compute_mixing_weights!(players)

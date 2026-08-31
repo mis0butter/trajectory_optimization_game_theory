@@ -156,19 +156,33 @@ export miss_distance_prop_kepler_Nseg
 
 ## ====================================================================
     
-"Calculate sum of Δv vector norms"
-function sum_norm_Δv( x, N ) 
+"""
+    sum_norm_Δv(x, N)
 
-    Δv_vec = reshape( x, N, 3 ) 
+Total ΔV: `Σᵢ ‖Δvᵢ‖`, in km/s.
 
-    sum_norm = 0 
-    for i = 1 : N 
-        # sum_norm += norm( Δv_vec[i,:] ) 
-        sum_norm += sum( Δv_vec[i,:].^2 ) 
-    end 
+Previously returned `Σᵢ ‖Δvᵢ‖²` — an energy-like quantity in (km/s)², not ΔV — despite the name
+and docstring (defect D3b / D11). That mattered because this is summed against a terminal miss
+distance in **km** inside `min_Δv_dist`: at Δv ≈ 0.01 km/s per segment the squared form is
+~1e-3 while the miss term starts at 1–40 km, so fuel was outweighed roughly 1000:1 and was not
+meaningfully optimized at all.
 
-    return sum_norm 
-end 
+`ε` desingularizes the gradient: `‖v‖` is not differentiable at `v = 0`, and a zero Δv segment
+is common here, so plain `norm` would hand ForwardDiff a NaN. With ε = 1e-12 km/s the
+perturbation is ~1e-12 against segment norms of ~1e-2 — utterly negligible numerically, but it
+keeps the objective smooth everywhere, which the gradient-based solvers in A6 require.
+"""
+function sum_norm_Δv( x, N; ε = 1e-12 )
+
+    Δv_vec = reshape( x, N, 3 )
+
+    sum_norm = zero(eltype(x))
+    for i = 1 : N
+        sum_norm += sqrt( sum( Δv_vec[i,:].^2 ) + ε^2 )
+    end
+
+    return sum_norm
+end
 
 export sum_norm_Δv 
 
