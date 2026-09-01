@@ -6,8 +6,13 @@
 
 ## Status — Aug 31 2026
 
-**Gate A is 9 of 10 items done.** Only A6 (Ipopt for the trajectory optimizer) and the
-smoke sweep remain. Per-defect detail is in the §3 `Status` column and the notes after it.
+**GATE A IS COMPLETE — all 10 items, finished Aug 31, six days ahead of the Sep 6 gate.**
+Per-defect detail is in the §3 `Status` column and the notes after it. Nine defects fixed
+(D1, D4, D5, D6-plumbing, D7, D8, D9, D10, D11), one retired as not-a-defect (D3), three
+still open (D2 → Gate B, D12 deferred, D13 a modeling decision).
+
+**Next: Gate B, starting with B1 (real Monte Carlo / D2).** Read the cost warning in note [i]
+first — a full 5×5 re-run now projects to ~2.5 h, not the ~36 min assumed earlier.
 
 **Landed (all verified value-preserving except where a fix is the point):**
 
@@ -35,7 +40,7 @@ smoke sweep remain. Per-defect detail is in the §3 `Status` column and the note
 - **D5 — both `Meta_*` P2 branches corrected** (transpose + sign), now mirroring `FP_*` exactly.
 - **`CLAUDE.md` written** (task zero). Carries a compact D1–D13 index pointing here as the source
   of truth, rather than a verbatim copy that would drift.
-- **`test/runtests.jl`** — was 6 lines testing nothing; now **3092 passing, 0 failing, 0 broken**.
+- **`test/runtests.jl`** — was 6 lines testing nothing; now **3,105 passing, 0 failing, 0 broken**.
 
 - **A6 / D9 — the trajectory optimizer is gradient-based.** BFGS + BackTracking, 12/12
   converged, 38% less fuel, ~10^7 better terminal miss. **Ipopt was tried and does not converge
@@ -44,15 +49,16 @@ smoke sweep remain. Per-defect detail is in the §3 `Status` column and the note
 - **Smoke sweep passed** — see note [i]: 99.53% solver convergence, 0/2,500 LP certificate
   failures, and `mixed`/`mixed` NashConv of 1.6e-14 confirming D1 end to end.
 
-**GATE A IS COMPLETE.** Next is Gate B, starting with B1 (real Monte Carlo / D2). Note the cost
-warning in [i]: a full 5x5 re-run now projects to ~2.5 h rather than ~36 min.
+**Four premises of this plan turned out to be wrong, and are corrected in place below:**
 
-**Two headline changes to the plan's premises:**
-
-1. **D3 is dead** — see note [a]. §9 risk 2 does not fire, and A3 leaves the critical path.
-2. **§9 risk 4 was wrong** — the AD path was *not* de-risked; it was broken (D10), and the
-   LBFGS fallback shared the same broken dependency. Fixed, but it means A6's justification is
-   now D11 + convergence statistics, not reachability.
+1. **D3 is dead** — note [a]. §9 risk 2 does not fire; A3 left the critical path on day 1.
+2. **§9 risk 4 was false.** The AD path was not "already de-risked" — it was broken (D10), and
+   the LBFGS fallback shared the same broken dependency, so it was never a hedge.
+3. **Ipopt does not work here** — note [h]. §5 said "Ipopt is in, decided by the author, not
+   gated on measurement"; measurement says 0/12 convergence at any budget. BFGS + BackTracking
+   is in instead, and beats every alternative on every axis. §5 is corrected.
+4. **The ΔV cap will never bind** — note [b]. Not at 2.0, not at the paper's 0.1. So A6 could
+   never have "made the constraint bindable," which was one of its stated justifications.
 
 **Corrections to §1 (this machine):**
 
@@ -95,10 +101,10 @@ Do **not** claim "the game is time-varying" as novelty — it is not. Treat the 
 ## 1. Environment setup (do this first on the new machine)
 
 - Julia with the repo's `Project.toml` / `Manifest.toml`. `Pkg.instantiate()` from the repo root.
-- **Launch Julia with threads:** `julia -t 8 --project=.`. `Threads.nthreads()` defaults to **1**, and `run_MC_games_parallel` uses `Threads.@threads` — without this every sweep runs serially.
+- **Launch Julia with threads:** `julia -t 32 --project=.` on this machine (32 cores). `Threads.nthreads()` defaults to **1**, and `run_MC_games_parallel` uses `Threads.@threads` — without this every sweep runs serially.
 - All result paths are **relative**; scripts must be run from the repo root.
 - **Disk:** ~~`test/results/` currently holds ~12 GB.~~ **Superseded — see Status above: it does not exist on this machine.** Gate A diagnostics need only `test/results/n30/` (~1.4 GB, 25 files at ~59 MB) copied to the new machine. Budget 20–40 GB for new runs unless B2 (slim persistence) lands first.
-- **Measured baseline cost (superseded — see Status):** the 5×5 sweep at 50 games × 30 steps took **2 h 51 min** wall clock on an 8-core machine, ~6 min per matchup, derived from output file mtimes.
+- **Measured baseline cost (superseded):** the 5×5 sweep at 50 games × 30 steps took **2 h 51 min** on an 8-core machine, ~6 min per matchup, derived from output file mtimes. **Current figure: ~2.5 h on 32 cores** with the gradient-based optimizer — see note [i], which supersedes both this and the ~45 min estimate in Status.
 
 ---
 
@@ -248,21 +254,28 @@ Two consequences:
 | 1000 | 0.06825 | 2.5e-5 | 6.2e-6 |
 
 A clean monotone tradeoff, and **A3 passes at every setting** by 4+ orders of magnitude.
+(Those numbers were measured under Nelder-Mead, *before* A6; the qualitative shape holds, the
+absolute fuel figures are superseded — see the correction below.)
 
-Two things worth putting in the paper:
+**The balance has flipped.** Before: fuel ~1e-3 (squared norms) against a miss starting at
+1–40 km, so miss outweighed fuel ~1000:1 and ΔV was not optimized at all. Now both terms are
+active — miss dominates early, driving the solve onto the vertex, and fuel dominates near the
+solution, trimming waste.
 
-- **The optimized trajectory costs *more* fuel than the Lambert initial guess** — 0.0476 vs
-  0.0293 km/s, i.e. 162%. That is not a regression: the Lambert guess misses its vertex by a
-  median of **20.3 km**, and the extra 63% ΔV is the price of actually arriving. This is a clean
-  one-line justification for why the optimizer exists at all, and it retires the D9 worry that
-  Nelder-Mead might not be earning its keep on the targeting objective.
-- **The balance has flipped.** Before: fuel ~1e-3 (squared norms) against a miss starting at
-  1–40 km, so miss outweighed fuel ~1000:1 and ΔV was not optimized. Now fuel ~0.048 against a
-  converged miss of 7e-5, so both terms are active — miss dominates early (driving the solve to
-  the vertex) and fuel dominates near the solution (trimming waste).
+**CORRECTION after A6 — and the corrected version is the better paper claim.** This note
+originally read: *"the optimized trajectory costs more fuel than the Lambert guess (0.0476 vs
+0.0293 km/s, 162%); the extra 63% is the price of actually arriving."* **That 63% was
+Nelder-Mead's inefficiency, not a physical price.** With BFGS the optimized trajectory costs
+**0.02926 km/s against Lambert's 0.02928** — statistically identical — while reducing the
+terminal miss from Lambert's median **20.3 km** to **7.6e-12 km**.
+
+So the honest and much stronger statement is: *the optimizer buys twelve orders of magnitude of
+targeting accuracy for no fuel at all.* It also means the earlier reading — that this "retires
+the D9 worry about Nelder-Mead earning its keep" — was exactly backwards: the 162% figure was
+itself the evidence that Nelder-Mead was leaving fuel on the table.
 
 **Open question for the author, not a defect:** `w_miss` could go *below* 1 to buy back fuel,
-since the miss has four orders of magnitude of headroom before the A3 threshold. Left at 1.0
+since the miss now has ~11 orders of magnitude of headroom before the A3 threshold. Left at 1.0
 because the action semantics want the vertex actually reached; worth a sentence either way.
 
 **[h] A6 resolved — but with quasi-Newton, not Ipopt.** Ipopt was tried first and **does not
@@ -280,7 +293,8 @@ cannot build a usable curvature model. Measured on the 12 step-1 subproblems (me
 | Ipopt (JuMP `@operator`, constrained) | **0/12** | 0.162 s | 1.0e-06 km | 0.03187 |
 
 **BFGS is now the default**: 38% less fuel and ~10^7 better terminal miss than the incumbent, for
-26% more wall time (~36 min per 5x5 sweep). Two details were load-bearing, and neither is in the
+26% more wall time on these subproblems. (In-pipeline the gap is larger — see the cost warning in
+note [i], which supersedes this figure.) Two details were load-bearing, and neither is in the
 original plan:
 
 - **A guarded objective.** A large enough trial Δv makes the Kepler propagation non-finite, and a
@@ -351,9 +365,13 @@ e=0.01. Reviewer 5 #1 asked exactly how vertex positions are obtained, so say wh
 
 ## 4. Workstreams
 
-### Gate A — correctness + existential diagnostics (Aug 31 – Sep 6)
+### Gate A — correctness + existential diagnostics — ✅ **COMPLETE Aug 31**
 
-Runs on **existing** `.jld2` files. No re-run needed yet.
+> **The text of A1–A6 below is the original specification, retained for provenance.** What was
+> actually done, and where it diverged, is in Status, the §3 `Status` column, and notes [a]–[i].
+> Two premises here are false: *"Runs on existing `.jld2` files, no re-run needed"* — that data
+> does not exist on this machine, so Gate A generated its own (~1 min); and A3's *"Pass 2 after
+> A6 is expected to reduce terminal miss substantially"* — the miss was already 4 cm before A6.
 
 **A1. Fix the LP (D1), instrument the solver (D7).**
 - `solve_mixed_nash(A)` → `sms(-A)` for the evader (maximizer of A), `sms(A')` for the pursuer (minimizer of A). Return the value, currently discarded at `:58`.
@@ -431,7 +449,7 @@ Deliver to Overleaf as markdown prose, CSV tables with intervals, and PDF figure
 
 - **MARL baseline: no, not for this deadline.** Each game step costs 12 nonlinear trajectory optimizations; RL needs 10⁵–10⁶ environment steps, which would require a surrogate environment that is then not this problem. It is also an unfair comparison as usually run — an offline-trained state-conditioned policy against an online adapter given no training. Use the oracle best-response (B6) instead. MARL is the direction `RL_BENCHMARK_HANDOFF.md` already points, as separate work.
 - **Fuel stays in the objective.** Fix its functional form (D4); do not remove it.
-- **Nelder-Mead is out; Ipopt is in (A6).** Decided by the author, not gated on measurement. Fallback is Optim + LBFGS, never Nelder-Mead.
+- ~~**Nelder-Mead is out; Ipopt is in (A6).**~~ **SUPERSEDED Aug 31 by measurement.** Nelder-Mead is out — that part stands and is done. But **Ipopt does not converge on this problem** (0/12 at any iteration budget up to 5000; note [h]). The trajectory optimizer is now **BFGS + BackTracking with analytic AD gradients**: 12/12 converged, 38% less fuel, ~10⁷ better terminal miss, no new dependencies. LBFGS is the faster alternative if sweep time binds. The author's underlying intent — a defensible gradient-based solver with reportable convergence — is satisfied, and better than Ipopt would have satisfied it.
 - **Do not claim time-variation as novelty.** See §0.
 - **Venue is AAMAS**, not an aerospace conference. Decided by the author.
 
@@ -441,7 +459,23 @@ Cut from the bottom: **`Meta_*` promotion** → **24-vertex ablation** (keep 6/1
 
 **Never cut:** the sign fix (A1), the miss-distance diagnostic (A3), randomized ICs with confidence intervals (B1/B4), exploitability (A2). Those four are what make the headline provable rather than asserted, and the Monte Carlo defect in particular is the kind of thing that sinks a paper when a reviewer finds it.
 
-## 7. Verification
+## 7. Verification — ✅ **DONE** (`test/runtests.jl`, 3,105 assertions, 0 failing)
+
+Everything specified below exists and passes. Beyond the original list, the suite also pins the
+*pre-fix* D1 orientation as exploitable (so the bug cannot silently return), asserts the D4
+property the old stage cost violated (equal burns cancel exactly), validates AD against
+`central_fdm(5,1)`, checks the column-major flat-index convention, verifies polygon geometry,
+and asserts A3 reachability on every run.
+
+Two items below were **not** done, for reasons that supersede them:
+- *"Re-run one previously-computed matchup with the fix disabled"* — impossible; no prior results
+  exist on this machine. Value-preservation was verified instead by bitwise comparison at each
+  infrastructure change (see Status).
+- *"solver termination is `OPTIMAL`"* — replaced by something stronger and solver-independent,
+  `nash_certificate`, which checks the saddle-point conditions directly rather than trusting a
+  status flag. That is what caught OSQP failing 24% of the time *while reporting success*.
+
+Original specification:
 
 - `test/runtests.jl` gains real tests: maximin = minimax on random and saved matrices; weights sum to 1 and are non-negative; solver termination is `OPTIMAL`; zero-sum property `p2.cost == -p1.cost`; exploitability of the LP solution ≈ 0 by construction (the strongest single check on A1).
 - Frozen-matrix FP convergence (C3) doubles as an integration test: FP's empirical frequency must converge to the LP's `w*` on a fixed matrix. Under current code these disagree, so it fails before the fix and passes after.
@@ -453,7 +487,7 @@ Cut from the bottom: **`Meta_*` promotion** → **24-vertex ablation** (keep 6/1
 
 | Window | Work | Gate |
 |---|---|---|
-| Aug 31 – Sep 6 | Task zero (`CLAUDE.md`); A1–A5 | **Is the lifting real?** |
+| ~~Aug 31 – Sep 6~~ **Aug 31** | Task zero (`CLAUDE.md`); A1–A6 + smoke sweep — ✅ **COMPLETE** | **Yes — miss 4 cm vs R 6.378 km** |
 | Sep 7 – Sep 13 | B1–B6 | **Narrative locks** |
 | Sep 14 – Sep 20 | C1–C5 | OpenReview accounts by ~Sep 17 |
 | Sep 21 – Sep 30 | Writing support; figures; abstract drafted | |
@@ -465,5 +499,7 @@ Cut from the bottom: **`Meta_*` promotion** → **24-vertex ablation** (keep 6/1
 1. **The headline may shrink.** With correct signs, `mixed` becomes genuinely unexploitable and FP's gain against it should approach zero — that is what minimax *means*. The exploitation-vs-safety framing is robust to this because it predicts it, but the abstract cannot be written before Gate B closes.
 2. ~~**D3 could be fatal.**~~ **RETIRED Aug 31.** Measured: median terminal miss 4.1 cm against R = 6.378 km, no late-game degradation. The action space is well defined and the lifting is faithful. See note [a].
 3. **Novelty pressure from [3].** Peters et al. covers lifting, mixed strategies, receding horizon, time-varying payoffs, and a randomized-IC tournament with SEM. The delta is online opponent modeling and the exploitation/safety tradeoff. Everything in the paper should be pointed at that delta; anything that reads as "Peters et al. applied to orbits" should be cut.
-4. **The Ipopt migration (A6) is the largest single code risk.** It touches the innermost, most-called function in the system and perturbs every trajectory in every result. **One stated mitigation was false and has been corrected:** the objective was *not* ForwardDiff-differentiable (D10), and the LBFGS fallback shared that same broken dependency, so it was never a hedge. Both are fixed as of Aug 31 — AD now matches finite differences to 1.6e-9 — so the mitigation is real now rather than assumed. The remaining mitigations stand: it lands in Gate A before the expensive sweeps, and LBFGS is a small change if JuMP's nonlinear interface resists. If A6 slips past Sep 6, take the fallback rather than pushing the Gate B re-run.
-5. **Ipopt may change the story, not just the numbers.** Better convergence should lower terminal miss (helping D3) and make the ΔV constraint bindable (fixing D6) — but it also means the corrected `mixed`/`greedy` strategies are being computed on a *different, better* action set than the CDC results used. Treat every CDC number as void; do not attempt reconciliation.
+4. ~~**The Ipopt migration (A6) is the largest single code risk.**~~ **RETIRED Aug 31.** It landed inside Gate A, before any expensive sweep, as planned. Two things went differently: the stated mitigation *"the objective is already ForwardDiff-differentiable"* was **false** (D10 — no gradient existed at all, and the LBFGS fallback shared the same broken dependency), and **Ipopt itself did not converge** (note [h]). BFGS + BackTracking is in instead: 99.53% convergence over 15,000 solves in the smoke sweep.
+5. **The solver change altered the story, not just the numbers — as anticipated, but not in the predicted direction.** It did *not* lower terminal miss for D3's sake (already 4 cm) and did *not* make the ΔV constraint bindable (note [b] — nothing binds it). What it did do is cut fuel by 38% and improve terminal miss by ~10⁷, so `mixed`/`greedy` are now computed on a **different, better** action set than the CDC results used. **Treat every CDC number as void; do not attempt reconciliation.**
+6. **NEW — the geometric confound (note [f]).** Hexagon vertices are not equally valuable for evasion: in-plane offsets convert to along-track drift that grows over an orbit, out-of-plane merely oscillates, and the vertex ranking is partly seed-independent. If FP wins partly by discovering that fixed bias rather than by modeling an opponent, the headline claim is confounded. **B6b (best-fixed-vertex baseline) is the required control** and is now in Gate B.
+7. **NEW — Gate B compute is ~5× the earlier estimate** (note [i]): ~2.5 h per full 5×5 at 50 games × 30 steps, versus the ~36 min assumed. Still a single sitting, but B1's raise to 100–200 trials multiplies it. Decide LBFGS-vs-BFGS before B3.
