@@ -163,7 +163,10 @@ miss is now recorded per solve in `player_struct.solve_info.traj`, so it is moni
 continuously rather than by an offline probe, and `test/runtests.jl` asserts it.
 
 **[b] D6 reframed — the ΔV cap is irrelevant, not merely un-threaded.** Measured max per-segment
-‖Δv‖ = **0.0221 km/s**. The original claim of 0.591 km/s is **not reproduced** - it is 27x
+‖Δv‖ = **0.0525 km/s** across all 15,000 solves of the smoke sweep. *(The 0.0221 figure first
+recorded here was measured on Day 0, under Nelder-Mead with the squared-norm fuel term; D11 and
+A6 both changed the trajectories. The conclusion is unchanged — nothing binds — but the margin to
+the paper's stated 0.1 km/s is now ~2x, not ~5x.)* The original claim of 0.591 km/s is **not reproduced** - it is 27x
 smaller. Critically, **the paper's stated 0.1 km/s would also never bind**; binding requires
 ~0.02. So the honest fix is not "set it to 0.1 and now the constraint is real" - it is either to
 state that the constraint is inactive at this scenario scale, or to choose a cap reflecting an
@@ -182,9 +185,19 @@ games:
 | OSQP, polish + eps 1e-12 | 2.6e-16 | 25% (bimodal) | 21.4 |
 | **Ipopt, tol 1e-14** | **2.7e-14** | **0%** | **3.3** |
 
-OSQP-with-polish is exact when polish succeeds and ~5e-3 when it does not; tightening tolerances
-does not move that split. **Every CDC-era LP was solved to roughly three decimal places.** Ipopt
-is uniformly accurate, fastest, and already a dependency - no Manifest change. This table is the
+**Re-measured on the REAL saved payoff matrices** (313 of them, rather than `randn(6,6)`), which
+is the defensible sample and is worse for OSQP than random matrices were:
+
+| backend | median residual | fraction > 1e-8 |
+|---|---|---|
+| OSQP, defaults | 7.5e-4 | **100%** |
+| OSQP, polish + eps 1e-9 | 6.2e-6 | **55.3%** ← not 24% |
+| **Ipopt, tol 1e-14** | **3.5e-15** | **0%** |
+
+Polish succeeds far less often on real payoff matrices than on random ones, so the original
+random-matrix benchmark **understated** the problem by more than 2x. Figure `fig3_lp_solver.pdf`
+shows the bimodality directly. **Every CDC-era LP was solved to roughly three decimal places.**
+Ipopt is uniformly accurate, fastest, and already a dependency - no Manifest change. This is the
 solver characterization Reviewer 7 #1 asked for. Failure policy is now record-and-fall-back
 (never `error()` inside `Threads.@threads`), so the failure *rate* becomes a reportable number.
 
@@ -203,14 +216,18 @@ must cancel exactly, including equal-magnitude burns in orthogonal directions.
 axis error produces a plausible-looking index instead of erroring.
 
 **[f] The game is NOT degenerate — but the decision margin is thin, and there is a geometric
-confound.** Measured Aug 31 over 240 matrices (4 matchups x 2 seeds x 30 steps), normalized by
-`|mean(A)|`:
+confound.** **Re-measured on 1,250 matrices from the smoke sweep, after D4 corrected the stage
+cost** (the original figures — 46.0 / 15.4 / 1.70 — came from 240 matrices carrying the *old*
+`norm(u1-u2)` cost and are superseded):
 
-| metric | median | p90 | max |
-|---|---|---|---|
-| full matrix range | 46.0% | 59.3% | 88.2% |
-| P1 leverage vs a uniform opponent | 15.4% | 21.7% | 25.1% |
-| **best-vs-2nd-best row gap** | **1.7%** | 5.1% | 7.4% |
+| metric | median (current) | median (pre-D4) |
+|---|---|---|
+| full matrix range | **59.8%** | 46.0% |
+| P1 leverage vs a uniform opponent | **18.1%** | 15.4% |
+| **best-vs-2nd-best row gap** | **2.37%** | 1.7% |
+
+The qualitative conclusion holds — the game is not degenerate, and the decision margin is thin —
+but the margin is **2.37%**, ~40% larger than first recorded.
 
 Leverage grows from 8.3% (steps 1-6) to ~16-17% from step 7 on, consistent across all four
 matchups. And per-step edges **compound**: pure-vertex strategies (P1 always plays vertex j) vs a
@@ -219,28 +236,47 @@ six vertices, on two seeds. So strategy selection matters a great deal over 30 s
 
 Two consequences:
 
-1. **The 1.7% decision margin is the number to worry about.** The D1 sign error produced
-   NashConv ~0.1 absolute on values of ~2.3 -- about **2.5x the decision gap** -- so it routinely
-   flipped which vertex was chosen. OSQP's 1.7e-3 residual is ~15-20% of the gap: not dominant,
+1. **The 2.37% decision margin is the number to worry about.** The D1 sign error produced a
+   median NashConv of **7.5e-2** on values of ~2.3 -- comparable to the decision gap -- so it
+   routinely flipped which vertex was chosen. Measured directly: **53.0% of pre-fix LP solves
+   (663/1,250) were not equilibria at all**, and the medians differ by a factor of **5.1e12**
+   (figure `fig2_lp_correctness.pdf`). OSQP's 1.7e-3 residual is ~15-20% of the gap: not dominant,
    but not ignorable for `greedy`, which is a bare `argmax` over near-ties.
 
-2. **NEW RISK - a geometric confound for the headline.** The vertex ranking is partly
-   seed-independent: vertices 3 (`botin`) and 6 (`topout`) are top-2 on both seeds, vertex 1
-   (`top`) is bottom-2 on both. 3 and 6 are the antipodal `axis_2`-dominant pair, i.e. in-plane;
-   vertex 1 is pure +`axis_3`, out-of-plane. That is physically expected -- an in-plane radial
-   offset converts into **along-track drift that grows over an orbit**, while out-of-plane
-   displacement merely oscillates. So the six vertices are not equally valuable for evasion, and
-   the asymmetry is static geometry, independent of the opponent.
+2. ~~**NEW RISK - a geometric confound for the headline.**~~ **RETRACTED — the claim did not
+   replicate.** It was made from **two seeds**, which was far too few, and I stated it without an
+   interval. At **six seeds** (figure `fig7_vertex_geometry.pdf`) the ranking essentially
+   inverts:
 
-   **If FP-greedy wins partly by converging onto vertex 3 or 6, some of its measured advantage is
-   discovering a fixed geometric bias, not modeling an opponent** -- which is exactly the
-   headline claim. An AAMAS reviewer will ask this.
+   | vertex | plane | late separation, mean ± sd [km] |
+   |---|---|---|
+   | 1 `top` | out-of-plane | **5.04 ± 1.06**  ← was claimed *worst* |
+   | 2 `topin` | in-plane | 4.67 ± 0.55 |
+   | 6 `topout` | in-plane | 4.54 ± 0.40 |
+   | 4 `bot` | out-of-plane | 4.39 ± 0.71 |
+   | 5 `botout` | in-plane | 4.09 ± 0.77 |
+   | 3 `botin` | in-plane | **3.94 ± 0.62**  ← was claimed *best* |
 
-   **Required control (add to Gate B, alongside B6):** a *best-fixed-vertex* baseline -- choose
-   the single best vertex in hindsight and play it every step. If FP does not clearly beat it,
-   the opponent-modeling claim is in trouble. If it does, the margin over that baseline *is* the
-   opponent-modeling effect, cleanly separated from geometry. `choose_strategies!` already
-   accepts an `Int` strategy, so this costs nothing to implement.
+   The **in-plane / out-of-plane hypothesis is not supported**: vertices 1 and 4 are both
+   out-of-plane and rank 1st and 4th. Panel (b) of the figure shows per-seed ranks crossing
+   constantly — there is **no stable ordering**. The physical story (in-plane offsets convert to
+   growing along-track drift) may still be true in principle, but it does not dominate the
+   outcome here.
+
+   **What survives.** There is still real vertex-dependent spread — ~1.1 km between best and
+   worst on a grand mean of ~4.4 km, about 25% — so which vertex you play does matter. It simply
+   is not a *fixed* geometric bias that a learner could exploit.
+
+   **The experiment was also mis-designed, and the fix is folded into B6.** The pursuer was
+   Nash-mixed, i.e. a *safety* strategy that declines to exploit — against an evader that is
+   perfectly predictable by construction. So the measurement mixed vertex geometry together with
+   Nash's unwillingness to exploit, and no run came near capture. Re-run against an **oracle
+   best-response** pursuer and the number becomes the vertex's security value, which is the
+   geometrically meaningful quantity. See B6.
+
+   **Lesson, recorded deliberately:** this was a claim from n=2 with no interval, in a plan whose
+   own B4 says *"no number enters a table without an interval."* The figure caught it. Apply the
+   same standard to Gate B before the narrative locks.
 
 **[g] D11 fixed — fuel is now genuinely part of the objective.** `sum_norm_Δv` returns true ΔV
 (with an ε=1e-12 desingularization so the gradient survives a zero-Δv segment, which plain
@@ -292,9 +328,19 @@ cannot build a usable curvature model. Measured on the 12 step-1 subproblems (me
 | LBFGS + BackTracking | 12/12 | **0.016 s** | 3.2e-12 km | 0.04169 |
 | Ipopt (JuMP `@operator`, constrained) | **0/12** | 0.162 s | 1.0e-06 km | 0.03187 |
 
-**BFGS is now the default**: 38% less fuel and ~10^7 better terminal miss than the incumbent, for
-26% more wall time on these subproblems. (In-pipeline the gap is larger — see the cost warning in
-note [i], which supersedes this figure.) Two details were load-bearing, and neither is in the
+**Re-measured across all 10 game steps** (60 subproblems, not just the 12 easy step-1 ones):
+
+| solver | converged | wall | terminal miss | ΔV | iters |
+|---|---|---|---|---|---|
+| Nelder-Mead | 1.7% | 0.046 s | 1.6e-08 km | 0.0156 | 2,000 (cap) |
+| Ipopt | **0%** | **1.29 s** | 2.9e-12 km | 0.0155 | 200 (cap) |
+| LBFGS + BackTracking | **100%** | **0.013 s** | 4.2e-12 km | 0.0160 | 56 |
+| **BFGS + BackTracking** | **100%** | 0.174 s | 7.5e-12 km | **0.0101** | 828 |
+
+**BFGS is the default**: 35% less fuel than any alternative, at 0.174 s. Its 828 median iterations
+match the smoke sweep's 820, so this sample is representative. **LBFGS is 13x faster** with 100%
+convergence but 59% more fuel — the lever if Gate B compute binds. Ipopt looks *worse* across all
+steps (1.29 s) than the step-1 measurement suggested. Two details were load-bearing, and neither is in the
 original plan:
 
 - **A guarded objective.** A large enough trial Δv makes the Kepler propagation non-finite, and a
@@ -355,6 +401,37 @@ That is ~5x the earlier estimate and ~5x the Nelder-Mead incumbent. Levers, in o
 preference: **LBFGS** instead of BFGS (measured 0.016 s vs 0.154 s on step-1 subproblems, ~10x
 faster, at ~40% more ΔV — the accuracy is unaffected, both reach ~1e-12); lower `maxiter` from
 2,000; or accept 2.5 h, which is still an overnight-free single sitting. Decide before B3.
+
+**[j] OPEN QUESTION (not filed as a defect): the fuel term is numerically absent from the game
+payoff.** Found Sep 1 while explaining why `A[i,j]` is not symmetric. Decomposing the stage cost
+at a representative step:
+
+| component | typical magnitude | range across the 6x6 |
+|---|---|---|
+| `λ1·mean sqrt(dist+0.1)` (separation) | **≈ 4.1** | 0.4442 |
+| `λ2·mean(‖u_P‖ − ‖u_E‖)` (differential fuel) | **≈ 0.0005** | **0.0000 (0% of the matrix range)** |
+
+The separation term is **~8,000x larger**, and the fuel term contributes **none** of the
+variation the players are actually choosing between. So although D4 corrected the fuel term's
+*functional form*, `λ2 = 0.1` against Δv magnitudes of 0.005–0.05 km/s leaves it invisible. This
+is the game-level analogue of D11, which was the same failure one level down in the trajectory
+optimizer's objective.
+
+Not filed as a defect because it is a **modelling choice, not a coding error** — but the paper
+describes the stage cost as "separation plus differential fuel" and, as implemented, the second
+half changes nothing. Three ways out, to decide **before Gate B locks the narrative**, since
+"comparable ΔV budgets" is a claim the paper makes:
+
+1. Raise `λ2` to ~100–1000 so fuel is a real term (changes every result; must precede B3).
+2. Normalize the two terms by their own scales so `λ2` is a genuine 0–1 tradeoff weight.
+3. State honestly that the payoff is separation-only, and report ΔV purely as a separate metric.
+
+**Related finding, for the writing.** `A[i,j]` is *not* symmetric, and it is worth knowing why:
+the **terminal** separation is exactly symmetric (6.3780 km either way for the (1,6)/(6,1) pair,
+asymmetry 0.000 — the hexagon is symmetric), but the stage cost is a **horizon average**, and the
+two players fly different paths to their targets because they start ~20 km apart on different
+orbits (`a` vs `1.005a`). Swapping (i,j) → (j,i) swaps the targets but not the starting states.
+Fuel contributes essentially nothing to the asymmetry.
 
 **Not a defect, but state it in the paper.** `axis_123` is *not* an orthogonal frame:
 `a1 . a2 = -9.9e-3 ~ -e`. The hexagon lies in the `a2`-`a3` (radial/normal) plane, **not** the
@@ -418,9 +495,25 @@ This directly answers Reviewer 7 #1, which asked whether the MPC problem is conv
 
 **B5. EGTA meta-game.** Treat the strategy table as a normal-form meta-game; report its Nash equilibrium (optionally α-Rank). Pure post-processing, and the principled fix for Reviewer 8's objection that "dominant strategy" is misused — afterwards you can say precisely whether FP-greedy is dominant or merely in the support.
 
-**B6b. Best-fixed-vertex baseline (added Aug 31 — see note [f]).** Play a single hindsight-best vertex every step. Controls for the static geometric asymmetry between hexagon vertices, without which the opponent-modeling headline is confounded. Uses the existing `Int` strategy branch.
+**B6. Oracle best-response + the exploitation gap** *(B6 and the former B6b merged Sep 1 — see the design note below)*.
 
-**B6. Oracle best-response baseline.** A player told the opponent's true strategy that best-responds exactly. ~10 lines, and it establishes the ceiling: "FP recovers X% of the oracle's advantage within N steps." This is the cheap stand-in for a MARL baseline (see §5).
+Implement an **oracle best-response** player: told the opponent's true strategy, best-responds exactly. ~10 lines. Then run **fixed-vertex evaders** (P1 plays vertex *j* every step, *j* = 1..6, via the existing `Int` branch) against **three** pursuers:
+
+| P2 | what it measures |
+|---|---|
+| **oracle BR** | the **security value** of vertex *j* — the clean geometric number, and the floor |
+| **FP_greedy** | how fast opponent modelling converges on a maximally predictable opponent |
+| **Nash mixed** | the equilibrium benchmark |
+
+Three results fall out, and all three serve the headline:
+
+1. **oracle − Nash = the price of safety.** Exactly the quantity the paper is about, measured where the gap should be largest and cleanest.
+2. **FP vs oracle** — "FP recovers X% of the available exploitation within N steps." This is B6's original deliverable and the stand-in for a MARL baseline (§5).
+3. **oracle across vertices** — answers the geometry question without Nash contaminating it.
+
+**Why the redesign.** Gate A's `fig7_vertex_geometry.pdf` used **Nash as the only pursuer, which is the wrong opponent for this test**. A fixed-vertex evader is the most exploitable opponent that exists — perfectly predictable, zero adaptation — while Nash is a *safety* strategy that guarantees a floor and deliberately declines to exploit anyone. So P2 left value on the table by construction and never came close to capture. The resulting numbers conflated vertex geometry with Nash's non-exploitation, which is part of why note [f]'s ranking was unstable. Same experiment, better opponents.
+
+**Two prerequisites:** the **capture radius must be defined first (B3)** — "did the oracle catch a predictable evader?" is unanswerable until someone picks a threshold, and there is still no capture or termination condition anywhere in the codebase. And **≥20 seeds with CIs** per B4; six was not enough even for Gate A's negative claim.
 
 ### Gate C — the contribution (Sep 14 – Sep 20)
 
@@ -501,5 +594,5 @@ Original specification:
 3. **Novelty pressure from [3].** Peters et al. covers lifting, mixed strategies, receding horizon, time-varying payoffs, and a randomized-IC tournament with SEM. The delta is online opponent modeling and the exploitation/safety tradeoff. Everything in the paper should be pointed at that delta; anything that reads as "Peters et al. applied to orbits" should be cut.
 4. ~~**The Ipopt migration (A6) is the largest single code risk.**~~ **RETIRED Aug 31.** It landed inside Gate A, before any expensive sweep, as planned. Two things went differently: the stated mitigation *"the objective is already ForwardDiff-differentiable"* was **false** (D10 — no gradient existed at all, and the LBFGS fallback shared the same broken dependency), and **Ipopt itself did not converge** (note [h]). BFGS + BackTracking is in instead: 99.53% convergence over 15,000 solves in the smoke sweep.
 5. **The solver change altered the story, not just the numbers — as anticipated, but not in the predicted direction.** It did *not* lower terminal miss for D3's sake (already 4 cm) and did *not* make the ΔV constraint bindable (note [b] — nothing binds it). What it did do is cut fuel by 38% and improve terminal miss by ~10⁷, so `mixed`/`greedy` are now computed on a **different, better** action set than the CDC results used. **Treat every CDC number as void; do not attempt reconciliation.**
-6. **NEW — the geometric confound (note [f]).** Hexagon vertices are not equally valuable for evasion: in-plane offsets convert to along-track drift that grows over an orbit, out-of-plane merely oscillates, and the vertex ranking is partly seed-independent. If FP wins partly by discovering that fixed bias rather than by modeling an opponent, the headline claim is confounded. **B6b (best-fixed-vertex baseline) is the required control** and is now in Gate B.
+6. ~~**NEW — the geometric confound.**~~ **RETRACTED — see note [f].** Raised from two seeds; at six seeds the vertex ranking inverts and shows no stable order, and the in-plane/out-of-plane explanation is unsupported. The test was also mis-designed — a Nash pursuer does not exploit, so it was the wrong opponent for a predictable evader. Folded into **B6**, which re-runs it against an oracle best-response pursuer and turns it into the price-of-safety measurement instead.
 7. **NEW — Gate B compute is ~5× the earlier estimate** (note [i]): ~2.5 h per full 5×5 at 50 games × 30 steps, versus the ~36 min assumed. Still a single sitting, but B1's raise to 100–200 trials multiplies it. Decide LBFGS-vs-BFGS before B3.
