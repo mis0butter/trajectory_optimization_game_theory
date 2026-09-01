@@ -348,10 +348,15 @@ paper's Eq. (9) `λ₂(‖u_P‖ − ‖u_E‖)` requires `norm(u2) - norm(u1)`.
 line verbatim would have survived the A1 fix and quietly corrupted Gate B. Pinned by the
 "stage cost orientation" testset.
 
-Note the two terms are dimensionally incommensurable — `sqrt(km)` against `km/s` — so λ1 and λ2
-are arbitrary scale factors, not physical weights. Say so in the paper.
+**λ2 defaults to 0, i.e. the payoff is separation only.** The two terms are dimensionally
+incommensurable — `sqrt(km)` against `km/s` — so λ1 and λ2 were never physical weights, and at
+the previous λ2 = 0.1 the fuel term measured ~8,000x smaller than the separation term and
+contributed **0.0%** of the 6x6 matrix's variation (note [j]). It therefore changed no decision
+while implying that fuel was being traded off. Fuel is still minimized where it is real — in the
+trajectory objective, which D11 fixed — and ΔV is reported as a separate metric. Pass λ2 > 0
+explicitly to re-enable the differential-fuel term; it remains implemented and tested. Say so in the paper.
 """
-function stage_cost(x1, x2, u1, u2; λ1=1.0, λ2=0.1)
+function stage_cost(x1, x2, u1, u2; λ1=1.0, λ2=0.0)
 
     dist = norm(x1[1:3] - x2[1:3])
     cost = λ1 * sqrt(dist + 0.1) + λ2 * (norm(u2) - norm(u1))
@@ -514,6 +519,61 @@ end
 
 ## ====================================================================
 
+"""
+    opponent_distribution(strategy, opp_idx, players, mixing_weights)
+
+The distribution over the OPPONENT's vertices implied by the strategy they are actually
+playing. `opp_idx` is 1 or 2, identifying which player is the opponent.
+
+This is the knowledge an *oracle best-response* player is granted (Gate B, B6): it is told the
+opponent's true decision rule and best-responds exactly. For stochastic opponents it knows the
+distribution, not the realization — which is the correct notion of a best response to a mixed
+strategy, and keeps the oracle honest rather than clairvoyant.
+
+Each branch mirrors the corresponding branch of `choose_strategies!` exactly; if the two ever
+drift apart the oracle stops being an oracle, so they must be edited together.
+"""
+function opponent_distribution(strategy, opp_idx, players, mixing_weights)
+
+    p_opp = players[opp_idx]
+    n     = length(mixing_weights[opp_idx])
+    point(k) = (d = zeros(n); d[k] = 1.0; d)
+
+    if strategy isa Int
+        return point(strategy)
+
+    elseif strategy == "random"
+        return fill(1 / n, n)
+
+    elseif strategy == "mixed"
+        return normalize_simplex(mixing_weights[opp_idx])
+
+    elseif strategy == "greedy"
+        return point(argmax(mixing_weights[opp_idx]))
+
+    elseif strategy == "FP_greedy"
+        # mirrors :505-509 (P1) / :550-553 (P2): P1 contracts with cost, P2 with cost'
+        q  = normalize_simplex(p_opp.fp_belief)
+        ec = opp_idx == 1 ? p_opp.cost * q : p_opp.cost' * q
+        return point(argmax(ec))
+
+    elseif strategy == "FP_mixed"
+        q  = normalize_simplex(p_opp.fp_belief)
+        ec = opp_idx == 1 ? p_opp.cost * q : p_opp.cost' * q
+        return normalize_simplex(ec .- minimum(ec) .+ 1e-6)
+
+    else
+        # Meta_* depends on a belief over strategies that itself depends on this player,
+        # so "the true distribution" is not well defined without a fixed point. Refuse
+        # rather than silently return uniform and call it an oracle.
+        error("oracle best-response is not defined against strategy: $strategy")
+    end
+end
+
+export opponent_distribution
+
+## ====================================================================
+
 function choose_strategies!(players, mixing_weights, rng, params, game)
 
     # now determine strategy 
@@ -560,6 +620,11 @@ function choose_strategies!(players, mixing_weights, rng, params, game)
         meta_expected_costs = players[1].cost * predicted_v_probs
         w = meta_expected_costs .- minimum(meta_expected_costs) .+ 1e-6
         chosen[1] = sample(rng, ProbabilityWeights(w))
+
+    elseif p1_strategy == "oracle"
+        # told P2's true rule, best-respond exactly. P1 maximizes its own cost.
+        d = opponent_distribution(p2_strategy, 2, players, mixing_weights)
+        chosen[1] = argmax(players[1].cost * d)
 
     elseif p1_strategy isa Int
         chosen[1] = p1_strategy
@@ -614,6 +679,12 @@ function choose_strategies!(players, mixing_weights, rng, params, game)
         meta_expected_costs = players[2].cost' * predicted_v_probs
         w = meta_expected_costs .- minimum(meta_expected_costs) .+ 1e-6
         chosen[2] = sample(rng, ProbabilityWeights(w))
+
+    elseif p2_strategy == "oracle"
+        # told P1's true rule. players[2].cost = -A and d indexes P1's vertices, so the
+        # transpose is required here for the same reason it is in the FP_* branches (D5).
+        d = opponent_distribution(p1_strategy, 1, players, mixing_weights)
+        chosen[2] = argmax(players[2].cost' * d)
 
     elseif p2_strategy isa Int
         chosen[2] = p2_strategy

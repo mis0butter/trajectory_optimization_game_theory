@@ -173,8 +173,21 @@ export max_Δv_dist
 
 ## ====================================================================
 
-"Default inner solver: quasi-Newton with a backtracking line search (see min_optim_info)."
-default_method() = BFGS(linesearch = Optim.LineSearches.BackTracking())
+"""
+Default inner solver: **LBFGS** with a backtracking line search.
+
+Chosen over BFGS for the Gate B sweep after the λ2 = 0 decision. Measured over 60 subproblems
+spanning all game steps:
+
+    BFGS  + BackTracking   100% converged   828 iters   miss 7.5e-12   ΔV 0.0101
+    LBFGS + BackTracking   100% converged    56 iters   miss 4.2e-12   ΔV 0.0160
+
+LBFGS is ~15x cheaper and *more* accurate on terminal miss; its only cost is 35% more ΔV. With
+the game payoff now separation-only (note [j]), that ΔV difference never reaches a decision — it
+changes a reported metric, not play. Swap back with `min_Δv_dist_solve(...; method = BFGS(...))`
+if λ2 is ever raised, because then fuel does drive the game.
+"""
+default_method() = LBFGS(linesearch = Optim.LineSearches.BackTracking())
 
 """
     min_optim_info(fn, x_0; method, tol, maxiter) -> (; x_min, converged, g_converged, iters, t)

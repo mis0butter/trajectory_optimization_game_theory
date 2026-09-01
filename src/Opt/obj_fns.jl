@@ -141,11 +141,12 @@ function miss_distance_prop_kepler_Nseg(
     rv_f_prop = rv_hist[end,:] 
 
     # Finding Miss Distance
-    Δrv_f = norm( rv_f_prop[1:3] - rv_f[1:3] ) 
+    Δrv_f = norm( rv_f_prop[1:3] - rv_f[1:3] )
 
-    if isnan(Δrv_f) 
-        println("Δrv_f is nan")
-    end 
+    # A non-finite value here is EXPECTED and handled: a large enough trial Δv makes the
+    # Kepler solve blow up, and min_Δv_dist_solve's guarded objective substitutes a large
+    # finite value so the line search backs off.  Printing it once per occurrence produced
+    # millions of lines in a sweep, so the notice is gone; the guard is the real handling.
 
     return Δrv_f
 end 

@@ -341,6 +341,74 @@ export dist_norm
 
 using JLD2
 
+"""
+    slim_player(p) / slim_game(g) / slim(games_vec)
+
+Strip the per-vertex candidate sets from a finished game (B2).
+
+`X`, `U`, `t` hold all six candidate trajectories per player per step — the bulk of a saved
+file — but the analysis only ever reads the *executed* trajectory, which is already in
+`rv_chosen` / `U_chosen` / `t_chosen`. `rv_0_hist` goes too, for the same reason.
+
+Everything the analysis does read is kept: `cost` (A_k), both weight vectors, `chosen`, the
+belief fields, `solve_info` (which now carries the terminal-miss and convergence diagnostics
+that used to require `X`), and `params` (including the realized `ic`).
+
+**Caveat:** `test/analyze_late_game.jl` still indexes `p.X[p.chosen]` and `p.U[p.chosen]`, so it
+must be switched to `rv_chosen`/`U_chosen` before it can read slim files.
+"""
+slim_player(p) = player_struct(;
+    cost               = p.cost,
+    weights            = p.weights,
+    chosen             = p.chosen,
+    t_chosen           = p.t_chosen,
+    rv_chosen          = p.rv_chosen,
+    U_chosen           = p.U_chosen,
+    fp_belief          = p.fp_belief,
+    strategy_belief    = p.strategy_belief,
+    tracked_strategies = p.tracked_strategies,
+    solve_info         = p.solve_info,
+    learner_state      = p.learner_state,
+)
+
+slim_game(g) = game_struct(g.tt, g.i_game_step, g.rv_E, g.rv_P, g.t_ref_E, g.rv_ref_E,
+                           slim_player.(g.p1_state), slim_player.(g.p2_state), g.params)
+
+slim(games_vec) = slim_game.(games_vec)
+
+export slim_player, slim_game, slim
+
+## ====================================================================
+
+"""
+    min_separation(game)
+
+Closest approach between the two craft over a whole game, in km, using every executed timestep
+rather than only the game-step endpoints.
+"""
+min_separation(game, params=game.params[1]) = minimum(dist_norm(game, params))
+
+"""
+    capture_curve(games_vec, radii)
+
+Capture rate as a FUNCTION of the capture radius: for each radius, the fraction of games whose
+closest approach fell inside it.
+
+Reported as a curve deliberately. **There is no capture or termination condition anywhere in
+this codebase** — nothing stops a game and no threshold has ever been defined — so picking a
+single number now would be inventing a result. A curve lets the paper state the sensitivity and
+choose a defensible radius afterwards, which is also the honest answer to the pursuit-evasion
+reviewer who will ask what capture means.
+"""
+function capture_curve(games_vec, radii)
+    d = [min_separation(g) for g in games_vec]
+    (; radii, rate = [count(<=(r), d) / length(d) for r in radii], min_sep = d)
+end
+
+export min_separation, capture_curve
+
+## ====================================================================
+
 function save_games_vec(games_vec, params=games_vec[1].params[1])
 
     k_max = games_vec[1].i_game_step[end]

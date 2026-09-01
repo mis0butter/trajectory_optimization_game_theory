@@ -52,9 +52,11 @@ export prop_game_step
 
 ## ====================================================================
 
-function run_game(rng, n_game_steps=10, p1_strategy="mixed", p2_strategy="mixed")
+"Run one game. `disperse` defaults to false here: a single game should be reproducible."
+function run_game(rng, n_game_steps=10, p1_strategy="mixed", p2_strategy="mixed";
+                  disperse::Bool=false, ic_kw...)
 
-    params, players, game = init_game(rng, p1_strategy, p2_strategy)
+    params, players, game = init_game(rng, p1_strategy, p2_strategy; disperse, ic_kw...)
 
     for ii = 1:n_game_steps-1
         println("step: ", ii + 1, "\n")
@@ -69,13 +71,15 @@ export run_game
 
 ## ====================================================================
 
-function run_MC_games(rng, N_games, n_game_steps, p1_strategy="mixed", p2_strategy="mixed")
+"Serial Monte Carlo. `disperse` defaults to TRUE — see run_MC_games_parallel."
+function run_MC_games(rng, N_games, n_game_steps, p1_strategy="mixed", p2_strategy="mixed";
+                      disperse::Bool=true, ic_kw...)
 
     games_vec = []
 
     for jj = 1:N_games
 
-        params, players, game = init_game(rng, p1_strategy, p2_strategy)
+        params, players, game = init_game(rng, p1_strategy, p2_strategy; disperse, ic_kw...)
 
         for ii = 1:n_game_steps-1
             println("game: ", jj, " step: ", ii + 1, "\n")
@@ -98,7 +102,20 @@ export run_MC_games
 
 using Base.Threads
 
-function run_MC_games_parallel(rng, N_games, n_game_steps, p1_strategy="mixed", p2_strategy="mixed")
+"""
+    run_MC_games_parallel(rng, N_games, n_game_steps, p1, p2; disperse=true, ic_kw...)
+
+**`disperse` defaults to `true`, and that is defect D2's fix.** This is the *Monte Carlo* entry
+point: dispersion over initial conditions is its entire purpose. Previously `init_game`
+hardcoded both orbits, so only the vertex-sampling RNG varied — which made every deterministic
+matchup bit-identical across all trials, i.e. N = 1 in those table cells, while the write-up
+claimed "independent initial conditions." Defaulting to `true` means that failure cannot recur
+silently; pass `disperse=false` explicitly if a fixed-IC sweep is genuinely wanted.
+
+`ic_kw...` forwards `a_ratio_range`, `σ_ν`, `σ_Ω` to `init_game`.
+"""
+function run_MC_games_parallel(rng, N_games, n_game_steps, p1_strategy="mixed", p2_strategy="mixed";
+                               disperse::Bool=true, ic_kw...)
 
     # Create thread-safe storage
     games_vec = Vector{Any}(undef, N_games)
@@ -111,7 +128,7 @@ function run_MC_games_parallel(rng, N_games, n_game_steps, p1_strategy="mixed", 
 
         local_rng = MersenneTwister(seeds[i_game])
 
-        params, players, game = init_game(local_rng, p1_strategy, p2_strategy)
+        params, players, game = init_game(local_rng, p1_strategy, p2_strategy; disperse, ic_kw...)
 
         # propagate each game forward one step at a time 
         for i_step = 1:n_game_steps-1

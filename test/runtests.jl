@@ -264,17 +264,22 @@ end
     # separation up -> P1's payoff up. True already.
     @test stage_cost(far, x2, u0, u0) > stage_cost(x1, x2, u0, u0)
 
-    # Differential fuel λ2*(‖u_P‖ - ‖u_E‖): the evader burning LOWERS P1's payoff,
-    # the pursuer burning RAISES it. The old `norm(u1-u2)` form was nonnegative and
-    # so raised it in both cases.
-    @test stage_cost(x1, x2, ub, u0) < stage_cost(x1, x2, u0, u0)
-    @test stage_cost(x1, x2, u0, ub) > stage_cost(x1, x2, u0, u0)
+    # λ2 now defaults to 0 — the payoff is separation only (note [j]) — so controls
+    # must not move the cost at all under the default.
+    @test stage_cost(x1, x2, ub, u0) == stage_cost(x1, x2, u0, u0)
+    @test init_game(MersenneTwister(1))[1].λ2 == 0.0
+
+    # The differential-fuel term is still implemented and must stay correct when
+    # explicitly enabled: the evader burning LOWERS P1's payoff, the pursuer burning
+    # RAISES it. The old `norm(u1-u2)` form was nonnegative and raised it in both cases.
+    @test stage_cost(x1, x2, ub, u0; λ2=0.1) < stage_cost(x1, x2, u0, u0; λ2=0.1)
+    @test stage_cost(x1, x2, u0, ub; λ2=0.1) > stage_cost(x1, x2, u0, u0; λ2=0.1)
 
     # equal burns must cancel exactly — the defining property of a differential-fuel
     # term, and precisely what norm(u1-u2) got wrong (it penalized both players for
     # thrusting in different directions)
-    @test stage_cost(x1, x2, ub, ub) ≈ stage_cost(x1, x2, u0, u0)
-    @test stage_cost(x1, x2, [0.1,0,0], [0.0,0.1,0]) ≈ stage_cost(x1, x2, u0, u0)
+    @test stage_cost(x1, x2, ub, ub; λ2=0.1) ≈ stage_cost(x1, x2, u0, u0; λ2=0.1)
+    @test stage_cost(x1, x2, [0.1,0,0], [0.0,0.1,0]; λ2=0.1) ≈ stage_cost(x1, x2, u0, u0; λ2=0.1)
 
     # λ1/λ2 are honored
     @test stage_cost(x1, x2, u0, ub; λ2=0.0) ≈ stage_cost(x1, x2, u0, u0; λ2=0.0)
@@ -354,6 +359,68 @@ end
     # end-to-end: a Meta_greedy pursuer must pick a valid column index
     _, players, _ = init_game(MersenneTwister(11), "mixed", "Meta_greedy")
     @test players[2].chosen in 1:size(players[1].cost, 2)
+end
+
+@testset "B1: IC dispersion (D2)" begin
+    # default must reproduce the nominal exactly, or every earlier result moves
+    p0, _, _ = init_game(MersenneTwister(1))
+    @test p0.ic.disperse == false
+    @test p0.ic.a_ratio == 1.005
+    @test p0.ic.dν_E == 0.0 && p0.ic.dΩ_P == 0.0
+
+    # dispersed draws must actually differ, and be recorded
+    ps = [init_game(MersenneTwister(400 + s); disperse=true)[1] for s in 1:5]
+    @test length(unique(p.ic.a_ratio for p in ps)) == 5
+    @test all(1.0045 <= p.ic.a_ratio <= 1.0055 for p in ps)
+    @test all(p.ic.kep0_P[1] ≈ p.ic.a * p.ic.a_ratio for p in ps)
+
+    # and the dispersion must be a PERTURBATION of the scenario, not a different one:
+    # a 2 deg phase jitter would displace a craft ~244 km against a 34.7 km nominal
+    sep(g) = norm(g.rv_E[1][1:3] - g.rv_P[1][1:3])
+    nom = sep(init_game(MersenneTwister(1))[3])
+    ds  = [sep(init_game(MersenneTwister(500 + s); disperse=true)[3]) for s in 1:8]
+    @test all(0.5nom .< ds .< 2.0nom)
+end
+
+@testset "B6: oracle best-response" begin
+    # against a fixed vertex the oracle must pick the exact best reply
+    for j in 1:6
+        _, pl, _ = init_game(MersenneTwister(7), j, "oracle")
+        @test pl[2].chosen == argmin(pl[1].cost[j, :])      # P2 minimizes A
+    end
+    for j in 1:6
+        _, pl, _ = init_game(MersenneTwister(9), "oracle", j)
+        @test pl[1].chosen == argmax(pl[1].cost[:, j])      # P1 maximizes A
+    end
+
+    # against a mixed opponent it best-responds to the MIX, not a realization
+    _, pl, _ = init_game(MersenneTwister(8), "mixed", "oracle")
+    @test pl[2].chosen == argmin(transpose(pl[1].cost) * normalize_simplex(pl[1].weights))
+
+    # the oracle must never do worse than the equilibrium against a known opponent
+    _, pl_o, _ = init_game(MersenneTwister(11), 3, "oracle")
+    _, pl_n, _ = init_game(MersenneTwister(11), 3, "mixed")
+    A = pl_o[1].cost
+    @test A[3, pl_o[2].chosen] <= A[3, pl_n[2].chosen] + 1e-12
+
+    # Meta_* has no well-defined true distribution; refuse rather than fake it
+    @test_throws ErrorException init_game(MersenneTwister(10), "Meta_greedy", "oracle")
+end
+
+@testset "B2: slim persistence + capture curve" begin
+    _, _, g = init_game(MersenneTwister(12))
+    sg = slim_game(g)
+    p, q = g.p1_state[1], sg.p1_state[1]
+    @test q.cost == p.cost && q.weights == p.weights && q.chosen == p.chosen
+    @test q.solve_info == p.solve_info
+    @test isempty(q.X) && isempty(q.U) && isempty(q.t) && isempty(q.rv_0_hist)
+
+    # capture rate must be non-decreasing in the radius, and bracket 0/1
+    game, params = run_game(MersenneTwister(13), 4, "random", "random")
+    cc = capture_curve([game], [0.0, 1.0, 10.0, 1e6])
+    @test issorted(cc.rate)
+    @test cc.rate[1] == 0.0 && cc.rate[end] == 1.0
+    @test min_separation(game) > 0
 end
 
 @testset "frozen-matrix FP converges to the LP equilibrium" begin

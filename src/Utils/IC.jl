@@ -2,29 +2,78 @@ using LinearAlgebra
 
 ## ====================================================================
 
+"""
+    init_game(rng, p1_strategy, p2_strategy; disperse=false, ...)
+
+Build the initial game state.
+
+**`disperse` is defect D2's fix.** With `disperse = false` (the default) both orbits are the
+hardcoded nominal, so *only the vertex-sampling RNG* varies between trials — which made every
+deterministic matchup (greedy/greedy, greedy/FP_greedy, FP_greedy/FP_greedy) bit-identical
+across all 50 "trials". Those table cells were N = 1 while `results.md` claimed "independent
+initial conditions."
+
+With `disperse = true` the initial conditions are drawn from `rng`:
+
+  * pursuer semi-major-axis ratio `a_P/a_E`, uniform over `a_ratio_range` (nominal 1.005)
+  * true-anomaly offset on each craft, normal with sd `σ_ν` — this is phase along the orbit,
+    the dispersion the geometry is most sensitive to
+  * RAAN offset on each craft, normal with sd `σ_Ω`
+
+Deliberately *not* `rand_IC` (`Utils.jl:164`), even though it exists: it drops the `a_P = 1.005a`
+drift and hands the pursuer the evader's velocity, which is a different scenario, not a
+dispersion of this one.
+
+The realized elements are stored in `params.ic` so any analysis can recover exactly which
+initial condition produced a given game.
+"""
 function init_game(
     rng,
     p1_strategy="mixed",
     p2_strategy="mixed"
+    ;
+    disperse::Bool  = false,
+    # Scales chosen in PHYSICAL units, then converted. On a ~6998 km orbit at i = 20 deg:
+    #     1 deg of true anomaly ~= a*pi/180            ~= 122 km along-track
+    #     1 deg of RAAN         ~= a*sin(i)*pi/180     ~=  42 km cross-track
+    # so the obvious-looking "2 deg of phase jitter" is a ~244 km displacement — seven
+    # times the nominal 34.7 km initial separation, i.e. a different scenario rather
+    # than a dispersion of this one. These defaults give ~5 km perturbations, which is
+    # the right scale against a 6.378 km hexagon and ~4 km late-game separations.
+    a_ratio_range   = (1.0045, 1.0055),   # nominal 1.005; +/-10% on the 35 km drift offset
+    σ_ν             = 0.04 * pi / 180,    # ~5 km along-track, both craft
+    σ_Ω             = 0.12 * pi / 180,    # ~5 km cross-track, both craft
 )
 
-    # orbit params 
-    mu = 398600.4415   # gravitational parameter 
-    r = 6378.0        # Earth radius [km] 
+    # orbit params
+    mu = 398600.4415   # gravitational parameter
+    r = 6378.0        # Earth radius [km]
 
-    # radius of polygon circle!!!! 
-    R_polygon = 6378.0 / 1000 
+    # radius of polygon circle!!!!
+    R_polygon = 6378.0 / 1000
 
-    # orbital elements
+    # --- initial conditions -------------------------------------------------
+    # Nominal: both craft on the same orbit but for the pursuer's semi-major axis.
     a = r + 620.0
-    kep0_E = [a, 0.01, 20 * pi / 180, 10.0 * pi / 180, 20.0 * pi / 180, 25.0 * pi / 180]
+    a_ratio = 1.005
+    dν_E = dν_P = dΩ_E = dΩ_P = 0.0
+
+    if disperse
+        lo, hi  = a_ratio_range
+        a_ratio = lo + (hi - lo) * rand(rng)
+        dν_E, dν_P = σ_ν * randn(rng), σ_ν * randn(rng)
+        dΩ_E, dΩ_P = σ_Ω * randn(rng), σ_Ω * randn(rng)
+    end
+
+    kep0_E = [a, 0.01, 20 * pi / 180, 10.0 * pi / 180 + dΩ_E, 20.0 * pi / 180, 25.0 * pi / 180 + dν_E]
     rv_0_E = kep2cart(kep0_E, mu)
 
-    # initial conditions for pursuer 
-    # r_0_P = rand_IC( rv_0_E, R_polygon, rng ) 
-    # rv_0_P = [ r_0_P ; rv_0_E[4:6] ]
-    kep0_P = [a * 1.005, 0.01, 20 * pi / 180, 10.0 * pi / 180, 20.0 * pi / 180, 25.0 * pi / 180]
+    kep0_P = [a * a_ratio, 0.01, 20 * pi / 180, 10.0 * pi / 180 + dΩ_P, 20.0 * pi / 180, 25.0 * pi / 180 + dν_P]
     rv_0_P = kep2cart(kep0_P, mu)
+
+    # keep the realized draw so a game can be traced back to its initial condition
+    ic = (; disperse, a, a_ratio, dν_E, dν_P, dΩ_E, dΩ_P,
+            kep0_E = copy(kep0_E), kep0_P = copy(kep0_P))
 
     # get period of orbit 
     T = 2 * pi * sqrt(a^3 / mu)
@@ -63,8 +112,14 @@ function init_game(
     w_miss = 1.0
 
     # --- stage cost weights (see stage_cost in matrix_game_solver.jl) ---
+    # λ2 = 0: the GAME payoff is separation only.  Measured Sep 1 (note [j]): at
+    # λ2 = 0.1 the differential-fuel term was ~8,000x smaller than the separation
+    # term and contributed 0.0% of the 6x6 matrix's variation, so it changed no
+    # decision while implying in the write-up that fuel was traded off.  Fuel is
+    # still minimized where it is real -- inside the TRAJECTORY objective, which
+    # D11 fixed -- and ΔV is reported as its own metric.
     λ1 = 1.0    # separation term
-    λ2 = 0.1    # differential-fuel term
+    λ2 = 0.0    # differential-fuel term; see above
 
     # game parameters
     params = (
@@ -82,7 +137,8 @@ function init_game(
         Δv_max=Δv_max,
         w_miss=w_miss,
         λ1=λ1,
-        λ2=λ2
+        λ2=λ2,
+        ic=ic
     )
 
     # save rv_ref from E to position for vertices of polygon 
